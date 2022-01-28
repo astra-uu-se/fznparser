@@ -2,9 +2,7 @@ cmake_minimum_required(VERSION 3.7)
 
 include(ExternalProject)
 
-
-set(ANTLR4_ZIP_REPOSITORY ${PROJECT_SOURCE_DIR}/thirdparty/antlr/antlr4-master.zip)
-
+cmake_policy(SET CMP0114 NEW)
 set(ANTLR4_ROOT ${CMAKE_CURRENT_BINARY_DIR}/antlr4_runtime/src/antlr4_runtime)
 set(ANTLR4_INCLUDE_DIRS ${ANTLR4_ROOT}/runtime/Cpp/runtime/src)
 set(ANTLR4_GIT_REPOSITORY https://github.com/antlr/antlr4.git)
@@ -41,7 +39,7 @@ else()
     set(ANTLR4_SHARED_LIBRARIES
         ${ANTLR4_OUTPUT_DIR}/libantlr4-runtime.dll.a)
     set(ANTLR4_RUNTIME_LIBRARIES
-        ${ANTLR4_OUTPUT_DIR}/cygantlr4-runtime-4.9.1.dll)
+        ${ANTLR4_OUTPUT_DIR}/cygantlr4-runtime-4.9.3.dll)
   elseif(APPLE)
     set(ANTLR4_RUNTIME_LIBRARIES
         ${ANTLR4_OUTPUT_DIR}/libantlr4-runtime.dylib)
@@ -91,6 +89,8 @@ if(ANTLR4_ZIP_REPOSITORY)
       CMAKE_CACHE_ARGS
           -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
           -DWITH_STATIC_CRT:BOOL=${ANTLR4_WITH_STATIC_CRT}
+          # -DCMAKE_CXX_STANDARD:STRING=17 # if desired, compile the runtime with a different C++ standard
+          # -DCMAKE_CXX_STANDARD:STRING=${CMAKE_CXX_STANDARD} # alternatively, compile the runtime with the same C++ standard as the outer project
       INSTALL_COMMAND ""
       EXCLUDE_FROM_ALL 1)
 else()
@@ -107,11 +107,13 @@ else()
       CMAKE_CACHE_ARGS
           -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
           -DWITH_STATIC_CRT:BOOL=${ANTLR4_WITH_STATIC_CRT}
+          # -DCMAKE_CXX_STANDARD:STRING=17 # if desired, compile the runtime with a different C++ standard
+          # -DCMAKE_CXX_STANDARD:STRING=${CMAKE_CXX_STANDARD} # alternatively, compile the runtime with the same C++ standard as the outer project
       INSTALL_COMMAND ""
       EXCLUDE_FROM_ALL 1)
 endif()
 
-# Seperate build step as rarely people want both
+# Separate build step as rarely people want both
 set(ANTLR4_BUILD_DIR ${ANTLR4_ROOT})
 if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.14.0")
   # CMake 3.14 builds in above's SOURCE_SUBDIR when BUILD_IN_SOURCE is true
