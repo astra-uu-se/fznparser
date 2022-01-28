@@ -54,3 +54,8 @@ add_executable(${PROJECT_NAME} src/main.cpp
   src/FznVisitor.cpp
                ${ANTLR_Sample_CXX_OUTPUTS})
 target_link_libraries(${PROJECT_NAME} ${PROJECT_LIB} antlr4_static)
+
+install(TARGETS
+  ${PROJECT_NAME}
+  CONFIGURATIONS Debug
+)
