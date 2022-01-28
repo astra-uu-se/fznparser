@@ -1,7 +1,6 @@
 set(PROJECT_NAME fznparser)
 # Set the 'library' name. The library consists of all cpp, hpp, and h files except
 # main in ./src
-set(PROJECT_LIB ${PROJECT_NAME}_lib)
 project(${PROJECT_NAME} LANGUAGES CXX)
 
 set(CMAKE_BUILD_TYPE Debug)
@@ -41,7 +40,14 @@ antlr_target(Sample ${PROJECT_SOURCE_DIR}/src/FlatZinc.g4
 include_directories(${ANTLR_Sample_OUTPUT_DIR})
 
 # Retrieve all cpp, hpp, and h files in ./src
-file(GLOB_RECURSE SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp  ${PROJECT_SOURCE_DIR}/src/*.hpp)
+set(COMMON_INCLUDES ${PROJECT_SOURCE_DIR}/include)
+# Set the 'library' name. The library consists of all cpp, hpp, and h files except
+# main in ./src
+set(PROJECT_LIB ${PROJECT_NAME}_lib)
+# includes (hpp/h) files are in ./include
+include_directories(${COMMON_INCLUDES})
+
+file(GLOB_RECURSE SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp  ${PROJECT_SOURCE_DIR}/include/*.hpp)
 # remove main from the src files
 list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/main.cpp)
 list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/FznVisitor.cpp)
@@ -50,12 +56,17 @@ list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/FznVisitor.cpp)
 add_library(${PROJECT_LIB} ${SRC_FILES})
 
 # add generated grammar to demo binary target
-add_executable(${PROJECT_NAME} src/main.cpp
-  src/FznVisitor.cpp
-               ${ANTLR_Sample_CXX_OUTPUTS})
+add_executable(${PROJECT_NAME}
+  ${PROJECT_SOURCE_DIR}/src/main.cpp
+  ${PROJECT_SOURCE_DIR}/src//FznVisitor.cpp
+  ${ANTLR_Sample_CXX_OUTPUTS}
+)
 target_link_libraries(${PROJECT_NAME} ${PROJECT_LIB} antlr4_static)
 
-install(TARGETS
-  ${PROJECT_NAME}
-  CONFIGURATIONS Debug
+include(GNUInstallDirs)
+install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}Config
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} # This is for Windows
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
+install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
