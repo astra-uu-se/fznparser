@@ -1,4 +1,4 @@
-#include "bool.hpp"
+#include "constraints/bool.hpp"
 
 #include <algorithm>
 
@@ -50,7 +50,7 @@ void BoolLinEq::configureVariables() {
   }
 }
 
-std::pair<Int, Int> BoolLinEq::calculateDomain(Variable* variable) {
+std::pair<Int, Int> BoolLinEq::calculateDomain(Variable* variable __attribute__((unused))) {
   Int lb = 0;
   Int ub = 0;
   for (auto par : _as->elements()) {

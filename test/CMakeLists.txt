@@ -32,6 +32,8 @@ else()
 endif()
 
 # ---- Create binary ----
+# Add a definition for the directory that contains the test stubs.
+add_compile_definitions(STUB_DIR="${CMAKE_CURRENT_SOURCE_DIR}/stubs")
 
 file(GLOB sources CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/source/*.cpp)
 add_executable(${PROJECT_NAME} ${sources})

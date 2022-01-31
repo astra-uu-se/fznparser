@@ -4,23 +4,23 @@
 #include "FlatZincBaseVisitor.h"
 #include "model.hpp"
 
-using namespace fznparser;
+using namespace fznparser::core;
 
 class FznVisitor : FlatZincBaseVisitor {
- public:
+private:
+  Model *model;
+
+public:
   antlrcpp::Any visitModel(FlatZincParser::ModelContext *ctx);
-  antlrcpp::Any visitVarDeclItem(FlatZincParser::VarDeclItemContext *ctx,
-                                 Model &m);
-  antlrcpp::Any visitParDeclItem(FlatZincParser::ParDeclItemContext *ctx,
-                                 Model &m);
+  antlrcpp::Any visitVarDeclItem(FlatZincParser::VarDeclItemContext *ctx);
+  antlrcpp::Any visitParDeclItem(FlatZincParser::ParDeclItemContext *ctx);
   antlrcpp::Any visitConstraintItem(FlatZincParser::ConstraintItemContext *ctx);
   antlrcpp::Any visitBasicVarType(FlatZincParser::BasicVarTypeContext *ctx);
   antlrcpp::Any visitAnnotations(FlatZincParser::AnnotationsContext *ctx);
   antlrcpp::Any visitAnnotation(FlatZincParser::AnnotationContext *ctx);
   antlrcpp::Any visitExpr(FlatZincParser::ExprContext *ctx);
   antlrcpp::Any visitArrayLiteral(FlatZincParser::ArrayLiteralContext *ctx);
-  antlrcpp::Any visitParArrayLiteral(
-      FlatZincParser::ParArrayLiteralContext *ctx);
+  antlrcpp::Any visitParArrayLiteral(FlatZincParser::ParArrayLiteralContext *ctx);
   // antlrcpp::Any visitArrayVarType(FlatZincParser::ArrayVarTypeContext *ctx);
 };
 

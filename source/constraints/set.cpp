@@ -1,4 +1,4 @@
-#include "set.hpp"
+#include "constraints/set.hpp"
 
 void SetInReif::loadVariables(const VariableMap& variableMap) {
   _variables.push_back(getSingleVariable(variableMap, 0));

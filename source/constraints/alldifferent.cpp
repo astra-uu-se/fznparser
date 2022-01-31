@@ -1,4 +1,4 @@
-#include "alldifferent.hpp"
+#include "constraints/alldifferent.hpp"
 
 void AllDifferent::loadVariables(const VariableMap& variableMap) {
   _x = getArrayVariable(variableMap, 0);  // Parameter

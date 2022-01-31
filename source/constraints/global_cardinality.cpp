@@ -1,4 +1,4 @@
-#include "global_cardinality.hpp"
+#include "constraints/global_cardinality.hpp"
 
 #include <memory>
 
@@ -62,7 +62,7 @@ void GlobalCardinality::imposeAndPropagate(Variable* variable) {
   std::set<Constraint*> visited;
   visited.insert(this);
 
-  for (int i = 0; i < _cover->elements().size(); i++) {
+  for (size_t i = 0; i < _cover->elements().size(); i++) {
     if (variable == _counts->elements()[i]) {
       auto bounds = getBounds(stol(_cover->elements()[i]->getName()));
       _outputDomains[i]->setLower(bounds.first);
@@ -79,7 +79,7 @@ void GlobalCardinality::imposeAndPropagate(Variable* variable) {
 void GlobalCardinality::refreshAndPropagate(std::set<Constraint*>& visited) {
   if (visited.count(this)) return;
   if (!isInvariant()) return;
-  for (int i = 0; i < _cover->elements().size(); i++) {
+  for (size_t i = 0; i < _cover->elements().size(); i++) {
     auto bounds = getBounds(stol(_cover->elements()[i]->getName()));
     if (_outputDomains[i]->upperBound() == bounds.second) {
       continue;
@@ -102,7 +102,7 @@ std::pair<Int, Int> GlobalCardinality::getBounds(Int n) {
   return std::make_pair(0, ub);
 }
 void GlobalCardinality::initDomains() {
-  for (auto _ : _counts->elements())
+  for (auto _ __attribute__((unused)) : _counts->elements())
     _outputDomains.push_back(std::make_shared<IntDomain>());
 }
 bool notFull() { return true; }

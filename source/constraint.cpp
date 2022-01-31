@@ -11,7 +11,7 @@ Constraint::Constraint(ConstraintBox constraintBox) {
   _name = constraintBox._name;
   _uniqueTarget = true;
 }
-Expression Constraint::getExpression(Int n) {
+Expression Constraint::getExpression(size_t n) {
   assert(n < _constraintBox._expressions.size());
   return _constraintBox._expressions[n];
 }
@@ -64,8 +64,7 @@ Variable* Constraint::getSingleVariable(const VariableMap& variableMap, Int n) {
   std::string name = getExpression(n).getName();
   return variableMap.find(name);
 }
-ArrayVariable* Constraint::getArrayVariable(const VariableMap& variableMap,
-                                            Int n) {
+ArrayVariable* Constraint::getArrayVariable(const VariableMap& variableMap, Int n) {
   // assert(getExpression(n).isArray()); TODO: Figure out why not works
   std::string name = getExpression(n).getName();
   return variableMap.findArray(name);
@@ -102,12 +101,8 @@ void Constraint::unDefineVariable(Variable* variable) {
   }
   variable->removeDefinition();
 }
-void Constraint::addDependency(Variable* variable) {
-  variable->addNextConstraint(this);
-}
-void Constraint::removeDependency(Variable* variable) {
-  variable->removeNextConstraint(this);
-}
+void Constraint::addDependency(Variable* variable) { variable->addNextConstraint(this); }
+void Constraint::removeDependency(Variable* variable) { variable->removeNextConstraint(this); }
 void Constraint::removeDependencies() {
   for (auto variable : _variables) {
     removeDependency(variable);
@@ -125,9 +120,7 @@ void Constraint::clearVariables() {
   removeDefinitions();
   assert(_defines.empty());
 }
-std::optional<Variable*> Constraint::annotationTarget() {
-  return _annotationTarget;
-}
+std::optional<Variable*> Constraint::annotationTarget() { return _annotationTarget; }
 void Constraint::checkAnnotations(const VariableMap& variableMap) {
   if (_constraintBox.hasDefineAnnotation()) {
     _annotationTarget.emplace(getAnnotationVariable(variableMap));
@@ -248,8 +241,7 @@ void Constraint::refreshAndPropagate(std::set<Constraint*>& visited) {
     refreshNext(visited);
   }
 }
-ConstraintBox::ConstraintBox(std::string name,
-                             std::vector<Expression> expressions,
+ConstraintBox::ConstraintBox(std::string name, std::vector<Expression> expressions,
                              std::vector<Annotation> annotations) {
   _name = name;
   _expressions = expressions;
@@ -260,8 +252,7 @@ void ConstraintBox::prepare(VariableMap& variables) {
     if (!variables.exists(e.getName())) {
       if (e.isArray()) {  // Create new entry for literal array.
         std::vector<Annotation> ann;
-        auto av =
-            std::make_shared<ArrayVariable>(e.getName(), ann, e._elements);
+        auto av = std::make_shared<ArrayVariable>(e.getName(), ann, e._elements);
         variables.add(av);
       } else if (!e.isId()) {
         auto p = std::make_shared<Literal>(e.getName());
@@ -316,8 +307,7 @@ bool SimpleConstraint::imposeDomain(Variable* var) {
 }
 bool SimpleConstraint::refreshDomain() {
   auto bounds = calculateDomain(*_defines.begin());
-  if (_outputDomain->lowerBound() != bounds.first ||
-      _outputDomain->upperBound() != bounds.second) {
+  if (_outputDomain->lowerBound() != bounds.first || _outputDomain->upperBound() != bounds.second) {
     return imposeDomain((*_defines.begin()));
   }
   return false;

@@ -4,10 +4,17 @@ class VariableMap;
 #include "structure.hpp"
 
 class Variable : public Node {
- public:
+private:
+  std::optional<Constraint*> _definedBy;
+  std::set<Constraint*> _nextConstraints;
+  std::set<Constraint*> _potentialDefiners;
+  std::set<Constraint*> _orgPotentialDefiners;
+  const std::string _name;
+  std::vector<Annotation> _annotations;
+
+public:
   Variable() = default;
-  Variable(std::string name, std::vector<Annotation> annotations,
-           std::shared_ptr<Domain> domain)
+  Variable(std::string name, std::vector<Annotation> annotations, std::shared_ptr<Domain> domain)
       : _name{name}, _annotations{annotations}, _domain{domain} {};
 
   static bool compareDomain(Variable* v1, Variable* v2);
@@ -47,18 +54,10 @@ class Variable : public Node {
 
   std::optional<Domain*> _imposedDomain;
   const std::shared_ptr<Domain> _domain;
-
- private:
-  std::optional<Constraint*> _definedBy;
-  std::set<Constraint*> _nextConstraints;
-  std::set<Constraint*> _potentialDefiners;
-  std::set<Constraint*> _orgPotentialDefiners;
-  const std::string _name;
-  std::vector<Annotation> _annotations;
 };
 
 class Literal : public Variable {
- public:
+public:
   Literal() = default;
   Literal(std::string value) : _valuename{value} {};
 
@@ -68,11 +67,11 @@ class Literal : public Variable {
   bool isDefinable() override { return false; }
   std::string getName() override { return _valuename; }
 
- protected:
+protected:
   std::string _valuename;
 };
 class Parameter : public Literal {
- public:
+public:
   Parameter(std::string name, std::string value) {
     _pname = name;
     _value = value;
@@ -81,13 +80,13 @@ class Parameter : public Literal {
   Int upperBound() override;
   std::string getName() override { return _pname; };
 
- private:
+private:
   std::string _pname;
   std::string _value;
 };
 
 class ArrayVariable {
- public:
+public:
   ArrayVariable(std::string name, std::vector<Annotation> annotations,
                 std::vector<Expression> expressions)
       : _name{name}, _annotations{annotations}, _expressions{expressions} {}
@@ -101,11 +100,11 @@ class ArrayVariable {
   bool contains(Variable* variable);
   bool noneDefined();
 
- private:
-  std::vector<Expression> _expressions;
+private:
   std::vector<Variable*> _elements;
   std::string _name;
   std::vector<Annotation> _annotations;
+  std::vector<Expression> _expressions;
 };
 
 #include "constraint.hpp"

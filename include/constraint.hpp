@@ -16,7 +16,7 @@ class VariableMap;
 class ConstraintMap;
 
 class ConstraintBox {
- public:
+public:
   ConstraintBox() = default;
   ConstraintBox(std::string name, std::vector<Expression> expressions,
                 std::vector<Annotation> annotations);
@@ -33,7 +33,7 @@ class ConstraintBox {
 };
 
 class Constraint : public Node {
- public:
+public:
   Constraint();
   Constraint(ConstraintBox constraintBox);
   virtual void init(const VariableMap& variables);
@@ -47,9 +47,9 @@ class Constraint : public Node {
   bool breakCycleWithBan(Variable* variable);
 
   std::optional<Variable*> annotationTarget();
-  virtual void unDefine(Variable* variable) { makeSoft(); }
+  virtual void unDefine(Variable* variable __attribute__((unused))) { makeSoft(); }
   virtual void define(Variable* variable);
-  virtual bool canDefine(Variable* variable) { return isFunctional(); }
+  virtual bool canDefine(Variable* variable __attribute__((unused))) { return isFunctional(); }
   virtual bool isFunctional() { return true; }
   virtual bool isPotImplicit() { return false; }
   virtual bool canBeImplicit() { return false; };
@@ -70,19 +70,19 @@ class Constraint : public Node {
   Int defInVarCount();
 
   virtual bool allVariablesFree();
-  virtual bool imposeDomain(Variable* variable) { return false; }
+  virtual bool imposeDomain(Variable* variable __attribute__((unused))) { return false; }
   virtual bool refreshDomain() { return false; }
   void refreshNext(std::set<Constraint*>& visisted);
   virtual void imposeAndPropagate(Variable* variable);
   virtual void refreshAndPropagate(std::set<Constraint*>& visisted);
 
- protected:
+protected:
   virtual void loadVariables(const VariableMap& variables) = 0;
   virtual void configureVariables() = 0;
   ArrayVariable* getArrayVariable(const VariableMap& variables, Int n);
   Variable* getSingleVariable(const VariableMap& variables, Int n);
   Variable* getAnnotationVariable(const VariableMap& variables);
-  Expression getExpression(Int n);
+  Expression getExpression(size_t n);
   virtual void checkAnnotations(const VariableMap& variables);
 
   void redefineVariable(Variable* variable);
@@ -107,17 +107,16 @@ class Constraint : public Node {
 };
 
 class NonFunctionalConstraint : public Constraint {
- public:
-  NonFunctionalConstraint(ConstraintBox constraintBox)
-      : Constraint(constraintBox) {}
-  void init(const VariableMap& variables) override {}
-  void loadVariables(const VariableMap& variables) override {}
+public:
+  NonFunctionalConstraint(ConstraintBox constraintBox) : Constraint(constraintBox) {}
+  void init(const VariableMap& variables __attribute__((unused))) override {}
+  void loadVariables(const VariableMap& variables __attribute__((unused))) override {}
   void configureVariables() override {}
   bool isFunctional() override { return false; }
 };
 
 class SimpleConstraint : public Constraint {
- public:
+public:
   SimpleConstraint(ConstraintBox constraintBox) : Constraint(constraintBox) {
     _outputDomain = std::make_shared<IntDomain>();
   }

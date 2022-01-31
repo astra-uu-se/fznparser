@@ -1,4 +1,4 @@
-#include "int_lin_eq.hpp"
+#include "constraints/int_lin_eq.hpp"
 
 #include <string>
 #include <utility>
@@ -12,7 +12,7 @@ void IntLinEq::loadVariables(const VariableMap& variableMap) {
   }
 }
 void IntLinEq::configureVariables() {
-  for (int i = 0; i < _as->elements().size(); i++) {
+  for (size_t i = 0; i < _as->elements().size(); i++) {
     _asv.push_back(std::stol(_as->elements()[i]->getName()));
     if (_bs->elements()[i]->isDefinable()) {
       std::string coefficient = _as->elements()[i]->getName();
@@ -23,7 +23,7 @@ void IntLinEq::configureVariables() {
   }
 }
 bool IntLinEq::canBeImplicit() {
-  for (int i = 0; i < _as->elements().size(); i++) {
+  for (size_t i = 0; i < _as->elements().size(); i++) {
     std::string coefficient = _as->elements()[i]->getName();
     if (!(coefficient == "1" || coefficient == "-1")) {
       return false;
@@ -46,8 +46,7 @@ bool IntLinEq::imposeDomain(Variable* variable) {
 }
 bool IntLinEq::refreshDomain() {
   auto bounds = getBounds(*_defines.begin());
-  if (_outputDomain->lowerBound() != bounds.first ||
-      _outputDomain->upperBound() != bounds.second) {
+  if (_outputDomain->lowerBound() != bounds.first || _outputDomain->upperBound() != bounds.second) {
     _outputDomain->setLower(bounds.first);
     _outputDomain->setUpper(bounds.second);
     return true;
@@ -57,20 +56,20 @@ bool IntLinEq::refreshDomain() {
 std::pair<Int, Int> IntLinEq::getBounds(Variable* variable) {
   Int lb = 0;
   Int ub = 0;
-  Int i = 0;
+  size_t i = 0;
   for (auto v : _bs->elements()) {
     if (v == variable) break;
     i++;
   }
   assert(i < _bs->elements().size());
   if (_asv[i] < 0) {
-    for (int j = 0; j < _bs->elements().size(); j++) {
+    for (size_t j = 0; j < _bs->elements().size(); j++) {
       if (j == i) continue;
       ub += maxDomain(_asv[j], _bs->elements()[j]);
       lb += minDomain(_asv[j], _bs->elements()[j]);
     }
   } else {
-    for (int j = 0; j < _bs->elements().size(); j++) {
+    for (size_t j = 0; j < _bs->elements().size(); j++) {
       if (j == i) continue;
       ub += minDomain(_asv[j], _bs->elements()[j]);
       lb += maxDomain(_asv[j], _bs->elements()[j]);
