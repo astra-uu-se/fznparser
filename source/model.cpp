@@ -1,8 +1,6 @@
 
 #include "model.hpp"
 
-#include <unistd.h>
-
 #include <limits>
 
 #include "maps.hpp"

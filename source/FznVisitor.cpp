@@ -20,7 +20,7 @@ antlrcpp::Any FznVisitor::visitModel(FlatZincParser::ModelContext *ctx) {
   if (auto b = ctx->solveItem()->basicExpr()) {
     if (b->Identifier()) {
       model->addObjective(b->Identifier()->getText());
-    } else if (auto ble __attribute__((unused)) = b->basicLiteralExpr()) {
+    } else if (b->basicLiteralExpr() != nullptr) {
       std::cerr << "Objective is literal expression\n";
     }
   }

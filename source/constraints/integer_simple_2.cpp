@@ -9,7 +9,7 @@ void TwoSVarConstraint::configureVariables() {
     _variables[1]->addPotentialDefiner(this);
   }
 }
-std::pair<Int, Int> IntAbs::calculateDomain(Variable* var __attribute__((unused))) {
+std::pair<Int, Int> IntAbs::calculateDomain([[maybe_unused]] Variable* var) {
   Int lb = std::max(_variables[0]->lowerBound(), (Int)0);
   Int ub = std::max(-1 * _variables[0]->lowerBound(), _variables[0]->upperBound());
   return std::make_pair(lb, ub);

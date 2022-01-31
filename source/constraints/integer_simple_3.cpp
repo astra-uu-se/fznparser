@@ -18,7 +18,7 @@ void IntDiv::configureVariables() {
     _variables[0]->addPotentialDefiner(this);
   }
 }
-std::pair<Int, Int> IntDiv::calculateDomain(Variable* _ __attribute__((unused))) {
+std::pair<Int, Int> IntDiv::calculateDomain([[maybe_unused]] Variable* _) {
   std::vector<Int> exs;
   exs.push_back(_variables[1]->lowerBound() * _variables[2]->lowerBound());
   exs.push_back(_variables[1]->upperBound() * _variables[2]->upperBound());
@@ -29,22 +29,22 @@ std::pair<Int, Int> IntDiv::calculateDomain(Variable* _ __attribute__((unused)))
 
   return std::make_pair(lb, ub);
 }
-std::pair<Int, Int> IntMax::calculateDomain(Variable* _ __attribute__((unused))) {
+std::pair<Int, Int> IntMax::calculateDomain([[maybe_unused]] Variable* _) {
   Int lb = std::max(_variables[0]->lowerBound(), _variables[1]->lowerBound());
   Int ub = std::max(_variables[0]->upperBound(), _variables[1]->upperBound());
   return std::make_pair(lb, ub);
 }
-std::pair<Int, Int> IntMin::calculateDomain(Variable* _ __attribute__((unused))) {
+std::pair<Int, Int> IntMin::calculateDomain([[maybe_unused]] Variable* _) {
   Int lb = std::min(_variables[0]->lowerBound(), _variables[1]->lowerBound());
   Int ub = std::min(_variables[0]->upperBound(), _variables[1]->upperBound());
   return std::make_pair(lb, ub);
 }
-std::pair<Int, Int> IntMod::calculateDomain(Variable* _ __attribute__((unused))) {
+std::pair<Int, Int> IntMod::calculateDomain([[maybe_unused]] Variable* _) {
   Int lb = std::max(_variables[0]->lowerBound(), _variables[1]->lowerBound());
   Int ub = std::min(_variables[0]->upperBound(), _variables[1]->upperBound());
   return std::make_pair(lb, ub);
 }
-std::pair<Int, Int> IntPow::calculateDomain(Variable* _ __attribute__((unused))) {
+std::pair<Int, Int> IntPow::calculateDomain([[maybe_unused]] Variable* _) {
   Int lb = static_cast<Int>(std::pow(_variables[0]->lowerBound(), _variables[1]->lowerBound()));
   Int ub = static_cast<Int>(std::pow(_variables[0]->upperBound(), _variables[1]->upperBound()));
   ub = std::max(
@@ -53,7 +53,7 @@ std::pair<Int, Int> IntPow::calculateDomain(Variable* _ __attribute__((unused)))
       ub, static_cast<Int>(std::pow(_variables[0]->lowerBound(), _variables[1]->upperBound() - 1)));
   return std::make_pair(lb, ub);
 }
-std::pair<Int, Int> IntTimes::calculateDomain(Variable* _ __attribute__((unused))) {
+std::pair<Int, Int> IntTimes::calculateDomain([[maybe_unused]] Variable* _) {
   std::vector<Int> exs;
   exs.push_back(_variables[0]->lowerBound() * _variables[1]->lowerBound());
   exs.push_back(_variables[0]->upperBound() * _variables[1]->upperBound());

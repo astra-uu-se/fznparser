@@ -15,7 +15,7 @@ void ArrayConstraint::configureVariables() {
   }
 }
 
-std::pair<Int, Int> ArrayIntMaximum::calculateDomain(Variable* _ __attribute__((unused))) {
+std::pair<Int, Int> ArrayIntMaximum::calculateDomain([[maybe_unused]] Variable* _) {
   std::vector<Int> lbs;
   std::vector<Int> ubs;
   for (auto var : _x->elements()) {
@@ -26,7 +26,7 @@ std::pair<Int, Int> ArrayIntMaximum::calculateDomain(Variable* _ __attribute__((
   Int ub = *std::max_element(ubs.begin(), ubs.end());
   return std::make_pair(lb, ub);
 }
-std::pair<Int, Int> ArrayIntMinimum::calculateDomain(Variable* _ __attribute__((unused))) {
+std::pair<Int, Int> ArrayIntMinimum::calculateDomain([[maybe_unused]] Variable* _) {
   std::vector<Int> lbs;
   std::vector<Int> ubs;
   for (auto var : _x->elements()) {

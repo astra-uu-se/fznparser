@@ -4,6 +4,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
 #include <vector>
@@ -47,9 +48,9 @@ public:
   bool breakCycleWithBan(Variable* variable);
 
   std::optional<Variable*> annotationTarget();
-  virtual void unDefine(Variable* variable __attribute__((unused))) { makeSoft(); }
+  virtual void unDefine([[maybe_unused]] Variable* variable) { makeSoft(); }
   virtual void define(Variable* variable);
-  virtual bool canDefine(Variable* variable __attribute__((unused))) { return isFunctional(); }
+  virtual bool canDefine([[maybe_unused]] Variable* variable) { return isFunctional(); }
   virtual bool isFunctional() { return true; }
   virtual bool isPotImplicit() { return false; }
   virtual bool canBeImplicit() { return false; };
@@ -70,7 +71,7 @@ public:
   Int defInVarCount();
 
   virtual bool allVariablesFree();
-  virtual bool imposeDomain(Variable* variable __attribute__((unused))) { return false; }
+  virtual bool imposeDomain([[maybe_unused]] Variable* variable) { return false; }
   virtual bool refreshDomain() { return false; }
   void refreshNext(std::set<Constraint*>& visisted);
   virtual void imposeAndPropagate(Variable* variable);
@@ -109,8 +110,8 @@ protected:
 class NonFunctionalConstraint : public Constraint {
 public:
   NonFunctionalConstraint(ConstraintBox constraintBox) : Constraint(constraintBox) {}
-  void init(const VariableMap& variables __attribute__((unused))) override {}
-  void loadVariables(const VariableMap& variables __attribute__((unused))) override {}
+  void init([[maybe_unused]] const VariableMap& variables) override {}
+  void loadVariables([[maybe_unused]] const VariableMap& variables) override {}
   void configureVariables() override {}
   bool isFunctional() override { return false; }
 };

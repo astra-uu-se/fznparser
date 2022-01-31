@@ -1,7 +1,9 @@
 #pragma once
 
-class VariableMap;
+#include <optional>
 #include "structure.hpp"
+
+class VariableMap;
 
 class Variable : public Node {
 private:

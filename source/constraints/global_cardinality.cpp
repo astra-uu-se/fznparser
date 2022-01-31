@@ -102,7 +102,7 @@ std::pair<Int, Int> GlobalCardinality::getBounds(Int n) {
   return std::make_pair(0, ub);
 }
 void GlobalCardinality::initDomains() {
-  for (auto _ __attribute__((unused)) : _counts->elements())
+  for ([[maybe_unused]] auto _ : _counts->elements())
     _outputDomains.push_back(std::make_shared<IntDomain>());
 }
 bool notFull() { return true; }
