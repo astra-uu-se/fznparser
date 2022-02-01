@@ -1,4 +1,4 @@
-#include "constraints/int_lin_eq.hpp"
+#include "int_lin_eq.hpp"
 
 #include <string>
 #include <utility>

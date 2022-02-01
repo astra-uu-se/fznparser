@@ -1,4 +1,4 @@
-#include "constraints/integer_simple_2.hpp"
+#include "integer_simple_2.hpp"
 
 void TwoSVarConstraint::loadVariables(const VariableMap& variableMap) {
   _variables.push_back(getSingleVariable(variableMap, 0));

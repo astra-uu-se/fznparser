@@ -4,7 +4,9 @@
 #include <string>
 #include <vector>
 
-#include "modelfactory.hpp"
+#include "fznparser/modelfactory.hpp"
+
+using namespace fznparser;
 
 class ModelFactoryTest : public ::testing::Test {
 private:
@@ -13,20 +15,37 @@ private:
 protected:
   std::unique_ptr<Model> model;
 
-  void SetUp() { model = fznparser::ModelFactory::create(file); }
+  void SetUp() { model = ModelFactory::create(file); }
 };
 
 TEST_F(ModelFactoryTest, parsing_of_variables) {
-  const std::vector<Variable*>& variables = model->varMap().variables();
+  const auto& variables = model->variables();
 
-  EXPECT_EQ(variables.size(), 2);
-  EXPECT_EQ(variables[0]->lowerBound(), 1);
-  EXPECT_EQ(variables[1]->lowerBound(), 1);
-  EXPECT_EQ(variables[0]->upperBound(), 3);
-  EXPECT_EQ(variables[1]->upperBound(), 3);
+  EXPECT_EQ(variables.size(), 3);
+  EXPECT_FALSE(variables[0]->isArray());
+  EXPECT_FALSE(variables[1]->isArray());
+
+  std::shared_ptr<SearchVariable> var1 = std::dynamic_pointer_cast<SearchVariable>(variables[0]);
+  std::shared_ptr<SearchVariable> var2 = std::dynamic_pointer_cast<SearchVariable>(variables[1]);
+
+  EXPECT_EQ(var1->domain()->type(), DomainType::INT);
+  EXPECT_EQ(var2->domain()->type(), DomainType::INT);
+
+  EXPECT_EQ(dynamic_cast<IntDomain*>(var1->domain())->lowerBound(), 1);
+  EXPECT_EQ(dynamic_cast<IntDomain*>(var2->domain())->lowerBound(), 1);
+  EXPECT_EQ(dynamic_cast<IntDomain*>(var1->domain())->upperBound(), 3);
+  EXPECT_EQ(dynamic_cast<IntDomain*>(var2->domain())->upperBound(), 3);
 }
 
 TEST_F(ModelFactoryTest, parsing_of_constraints) {
-  const std::vector<Constraint*>& constraints = model->constraints();
+  const std::vector<std::shared_ptr<Constraint>>& constraints = model->constraints();
+
   EXPECT_EQ(constraints.size(), 1);
+  EXPECT_FALSE(constraints[0]->isFunctional());
+  EXPECT_EQ(constraints[0]->name(), "int_lt");
+
+  const std::vector<std::shared_ptr<Variable>>& variables
+      = std::dynamic_pointer_cast<NonFunctionalConstraint>(constraints[0])->variables();
+
+  EXPECT_EQ(variables.size(), 2);
 }

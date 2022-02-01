@@ -1,4 +1,4 @@
-#include "constraints/global_cardinality.hpp"
+#include "global_cardinality.hpp"
 
 #include <memory>
 

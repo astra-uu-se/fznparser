@@ -1,4 +1,4 @@
-#include "constraints/circuit.hpp"
+#include "circuit.hpp"
 
 void Circuit::loadVariables(const VariableMap& variableMap) {
   // Not sure what the first argument does.

@@ -1,4 +1,4 @@
-#include "constraints/integer_simple_3.hpp"
+#include "integer_simple_3.hpp"
 
 #include <algorithm>
 #include <cmath>

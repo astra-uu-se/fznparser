@@ -1,4 +1,4 @@
-#include "constraints/reified.hpp"
+#include "reified.hpp"
 
 void ReifiedConstraint::configureVariables() {
   if (_variables[0]->isDefinable()) _variables[0]->addPotentialDefiner(this);

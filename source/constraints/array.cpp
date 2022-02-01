@@ -1,4 +1,4 @@
-#include "constraints/array.hpp"
+#include "array.hpp"
 
 #include <algorithm>
 

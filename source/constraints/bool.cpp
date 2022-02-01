@@ -1,4 +1,4 @@
-#include "constraints/bool.hpp"
+#include "bool.hpp"
 
 #include <algorithm>
 
