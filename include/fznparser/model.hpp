@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <utility>
 #include <vector>
 
 #include "constraint.hpp"
@@ -15,7 +16,7 @@ namespace fznparser {
   public:
     Model(std::vector<std::shared_ptr<Variable>> vars,
           std::vector<std::shared_ptr<Constraint>> cons)
-        : _variables(vars), _constraints(cons) {}
+        : _variables(std::move(vars)), _constraints(std::move(cons)) {}
 
     const std::vector<std::shared_ptr<Constraint>>& constraints() { return _constraints; }
     const std::vector<std::shared_ptr<Variable>>& variables() { return _variables; }

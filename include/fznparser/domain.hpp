@@ -26,6 +26,6 @@ namespace fznparser {
     int64_t lowerBound() override { return _lb; }
     int64_t upperBound() override { return _ub; }
 
-    virtual DomainType type() override { return INT; }
+    DomainType type() override { return INT; }
   };
 }  // namespace fznparser

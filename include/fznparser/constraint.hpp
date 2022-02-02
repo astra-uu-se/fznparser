@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <string_view>
+#include <utility>
 
 #include "variable.hpp"
 
@@ -12,13 +13,19 @@ namespace fznparser {
     std::string _name;
 
   public:
-    Constraint(std::string name) : _name(name) {}
+    static std::shared_ptr<Constraint> create(
+        const std::string& name,
+        const std::vector<std::shared_ptr<fznparser::Annotation>>& annotations,
+        const std::vector<std::shared_ptr<Variable>>& arguments);
+
+    explicit Constraint(std::string name) : _name(std::move(name)) {}
 
     std::string_view name() {
       // How to one-line this such that the implicit conversion kicks in?
       std::string_view view = _name;
       return view;
     }
+
     virtual bool isFunctional() = 0;
   };
 
@@ -36,9 +43,9 @@ namespace fznparser {
   public:
     FunctionalConstraint(std::string name, std::vector<std::shared_ptr<Variable>> in,
                          std::vector<std::shared_ptr<Variable>> out)
-        : Constraint(name), _inputs(in), _outputs(out) {}
+        : Constraint(std::move(name)), _inputs(std::move(in)), _outputs(std::move(out)) {}
 
-    virtual bool isFunctional() override { return true; }
+    bool isFunctional() override { return true; }
 
     const std::vector<std::shared_ptr<Variable>>& inputs() { return _inputs; }
     const std::vector<std::shared_ptr<Variable>>& outputs() { return _outputs; }
@@ -57,9 +64,9 @@ namespace fznparser {
 
   public:
     NonFunctionalConstraint(std::string name, std::vector<std::shared_ptr<Variable>> vars)
-        : Constraint(name), _variables(vars) {}
+        : Constraint(std::move(name)), _variables(std::move(vars)) {}
 
-    virtual bool isFunctional() override { return false; }
+    bool isFunctional() override { return false; }
 
     const std::vector<std::shared_ptr<Variable>>& variables() { return _variables; }
   };

@@ -1,6 +1,8 @@
-/build*
-/out
-/.vscode
-/.vs
-/cpm_modules
+build*
+out
+.vscode
+.vs
+cpm_modules
 .DS_Store
+.idea
+cmake-build-debug
