@@ -37,6 +37,19 @@ TEST_F(ModelFactoryTest, parsing_of_variables) {
   EXPECT_EQ(dynamic_cast<IntDomain*>(var2->domain())->upperBound(), 3);
 }
 
+TEST_F(ModelFactoryTest, parsing_of_array_variables) {
+  const auto& variables = model->variables();
+  EXPECT_TRUE(variables[2]->isArray());
+
+  std::shared_ptr<ArrayVariable> arrayVar = std::dynamic_pointer_cast<ArrayVariable>(variables[2]);
+  EXPECT_EQ(arrayVar->size(), 2);
+  EXPECT_EQ(arrayVar->contents()[0], variables[0]);
+  EXPECT_EQ(arrayVar->contents()[1], variables[1]);
+
+  EXPECT_EQ(arrayVar->annotations().size(), 1);
+  EXPECT_EQ(arrayVar->annotations()[0]->type(), AnnotationType::OUTPUT);
+}
+
 TEST_F(ModelFactoryTest, parsing_of_constraints) {
   const std::vector<std::shared_ptr<Constraint>>& constraints = model->constraints();
 
