@@ -10,7 +10,7 @@ using namespace fznparser;
 
 class ModelFactoryTest : public ::testing::Test {
 private:
-  inline static const std::string& file = STUB_DIR "/test-model.fzn";
+  inline static const std::string& file = STUB_DIR "/test-model-1.fzn";
 
 protected:
   std::unique_ptr<Model> model;
@@ -61,4 +61,17 @@ TEST_F(ModelFactoryTest, parsing_of_constraints) {
       = std::dynamic_pointer_cast<NonFunctionalConstraint>(constraints[0])->variables();
 
   EXPECT_EQ(variables.size(), 2);
+}
+
+TEST_F(ModelFactoryTest, parsing_of_objective) {
+  EXPECT_EQ(model->objective(), Objective::SATISFY);
+  EXPECT_FALSE(model->objective_value());
+
+  model = ModelFactory::create(STUB_DIR "/test-model-2.fzn");
+  EXPECT_EQ(model->objective(), Objective::MINIMIZE);
+  EXPECT_TRUE(model->objective_value());
+
+  const auto& variables = model->variables();
+  auto variablePos = std::find(variables.begin(), variables.end(), *model->objective_value());
+  EXPECT_NE(variablePos, std::end(variables));
 }

@@ -29,15 +29,25 @@ antlrcpp::Any FznVisitor::visitModel(FlatZincParser::ModelContext *ctx) {
         constraintItem->accept(this).as<std::shared_ptr<fznparser::Constraint>>());
   }
 
-  // if (auto b = ctx->solveItem()->basicExpr()) {
-  //   if (b->Identifier()) {
-  //     model->addObjective(b->Identifier()->getText());
-  //   } else if (b->basicLiteralExpr() != nullptr) {
-  //     std::cerr << "Objective is literal expression\n";
-  //   }
-  // }
+  fznparser::Objective objective;
+  std::optional<std::shared_ptr<fznparser::Variable>> objectiveValue = {};
 
-  return new fznparser::Model(variables, constraints);
+  if (!ctx->solveItem()->optimization()) {
+    objective = fznparser::Objective::SATISFY;
+  } else if (ctx->solveItem()->optimization()->getText() == "minimize") {
+    objective = fznparser::Objective::MINIMIZE;
+  } else if (ctx->solveItem()->optimization()->getText() == "maximize") {
+    objective = fznparser::Objective::MAXIMIZE;
+  } else {
+    // Should never happen
+    throw std::logic_error("Unknown objective: " + ctx->getText());
+  }
+
+  if (objective != fznparser::Objective::SATISFY) {
+    objectiveValue = _variableMap.at(ctx->solveItem()->basicExpr()->getText());
+  }
+
+  return new fznparser::Model(variables, constraints, objective, objectiveValue);
 }
 
 antlrcpp::Any FznVisitor::visitParDeclItem(

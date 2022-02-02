@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -8,17 +9,53 @@
 #include "variable.hpp"
 
 namespace fznparser {
+  enum Objective { SATISFY, MINIMIZE, MAXIMIZE };
+
   class Model {
   private:
     std::vector<std::shared_ptr<Variable>> _variables;
     std::vector<std::shared_ptr<Constraint>> _constraints;
+    Objective _objective;
+    std::optional<std::shared_ptr<Variable>> _objectiveValue;
 
   public:
+    /**
+     * Create a model for a satisfaction problem.
+     *
+     * @param vars The variables of the model.
+     * @param cons The constraints of the model.
+     */
     Model(std::vector<std::shared_ptr<Variable>> vars,
           std::vector<std::shared_ptr<Constraint>> cons)
-        : _variables(std::move(vars)), _constraints(std::move(cons)) {}
+        : Model(std::move(vars), std::move(cons), Objective::SATISFY, {}) {}
 
-    const std::vector<std::shared_ptr<Constraint>>& constraints() { return _constraints; }
-    const std::vector<std::shared_ptr<Variable>>& variables() { return _variables; }
+    /**
+     * Create a model for an optimization problem.
+     *
+     * @param vars The variables of the model.
+     * @param cons The constraints of the model.
+     * @param objective The objective (minimization or maximization).
+     * @param objectiveValue The variable to optimize. This must be an element of \p vars as well.
+     */
+    Model(std::vector<std::shared_ptr<Variable>> vars,
+          std::vector<std::shared_ptr<Constraint>> cons, Objective objective,
+          std::optional<std::shared_ptr<Variable>> objectiveValue)
+        : _variables(std::move(vars)),
+          _constraints(std::move(cons)),
+          _objective(objective),
+          _objectiveValue(std::move(objectiveValue)) {}
+
+    [[nodiscard]] const std::vector<std::shared_ptr<Constraint>>& constraints() const {
+      return _constraints;
+    }
+
+    [[nodiscard]] const std::vector<std::shared_ptr<Variable>>& variables() const {
+      return _variables;
+    }
+
+    [[nodiscard]] Objective objective() const { return _objective; }
+    [[nodiscard]] std::optional<std::shared_ptr<Variable>> objective_value() const {
+      return _objectiveValue;
+    }
   };
 }  // namespace fznparser
