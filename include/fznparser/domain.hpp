@@ -7,6 +7,8 @@ namespace fznparser {
 
   class Domain {
   public:
+    virtual ~Domain() = default;
+
     virtual int64_t lowerBound() = 0;
     virtual int64_t upperBound() = 0;
     virtual int64_t size() = 0;
@@ -21,6 +23,7 @@ namespace fznparser {
 
   public:
     IntDomain(int64_t lb, int64_t ub) : _lb(lb), _ub(ub) {}
+    ~IntDomain() override = default;
 
     int64_t size() override { return _ub - _lb; }
     int64_t lowerBound() override { return _lb; }

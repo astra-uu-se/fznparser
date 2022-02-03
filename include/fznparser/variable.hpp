@@ -13,6 +13,7 @@ namespace fznparser {
 
   class Annotation {
   public:
+    virtual ~Annotation() = default;
     virtual AnnotationType type() = 0;
   };
 
@@ -22,6 +23,7 @@ namespace fznparser {
 
   public:
     explicit MarkerAnnotation(AnnotationType type) : _type(type) {}
+    ~MarkerAnnotation() override = default;
 
     AnnotationType type() override { return _type; }
   };
@@ -34,6 +36,7 @@ namespace fznparser {
   public:
     explicit DefinesVarAnnotation(std::vector<std::weak_ptr<Variable>> defines)
         : _defines(std::move(defines)) {}
+    ~DefinesVarAnnotation() override = default;
 
     [[nodiscard]] const std::vector<std::weak_ptr<Variable>>& defines() const { return _defines; }
     [[nodiscard]] AnnotationType type() override { return AnnotationType::DEFINES_VAR; }
@@ -47,6 +50,7 @@ namespace fznparser {
   public:
     Variable(std::string name, std::vector<std::shared_ptr<Annotation>> annotations)
         : _name(std::move(name)), _annotations(std::move(annotations)) {}
+    virtual ~Variable() = default;
 
     virtual bool isArray() = 0;
 
@@ -71,6 +75,7 @@ namespace fznparser {
     ArrayVariable(std::string name, std::vector<std::shared_ptr<Annotation>> annotations,
                   std::vector<std::shared_ptr<Variable>> contents)
         : Variable(std::move(name), std::move(annotations)), _contents(std::move(contents)) {}
+    ~ArrayVariable() override = default;
 
     [[nodiscard]] const std::vector<std::shared_ptr<Variable>>& contents() const {
       return _contents;
@@ -88,6 +93,7 @@ namespace fznparser {
     SearchVariable(std::string name, std::vector<std::shared_ptr<Annotation>> annotations,
                    std::unique_ptr<Domain> domain)
         : Variable(std::move(name), std::move(annotations)), _domain(std::move(domain)) {}
+    ~SearchVariable() override = default;
 
     Domain* domain() { return _domain.get(); }
     bool isArray() override { return false; }

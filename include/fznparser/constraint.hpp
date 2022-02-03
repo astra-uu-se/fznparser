@@ -19,6 +19,7 @@ namespace fznparser {
         const std::vector<std::shared_ptr<Variable>>& arguments);
 
     explicit Constraint(std::string name) : _name(std::move(name)) {}
+    virtual ~Constraint() = default;
 
     std::string_view name() {
       // How to one-line this such that the implicit conversion kicks in?
@@ -44,6 +45,7 @@ namespace fznparser {
     FunctionalConstraint(std::string name, std::vector<std::shared_ptr<Variable>> in,
                          std::vector<std::shared_ptr<Variable>> out)
         : Constraint(std::move(name)), _inputs(std::move(in)), _outputs(std::move(out)) {}
+    ~FunctionalConstraint() override = default;
 
     bool isFunctional() override { return true; }
 
@@ -65,6 +67,7 @@ namespace fznparser {
   public:
     NonFunctionalConstraint(std::string name, std::vector<std::shared_ptr<Variable>> vars)
         : Constraint(std::move(name)), _variables(std::move(vars)) {}
+    ~NonFunctionalConstraint() override = default;
 
     bool isFunctional() override { return false; }
 
