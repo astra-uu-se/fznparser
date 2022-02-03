@@ -3,9 +3,9 @@ cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 # ---- Project ----
 
 project(
-  fznparser
-  VERSION 0.1
-  LANGUAGES CXX
+        fznparser
+        VERSION 0.1
+        LANGUAGES CXX
 )
 
 set(CMAKE_CXX_STANDARD 17)
@@ -13,12 +13,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # ---- Include guards ----
 
-if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
-  message(
-    FATAL_ERROR
-      "In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there."
-  )
-endif()
+if (PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
+    message(
+            FATAL_ERROR
+            "In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there."
+    )
+endif ()
 
 # ---- Add dependencies via CPM ----
 # see https://github.com/TheLartians/CPM.cmake for more info
@@ -48,8 +48,8 @@ find_package(ANTLR REQUIRED)
 
 # Call macro to add lexer and grammar to your build dependencies.
 antlr_target(CoreParser ${PROJECT_SOURCE_DIR}/source/FlatZinc.g4
-  PACKAGE fznparser::core
-  VISITOR)
+        PACKAGE fznparser::core
+        VISITOR)
 
 # Include generated files in project environment
 include_directories(${ANTLR_CoreParser_OUTPUT_DIR})
@@ -71,10 +71,10 @@ target_compile_options(${PROJECT_NAME} PUBLIC "$<$<COMPILE_LANG_AND_ID:CXX,MSVC>
 
 # Link dependencies
 target_include_directories(
-  ${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-                         $<INSTALL_INTERFACE:include/${PROJECT_NAME}-${PROJECT_VERSION}>
+        ${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include/${PROJECT_NAME}-${PROJECT_VERSION}>
 )
-target_link_libraries(${PROJECT_NAME} PRIVATE antlr4_static)
+target_link_libraries(${PROJECT_NAME} PUBLIC antlr4_static)
 
 # ---- Create an installable target ----
 # this allows users to install and find the library via `find_package()`.
@@ -84,11 +84,11 @@ target_link_libraries(${PROJECT_NAME} PRIVATE antlr4_static)
 string(TOLOWER ${PROJECT_NAME}/version.h VERSION_HEADER_LOCATION)
 
 packageProject(
-  NAME ${PROJECT_NAME}
-  VERSION ${PROJECT_VERSION}
-  NAMESPACE ${PROJECT_NAME}
-  BINARY_DIR ${PROJECT_BINARY_DIR}
-  INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include
-  INCLUDE_DESTINATION include/${PROJECT_NAME}-${PROJECT_VERSION}
-  VERSION_HEADER "${VERSION_HEADER_LOCATION}"
+        NAME ${PROJECT_NAME}
+        VERSION ${PROJECT_VERSION}
+        NAMESPACE ${PROJECT_NAME}
+        BINARY_DIR ${PROJECT_BINARY_DIR}
+        INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include
+        INCLUDE_DESTINATION include/${PROJECT_NAME}-${PROJECT_VERSION}
+        VERSION_HEADER "${VERSION_HEADER_LOCATION}"
 )
