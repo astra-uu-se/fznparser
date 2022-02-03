@@ -4,10 +4,14 @@
 #include <string>
 #include <string_view>
 #include <utility>
+#include <variant>
 
 #include "variable.hpp"
 
 namespace fznparser {
+  typedef std::variant<std::vector<std::shared_ptr<Literal>>, std::shared_ptr<Literal>>
+      ConstraintArgument;
+
   class Constraint {
   private:
     std::string _name;
@@ -16,7 +20,7 @@ namespace fznparser {
     static std::shared_ptr<Constraint> create(
         const std::string& name,
         const std::vector<std::shared_ptr<fznparser::Annotation>>& annotations,
-        const std::vector<std::shared_ptr<Variable>>& arguments);
+        const std::vector<ConstraintArgument>& arguments);
 
     explicit Constraint(std::string name) : _name(std::move(name)) {}
     virtual ~Constraint() = default;
@@ -38,19 +42,19 @@ namespace fznparser {
    */
   class FunctionalConstraint : public Constraint {
   private:
-    std::vector<std::shared_ptr<Variable>> _inputs;
-    std::vector<std::shared_ptr<Variable>> _outputs;
+    std::vector<ConstraintArgument> _inputs;
+    std::vector<ConstraintArgument> _outputs;
 
   public:
-    FunctionalConstraint(std::string name, std::vector<std::shared_ptr<Variable>> in,
-                         std::vector<std::shared_ptr<Variable>> out)
+    FunctionalConstraint(std::string name, std::vector<ConstraintArgument> in,
+                         std::vector<ConstraintArgument> out)
         : Constraint(std::move(name)), _inputs(std::move(in)), _outputs(std::move(out)) {}
     ~FunctionalConstraint() override = default;
 
     bool isFunctional() override { return true; }
 
-    const std::vector<std::shared_ptr<Variable>>& inputs() { return _inputs; }
-    const std::vector<std::shared_ptr<Variable>>& outputs() { return _outputs; }
+    const std::vector<ConstraintArgument>& inputs() { return _inputs; }
+    const std::vector<ConstraintArgument>& outputs() { return _outputs; }
   };
 
   /**
@@ -62,15 +66,15 @@ namespace fznparser {
    */
   class NonFunctionalConstraint : public Constraint {
   private:
-    std::vector<std::shared_ptr<Variable>> _variables;
+    std::vector<ConstraintArgument> _arguments;
 
   public:
-    NonFunctionalConstraint(std::string name, std::vector<std::shared_ptr<Variable>> vars)
-        : Constraint(std::move(name)), _variables(std::move(vars)) {}
+    NonFunctionalConstraint(std::string name, std::vector<ConstraintArgument> args)
+        : Constraint(std::move(name)), _arguments(std::move(args)) {}
     ~NonFunctionalConstraint() override = default;
 
     bool isFunctional() override { return false; }
 
-    const std::vector<std::shared_ptr<Variable>>& variables() { return _variables; }
+    const std::vector<ConstraintArgument>& arguments() { return _arguments; }
   };
 }  // namespace fznparser

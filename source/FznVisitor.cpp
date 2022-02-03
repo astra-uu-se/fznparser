@@ -8,20 +8,23 @@
 #include <vector>
 
 antlrcpp::Any FznVisitor::visitModel(FlatZincParser::ModelContext *ctx) {
+  std::vector<fznparser::Parameter> parameters;
   for (auto item : ctx->parDeclItem()) {
-    item->accept(this);
+    fznparser::Parameter param = item->accept(this).as<fznparser::Parameter>();
+
+    parameters.push_back(param);
+
+    std::visit([this](auto p) { _literalMap.emplace(p->name(), p); }, param);
   }
 
+  std::vector<std::shared_ptr<fznparser::Variable>> variables;
   for (auto item : ctx->varDeclItem()) {
     std::shared_ptr<fznparser::Variable> variable
         = item->accept(this).as<std::shared_ptr<fznparser::Variable>>();
 
-    _variableMap.emplace(variable->name(), variable);
+    variables.push_back(variable);
+    _literalMap.emplace(variable->name(), variable);
   }
-
-  std::vector<std::shared_ptr<fznparser::Variable>> variables;
-  variables.reserve(_variableMap.size());
-  for (const auto &entry : _variableMap) variables.push_back(entry.second);
 
   std::vector<std::shared_ptr<fznparser::Constraint>> constraints;
   for (auto constraintItem : ctx->constraintItem()) {
@@ -44,30 +47,29 @@ antlrcpp::Any FznVisitor::visitModel(FlatZincParser::ModelContext *ctx) {
   }
 
   if (objective != fznparser::Objective::SATISFY) {
-    objectiveValue = _variableMap.at(ctx->solveItem()->basicExpr()->getText());
+    auto val = _literalMap.at(ctx->solveItem()->basicExpr()->getText());
+    objectiveValue = std::dynamic_pointer_cast<fznparser::Variable>(val);
   }
 
-  return new fznparser::Model(variables, constraints, objective, objectiveValue);
+  return new fznparser::Model(parameters, variables, constraints, objective, objectiveValue);
 }
 
 antlrcpp::Any FznVisitor::visitParDeclItem(
     [[maybe_unused]] FlatZincParser::ParDeclItemContext *ctx) {
-  // std::string name = ctx->Identifier()->getText();
+  fznparser::Parameter param;
+  std::string name = ctx->Identifier()->getText();
 
-  // if (!ctx->parType()->indexSet()) {
-  //   std::string value = ctx->parExpr()->getText();  // Value is discarded
-  //   // return static_cast<std::shared_ptr<Variable>>(
-  //   //     std::make_shared<Parameter>(name, value));
-  //   model->addVariable(std::make_shared<Parameter>(name, value));
-  // } else {  // if (ctx->arrayVarType()) {
-  //   std::vector<Expression> elements
-  //       = visitParArrayLiteral(ctx->parExpr()->parArrayLiteral()).as<std::vector<Expression>>();
-  //   std::vector<Annotation> annotations;
-  //   // return static_cast<std::shared_ptr<Variable>>(
-  //   //     std::make_shared<ArrayVariable>(name, annotations, elements));
-  //   model->addVariable(std::make_shared<ArrayVariable>(name, annotations, elements));
-  // }
-  return 0;
+  if (ctx->parExpr()->basicLiteralExpr()) {
+    param = std::make_shared<fznparser::SingleParameter>(
+        name, std::stol(ctx->parExpr()->basicLiteralExpr()->getText()));
+  } else {
+    std::vector<int64_t> values
+        = ctx->parExpr()->parArrayLiteral()->accept(this).as<std::vector<int64_t>>();
+
+    param = std::make_shared<fznparser::ParameterArray>(name, values);
+  }
+
+  return param;
 }
 
 antlrcpp::Any FznVisitor::visitVarDeclItem(FlatZincParser::VarDeclItemContext *ctx) {
@@ -84,11 +86,19 @@ antlrcpp::Any FznVisitor::visitVarDeclItem(FlatZincParser::VarDeclItemContext *c
   }
 
   assert(ctx->arrayVarType());
-  std::vector<std::shared_ptr<fznparser::Variable>> contents
-      = ctx->arrayLiteral()->accept(this).as<std::vector<std::shared_ptr<fznparser::Variable>>>();
+  auto contents
+      = ctx->arrayLiteral()->accept(this).as<std::vector<std::shared_ptr<fznparser::Literal>>>();
+
+  // We know at this point contents is a vector of search variables, but we cannot make the compiler
+  // believe that without using dynamic_cast on each of the elements.
+
+  std::vector<std::shared_ptr<fznparser::SearchVariable>> variables;
+  variables.reserve(contents.size());
+  for (const auto &literal : contents)
+    variables.emplace_back(std::dynamic_pointer_cast<fznparser::SearchVariable>(literal));
 
   return std::static_pointer_cast<fznparser::Variable>(
-      std::make_shared<fznparser::ArrayVariable>(name, annotations, contents));
+      std::make_shared<fznparser::VariableArray>(name, annotations, variables));
 }
 
 antlrcpp::Any FznVisitor::visitBasicVarType(FlatZincParser::BasicVarTypeContext *ctx) {
@@ -107,14 +117,6 @@ antlrcpp::Any FznVisitor::visitBasicVarType(FlatZincParser::BasicVarTypeContext 
 
     return static_cast<fznparser::Domain *>(new fznparser::IntDomain(lb, ub));
   }
-
-  // if (ctx->set()) {
-  //   std::set<Int> s;
-  //   for (auto i : ctx->set()->intLiteral()) {
-  //     s.insert(stol(i->getText()));
-  //   }
-  //   return static_cast<std::shared_ptr<Domain>>(std::make_shared<IntSetDomain>(s));
-  // }
 
   throw std::logic_error("Domain not supported");
 }
@@ -137,24 +139,22 @@ antlrcpp::Any FznVisitor::visitConstraintItem(FlatZincParser::ConstraintItemCont
   std::vector<std::shared_ptr<fznparser::Annotation>> annotations
       = ctx->annotations()->accept(this).as<std::vector<std::shared_ptr<fznparser::Annotation>>>();
 
-  std::vector<std::shared_ptr<fznparser::Variable>> arguments;
+  std::vector<fznparser::ConstraintArgument> arguments;
   arguments.reserve(ctx->expr().size());
 
   for (auto expr : ctx->expr()) {
     if (expr->arrayLiteral()) {
-      throw std::logic_error("Unimplemented: in-line array literals in constraint items.");
+      auto argument = expr->arrayLiteral()
+                          ->accept(this)
+                          .as<std::vector<std::shared_ptr<fznparser::Literal>>>();
 
-      // TODO: group array literal into one variable. This would be a variable that does not exist
-      // in the flatzinc itself. Maybe the constructors for fznparser::Constraint need to accept
-      // vectors of variables as a single input.
-
-      //      std::vector<std::shared_ptr<fznparser::Variable>> vars
-      //          = expr->arrayLiteral()
-      //                ->accept(this)
-      //                .as<std::vector<std::shared_ptr<fznparser::Variable>>>();
-    } else if (expr->basicExpr()) {
+      arguments.emplace_back(argument);
+    } else if (expr->basicExpr()->Identifier()) {
       std::string variableName = expr->basicExpr()->Identifier()->getText();
-      arguments.push_back(_variableMap.at(variableName));
+      arguments.emplace_back(_literalMap.at(variableName));
+    } else if (expr->basicExpr()->basicLiteralExpr()) {
+      int64_t value = expr->basicExpr()->basicLiteralExpr()->accept(this).as<int64_t>();
+      arguments.emplace_back(std::make_shared<fznparser::ValueLiteral>(value));
     }
   }
 
@@ -179,25 +179,37 @@ antlrcpp::Any FznVisitor::visitExpr([[maybe_unused]] FlatZincParser::ExprContext
 
 antlrcpp::Any FznVisitor::visitArrayLiteral(
     [[maybe_unused]] FlatZincParser::ArrayLiteralContext *ctx) {
-  // Implemented under the assumption that all variables in an array are previously declared, and
-  // are in the _variableMap.
-
-  std::vector<std::shared_ptr<fznparser::Variable>> variables;
-  variables.reserve(ctx->basicExpr().size());
+  std::vector<std::shared_ptr<fznparser::Literal>> literals;
+  literals.reserve(ctx->basicExpr().size());
 
   for (auto expr : ctx->basicExpr()) {
-    variables.push_back(_variableMap.at(expr->Identifier()->getText()));
+    if (expr->basicLiteralExpr()) {
+      int64_t value = expr->basicLiteralExpr()->accept(this).as<int64_t>();
+      literals.emplace_back(std::make_shared<fznparser::ValueLiteral>(value));
+    } else if (expr->Identifier()) {
+      literals.push_back(_literalMap.at(expr->Identifier()->getText()));
+    }
   }
 
-  return variables;
+  return literals;
 }
 
 antlrcpp::Any FznVisitor::visitParArrayLiteral(
     [[maybe_unused]] FlatZincParser::ParArrayLiteralContext *ctx) {
-  // std::vector<Expression> ab;
-  // for (auto c : ctx->basicLiteralExpr()) {
-  //   ab.push_back(Expression(c->getText(), false));
-  // }
-  // return ab;
-  return 0;
+  std::vector<int64_t> values;
+  values.reserve(ctx->basicLiteralExpr().size());
+
+  for (auto c : ctx->basicLiteralExpr()) {
+    values.push_back(c->accept(this).as<int64_t>());
+  }
+
+  return values;
+}
+
+antlrcpp::Any FznVisitor::visitBasicLiteralExpr(FlatZincParser::BasicLiteralExprContext *ctx) {
+  if (ctx->intLiteral()) {
+    return std::stol(ctx->intLiteral()->getText());
+  } else {
+    throw std::runtime_error("Unimplemented literal type.");
+  }
 }

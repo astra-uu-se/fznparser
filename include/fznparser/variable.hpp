@@ -4,6 +4,7 @@
 #include <string>
 #include <string_view>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include "domain.hpp"
@@ -28,6 +29,37 @@ namespace fznparser {
     AnnotationType type() override { return _type; }
   };
 
+  enum class LiteralType { SEARCH_VARIABLE, VARIABLE_ARRAY, PARAMETER, PARAMETER_ARRAY, VALUE };
+  class Literal {
+  public:
+    virtual ~Literal() = default;
+    virtual LiteralType type() = 0;
+  };
+
+  class ValueLiteral : public Literal {
+  private:
+    int64_t _value;
+
+  public:
+    explicit ValueLiteral(int64_t value) : _value(value) {}
+    ~ValueLiteral() override = default;
+
+    [[nodiscard]] int64_t value() const { return _value; }
+    [[nodiscard]] LiteralType type() override { return LiteralType::VALUE; }
+  };
+
+  class NamedLiteral : public Literal {
+  private:
+    std::string _name;
+
+  public:
+    explicit NamedLiteral(std::string name) : _name(std::move(name)) {}
+    ~NamedLiteral() override = default;
+
+    std::string_view name() { return std::string_view(_name); }
+    virtual LiteralType type() = 0;
+  };
+
   class Variable;
   class DefinesVarAnnotation : public Annotation {
   private:
@@ -42,47 +74,16 @@ namespace fznparser {
     [[nodiscard]] AnnotationType type() override { return AnnotationType::DEFINES_VAR; }
   };
 
-  class Variable {
+  class Variable : public NamedLiteral {
   private:
-    std::string _name;
     std::vector<std::shared_ptr<Annotation>> _annotations;
 
   public:
     Variable(std::string name, std::vector<std::shared_ptr<Annotation>> annotations)
-        : _name(std::move(name)), _annotations(std::move(annotations)) {}
-    virtual ~Variable() = default;
+        : NamedLiteral(std::move(name)), _annotations(std::move(annotations)) {}
+    ~Variable() override = default;
 
-    virtual bool isArray() = 0;
-
-    std::string_view name() { return std::string_view(_name); }
     const std::vector<std::shared_ptr<Annotation>>& annotations() { return _annotations; }
-  };
-
-  /**
-   * @brief A flatzinc array variable is a container for other, explicitly
-   * defined, variables. Hence, this is just a collection of pointers to
-   * variables.
-   *
-   * The index set for array variables is always 1..n where n is the size of the
-   * array. There is therefore no need to separately store the index set, as the
-   * number of variables gives all the information.
-   */
-  class ArrayVariable : public Variable {
-  private:
-    std::vector<std::shared_ptr<Variable>> _contents;
-
-  public:
-    ArrayVariable(std::string name, std::vector<std::shared_ptr<Annotation>> annotations,
-                  std::vector<std::shared_ptr<Variable>> contents)
-        : Variable(std::move(name), std::move(annotations)), _contents(std::move(contents)) {}
-    ~ArrayVariable() override = default;
-
-    [[nodiscard]] const std::vector<std::shared_ptr<Variable>>& contents() const {
-      return _contents;
-    }
-    [[nodiscard]] size_t size() const { return _contents.size(); }
-
-    bool isArray() override { return true; }
   };
 
   class SearchVariable : public Variable {
@@ -96,6 +97,66 @@ namespace fznparser {
     ~SearchVariable() override = default;
 
     Domain* domain() { return _domain.get(); }
-    bool isArray() override { return false; }
+    LiteralType type() override { return LiteralType::SEARCH_VARIABLE; }
   };
+
+  /**
+   * An array of search variables. In line with the FlatZinc specification, variable arrays are
+   * always 1-dimensional. Hence, the type of the content items is SearchVariable instead of the
+   * common Variable type.
+   *
+   * The index set for array variables is always 1..n where n is the size of the
+   * array. There is therefore no need to separately store the index set, as the
+   * number of variables gives all the information.
+   */
+  class VariableArray : public Variable {
+  private:
+    std::vector<std::shared_ptr<SearchVariable>> _contents;
+
+  public:
+    VariableArray(std::string name, std::vector<std::shared_ptr<Annotation>> annotations,
+                  std::vector<std::shared_ptr<SearchVariable>> contents)
+        : Variable(std::move(name), std::move(annotations)), _contents(std::move(contents)) {}
+    ~VariableArray() override = default;
+
+    [[nodiscard]] const std::vector<std::shared_ptr<SearchVariable>>& contents() const {
+      return _contents;
+    }
+    [[nodiscard]] size_t size() const { return _contents.size(); }
+
+    LiteralType type() override { return LiteralType::VARIABLE_ARRAY; }
+  };
+
+  class SingleParameter : public NamedLiteral {
+  private:
+    int64_t _value;
+
+  public:
+    SingleParameter(std::string name, int64_t value)
+        : NamedLiteral(std::move(name)), _value(value) {}
+    ~SingleParameter() override = default;
+
+    [[nodiscard]] int64_t value() const { return _value; }
+    LiteralType type() override { return LiteralType::PARAMETER; }
+  };
+
+  /**
+   * An array of parameters. According to the FlatZinc specification, parameter arrays are
+   * 1-dimensional, and therefore the contents is of type int64_t instead of Parameter or other.
+   */
+  class ParameterArray : public NamedLiteral {
+  private:
+    std::vector<int64_t> _contents;
+
+  public:
+    ParameterArray(std::string name, std::vector<int64_t> contents)
+        : NamedLiteral(std::move(name)), _contents(std::move(contents)) {}
+
+    [[nodiscard]] const std::vector<int64_t>& contents() const { return _contents; }
+    [[nodiscard]] size_t size() const { return _contents.size(); }
+
+    LiteralType type() override { return LiteralType::PARAMETER_ARRAY; }
+  };
+
+  typedef std::variant<std::shared_ptr<SingleParameter>, std::shared_ptr<ParameterArray>> Parameter;
 }  // namespace fznparser

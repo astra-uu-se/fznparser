@@ -6,7 +6,7 @@
 
 std::shared_ptr<fznparser::Constraint> fznparser::Constraint::create(
     const std::string& name, const std::vector<std::shared_ptr<fznparser::Annotation>>& annotations,
-    const std::vector<std::shared_ptr<fznparser::Variable>>& arguments) {
+    const std::vector<ConstraintArgument>& arguments) {
   auto definesVarAnn
       = std::find_if(annotations.begin(), annotations.end(), [](const auto& annotation) {
           return annotation->type() == fznparser::AnnotationType::DEFINES_VAR;
@@ -19,13 +19,13 @@ std::shared_ptr<fznparser::Constraint> fznparser::Constraint::create(
   auto definedVars
       = std::dynamic_pointer_cast<fznparser::DefinesVarAnnotation>(*definesVarAnn)->defines();
 
-  std::vector<std::shared_ptr<fznparser::Variable>> outputs;
+  std::vector<ConstraintArgument> outputs;
   for (const auto& weak_ptr : definedVars) {
     if (weak_ptr.expired()) throw std::logic_error("Variable was de-allocated already");
-    outputs.push_back(weak_ptr.lock());
+    outputs.emplace_back(weak_ptr.lock());
   }
 
-  std::vector<std::shared_ptr<fznparser::Variable>> inputs;
+  std::vector<ConstraintArgument> inputs;
   inputs.reserve(arguments.size() - definedVars.size());
   std::copy_if(arguments.begin(), arguments.end(), std::back_inserter(inputs),
                [&outputs](auto var) {

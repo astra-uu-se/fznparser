@@ -10,7 +10,7 @@ using namespace fznparser::core;
 
 class FznVisitor : FlatZincBaseVisitor {
 private:
-  std::map<std::string_view, std::shared_ptr<fznparser::Variable>> _variableMap;
+  std::map<std::string_view, std::shared_ptr<fznparser::NamedLiteral>> _literalMap;
 
 public:
   antlrcpp::Any visitModel(FlatZincParser::ModelContext *ctx) override;
@@ -23,5 +23,6 @@ public:
   antlrcpp::Any visitExpr(FlatZincParser::ExprContext *ctx) override;
   antlrcpp::Any visitArrayLiteral(FlatZincParser::ArrayLiteralContext *ctx) override;
   antlrcpp::Any visitParArrayLiteral(FlatZincParser::ParArrayLiteralContext *ctx) override;
+  antlrcpp::Any visitBasicLiteralExpr(FlatZincParser::BasicLiteralExprContext *ctx) override;
   // antlrcpp::Any visitArrayVarType(FlatZincParser::ArrayVarTypeContext *ctx);
 };
