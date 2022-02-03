@@ -38,8 +38,6 @@ set(ANTLR4_WITH_STATIC_CRT OFF)
 set(ANTLR4_TAG e4c1a74)
 set(ANTLR4_TAG e4c1a74)
 include(cmake/antlr4/ExternalAntlr4Cpp.cmake)
-# Add antrl4cpp artifacts to project environment
-include_directories(${ANTLR4_INCLUDE_DIRS})
 # set variable pointing to the antlr tool that supports C++
 # this is not required if the jar file can be found under PATH environment
 set(ANTLR_EXECUTABLE ${PROJECT_SOURCE_DIR}/thirdparty/antlr/antlr-4.9.1-complete.jar)
@@ -50,9 +48,6 @@ find_package(ANTLR REQUIRED)
 antlr_target(CoreParser ${PROJECT_SOURCE_DIR}/source/FlatZinc.g4
         PACKAGE fznparser::core
         VISITOR)
-
-# Include generated files in project environment
-include_directories(${ANTLR_CoreParser_OUTPUT_DIR})
 
 # ---- Add source files ----
 
@@ -70,11 +65,15 @@ set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 target_compile_options(${PROJECT_NAME} PUBLIC "$<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/permissive->")
 
 # Link dependencies
-target_include_directories(
-        ${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include/${PROJECT_NAME}-${PROJECT_VERSION}>
-)
-target_link_libraries(${PROJECT_NAME} PUBLIC antlr4_static)
+target_include_directories(${PROJECT_NAME}
+        PRIVATE
+        ${ANTLR_CoreParser_OUTPUT_DIR}
+        ${ANTLR4_INCLUDE_DIRS}
+        PUBLIC
+        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include/${PROJECT_NAME}-${PROJECT_VERSION}>)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE antlr4_static)
 
 # ---- Create an installable target ----
 # this allows users to install and find the library via `find_package()`.
