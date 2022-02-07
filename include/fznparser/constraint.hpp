@@ -16,11 +16,11 @@ namespace fznparser {
   private:
     std::string _name;
     std::vector<ConstraintArgument> _args;
-    std::vector<std::shared_ptr<Annotation>> _annotations;
+    AnnotationCollection _annotations;
 
   public:
     explicit Constraint(std::string name, std::vector<ConstraintArgument> args,
-                        std::vector<std::shared_ptr<Annotation>> annotations)
+                        AnnotationCollection annotations)
         : _name(std::move(name)), _args(std::move(args)), _annotations(std::move(annotations)) {}
 
     virtual ~Constraint() = default;
@@ -32,8 +32,6 @@ namespace fznparser {
     }
 
     [[nodiscard]] const std::vector<ConstraintArgument>& arguments() { return _args; }
-    [[nodiscard]] const std::vector<std::shared_ptr<Annotation>>& annotations() {
-      return _annotations;
-    }
+    [[nodiscard]] const AnnotationCollection& annotations() { return _annotations; }
   };
 }  // namespace fznparser

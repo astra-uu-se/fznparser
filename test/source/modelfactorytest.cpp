@@ -40,7 +40,7 @@ TEST(ModelFactoryTest, parsing_of_array_variables) {
   EXPECT_EQ(arrayVar->contents()[1], variables[1]);
 
   EXPECT_EQ(arrayVar->annotations().size(), 1);
-  EXPECT_EQ(arrayVar->annotations()[0]->type(), AnnotationType::OUTPUT);
+  EXPECT_TRUE(arrayVar->annotations().has<OutputAnnotation>());
 }
 
 TEST(ModelFactoryTest, parsing_of_constraints) {
@@ -94,4 +94,16 @@ TEST(ModelFactoryTest, parsing_of_parameters) {
 
   EXPECT_EQ(param3->contents()[0], 2);
   EXPECT_EQ(param3->contents()[1], -1);
+}
+
+TEST(ModelFactoryTest, parsing_of_annotations) {
+  auto model = ModelFactory::create(STUB_DIR "/test-model-4.fzn");
+
+  auto constraint = model->constraints()[0];
+
+  EXPECT_TRUE(constraint->annotations().has<DefinesVarAnnotation>());
+
+  auto ann = constraint->annotations().get<DefinesVarAnnotation>();
+  auto definedVars = ann->defines();
+  EXPECT_EQ(model->variables()[2], definedVars[0].lock());
 }

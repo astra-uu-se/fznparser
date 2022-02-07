@@ -74,14 +74,13 @@ antlrcpp::Any FznVisitor::visitParDeclItem(
 
 antlrcpp::Any FznVisitor::visitVarDeclItem(FlatZincParser::VarDeclItemContext *ctx) {
   std::string name = ctx->Identifier()->getText();
-  std::vector<std::shared_ptr<fznparser::Annotation>> annotations
-      = ctx->annotations()->accept(this).as<std::vector<std::shared_ptr<fznparser::Annotation>>>();
+  ctx->annotations()->accept(this);
 
   if (ctx->basicVarType()) {
     fznparser::Domain *domain = ctx->basicVarType()->accept(this).as<fznparser::Domain *>();
 
     return std::static_pointer_cast<fznparser::Variable>(
-        std::make_shared<fznparser::SearchVariable>(name, annotations,
+        std::make_shared<fznparser::SearchVariable>(name, _annotations,
                                                     std::unique_ptr<fznparser::Domain>(domain)));
   }
 
@@ -98,7 +97,7 @@ antlrcpp::Any FznVisitor::visitVarDeclItem(FlatZincParser::VarDeclItemContext *c
     variables.emplace_back(std::dynamic_pointer_cast<fznparser::SearchVariable>(literal));
 
   return std::static_pointer_cast<fznparser::Variable>(
-      std::make_shared<fznparser::VariableArray>(name, annotations, variables));
+      std::make_shared<fznparser::VariableArray>(name, _annotations, variables));
 }
 
 antlrcpp::Any FznVisitor::visitBasicVarType(FlatZincParser::BasicVarTypeContext *ctx) {
@@ -122,22 +121,39 @@ antlrcpp::Any FznVisitor::visitBasicVarType(FlatZincParser::BasicVarTypeContext 
 }
 
 antlrcpp::Any FznVisitor::visitAnnotations(FlatZincParser::AnnotationsContext *ctx) {
-  std::vector<std::shared_ptr<fznparser::Annotation>> annotations;
+  _annotations = fznparser::MutableAnnotationCollection();
   for (auto a : ctx->annotation()) {
-    annotations.push_back(a->accept(this).as<std::shared_ptr<fznparser::Annotation>>());
+    a->accept(this);
   }
-  return annotations;
+  return _annotations;
 }
 
 antlrcpp::Any FznVisitor::visitAnnotation([[maybe_unused]] FlatZincParser::AnnotationContext *ctx) {
-  return std::static_pointer_cast<fznparser::Annotation>(
-      std::make_shared<fznparser::MarkerAnnotation>(fznparser::AnnotationType::OUTPUT));
+  std::string name = ctx->Identifier()->getText();
+  if (name == "defines_var") {
+    assert(ctx->annExpr().size() == 1);
+    auto variableName = ctx->annExpr()[0]->basicAnnExpr()[0]->annotation()->Identifier()->getText();
+    std::weak_ptr<fznparser::Variable> variable
+        = std::dynamic_pointer_cast<fznparser::Variable>(_literalMap.at(variableName));
+
+    _annotations.add<fznparser::DefinesVarAnnotation>(
+        std::vector<std::weak_ptr<fznparser::Variable>>{variable});
+  } else if (name == "output_array" || name == "output_var") {
+    _annotations.add<fznparser::OutputAnnotation>();
+  } else if (name == "is_defined_var") {
+    _annotations.add<fznparser::DefinedVarAnnotation>();
+  } else if (name == "var_is_introduced") {
+    _annotations.add<fznparser::IntroducedVarAnnotation>();
+  } else {
+    throw std::runtime_error("Unsupported annotation: " + name);
+  }
+
+  return 0;
 }
 
 antlrcpp::Any FznVisitor::visitConstraintItem(FlatZincParser::ConstraintItemContext *ctx) {
   std::string name = ctx->Identifier()->getText();
-  std::vector<std::shared_ptr<fznparser::Annotation>> annotations
-      = ctx->annotations()->accept(this).as<std::vector<std::shared_ptr<fznparser::Annotation>>>();
+  ctx->annotations()->accept(this);
 
   std::vector<fznparser::ConstraintArgument> arguments;
   arguments.reserve(ctx->expr().size());
@@ -158,7 +174,7 @@ antlrcpp::Any FznVisitor::visitConstraintItem(FlatZincParser::ConstraintItemCont
     }
   }
 
-  return std::make_shared<fznparser::Constraint>(name, arguments, annotations);
+  return std::make_shared<fznparser::Constraint>(name, arguments, _annotations);
 }
 
 antlrcpp::Any FznVisitor::visitExpr([[maybe_unused]] FlatZincParser::ExprContext *ctx) {

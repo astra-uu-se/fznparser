@@ -7,10 +7,11 @@
 #include <variant>
 #include <vector>
 
+#include "annotationcollection.hpp"
 #include "domain.hpp"
 
 namespace fznparser {
-  enum AnnotationType { DEFINES_VAR, OUTPUT };
+  enum AnnotationType { DEFINES_VAR, DEFINED_VAR, INTRODUCED_VAR, OUTPUT };
 
   class Annotation {
   public:
@@ -18,15 +19,22 @@ namespace fznparser {
     virtual AnnotationType type() = 0;
   };
 
-  class MarkerAnnotation : public Annotation {
-  private:
-    AnnotationType _type;
-
+  class OutputAnnotation : public Annotation {
   public:
-    explicit MarkerAnnotation(AnnotationType type) : _type(type) {}
-    ~MarkerAnnotation() override = default;
+    ~OutputAnnotation() override = default;
+    AnnotationType type() override { return OUTPUT; }
+  };
 
-    AnnotationType type() override { return _type; }
+  class DefinedVarAnnotation : public Annotation {
+  public:
+    ~DefinedVarAnnotation() override = default;
+    AnnotationType type() override { return DEFINED_VAR; }
+  };
+
+  class IntroducedVarAnnotation : public Annotation {
+  public:
+    ~IntroducedVarAnnotation() override = default;
+    AnnotationType type() override { return INTRODUCED_VAR; }
   };
 
   enum class LiteralType { SEARCH_VARIABLE, VARIABLE_ARRAY, PARAMETER, PARAMETER_ARRAY, VALUE };
@@ -57,7 +65,6 @@ namespace fznparser {
     ~NamedLiteral() override = default;
 
     std::string_view name() { return std::string_view(_name); }
-    virtual LiteralType type() = 0;
   };
 
   class Variable;
@@ -76,14 +83,14 @@ namespace fznparser {
 
   class Variable : public NamedLiteral {
   private:
-    std::vector<std::shared_ptr<Annotation>> _annotations;
+    AnnotationCollection _annotations;
 
   public:
-    Variable(std::string name, std::vector<std::shared_ptr<Annotation>> annotations)
+    Variable(std::string name, AnnotationCollection annotations)
         : NamedLiteral(std::move(name)), _annotations(std::move(annotations)) {}
     ~Variable() override = default;
 
-    const std::vector<std::shared_ptr<Annotation>>& annotations() { return _annotations; }
+    const AnnotationCollection& annotations() { return _annotations; }
   };
 
   class SearchVariable : public Variable {
@@ -91,9 +98,9 @@ namespace fznparser {
     std::unique_ptr<Domain> _domain;
 
   public:
-    SearchVariable(std::string name, std::vector<std::shared_ptr<Annotation>> annotations,
+    SearchVariable(std::string name, AnnotationCollection annotations,
                    std::unique_ptr<Domain> domain)
-        : Variable(std::move(name), std::move(annotations)), _domain(std::move(domain)) {}
+        : Variable(std::move(name), annotations), _domain(std::move(domain)) {}
     ~SearchVariable() override = default;
 
     Domain* domain() { return _domain.get(); }
@@ -114,9 +121,9 @@ namespace fznparser {
     std::vector<std::shared_ptr<SearchVariable>> _contents;
 
   public:
-    VariableArray(std::string name, std::vector<std::shared_ptr<Annotation>> annotations,
+    VariableArray(std::string name, AnnotationCollection annotations,
                   std::vector<std::shared_ptr<SearchVariable>> contents)
-        : Variable(std::move(name), std::move(annotations)), _contents(std::move(contents)) {}
+        : Variable(std::move(name), annotations), _contents(std::move(contents)) {}
     ~VariableArray() override = default;
 
     [[nodiscard]] const std::vector<std::shared_ptr<SearchVariable>>& contents() const {

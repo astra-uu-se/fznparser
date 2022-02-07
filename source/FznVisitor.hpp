@@ -11,6 +11,7 @@ using namespace fznparser::core;
 class FznVisitor : FlatZincBaseVisitor {
 private:
   std::map<std::string_view, std::shared_ptr<fznparser::NamedLiteral>> _literalMap;
+  fznparser::MutableAnnotationCollection _annotations;
 
 public:
   antlrcpp::Any visitModel(FlatZincParser::ModelContext *ctx) override;
