@@ -158,7 +158,7 @@ antlrcpp::Any FznVisitor::visitConstraintItem(FlatZincParser::ConstraintItemCont
     }
   }
 
-  return fznparser::Constraint::create(name, annotations, arguments);
+  return std::make_shared<fznparser::Constraint>(name, arguments, annotations);
 }
 
 antlrcpp::Any FznVisitor::visitExpr([[maybe_unused]] FlatZincParser::ExprContext *ctx) {

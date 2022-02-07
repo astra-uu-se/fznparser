@@ -48,11 +48,9 @@ TEST(ModelFactoryTest, parsing_of_constraints) {
   const std::vector<std::shared_ptr<Constraint>>& constraints = model->constraints();
 
   EXPECT_EQ(constraints.size(), 1);
-  EXPECT_FALSE(constraints[0]->isFunctional());
   EXPECT_EQ(constraints[0]->name(), "int_lt");
 
-  const std::vector<ConstraintArgument>& arguments
-      = std::dynamic_pointer_cast<NonFunctionalConstraint>(constraints[0])->arguments();
+  const std::vector<ConstraintArgument>& arguments = constraints[0]->arguments();
 
   EXPECT_EQ(arguments.size(), 2);
 }
