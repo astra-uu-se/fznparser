@@ -104,6 +104,5 @@ TEST(ModelFactoryTest, parsing_of_annotations) {
   EXPECT_TRUE(constraint->annotations().has<DefinesVarAnnotation>());
 
   auto ann = constraint->annotations().get<DefinesVarAnnotation>();
-  auto definedVars = ann->defines();
-  EXPECT_EQ(model->variables()[2], definedVars[0].lock());
+  EXPECT_EQ(model->variables()[2], ann->defines().lock());
 }

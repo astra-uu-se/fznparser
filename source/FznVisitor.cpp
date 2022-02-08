@@ -136,8 +136,7 @@ antlrcpp::Any FznVisitor::visitAnnotation([[maybe_unused]] FlatZincParser::Annot
     std::weak_ptr<fznparser::Variable> variable
         = std::dynamic_pointer_cast<fznparser::Variable>(_literalMap.at(variableName));
 
-    _annotations.add<fznparser::DefinesVarAnnotation>(
-        std::vector<std::weak_ptr<fznparser::Variable>>{variable});
+    _annotations.add<fznparser::DefinesVarAnnotation>(variable);
   } else if (name == "output_array" || name == "output_var") {
     _annotations.add<fznparser::OutputAnnotation>();
   } else if (name == "is_defined_var") {

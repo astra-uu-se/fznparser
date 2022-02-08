@@ -70,14 +70,13 @@ namespace fznparser {
   class Variable;
   class DefinesVarAnnotation : public Annotation {
   private:
-    std::vector<std::weak_ptr<Variable>> _defines;
+    std::weak_ptr<Variable> _defines;
 
   public:
-    explicit DefinesVarAnnotation(std::vector<std::weak_ptr<Variable>> defines)
-        : _defines(std::move(defines)) {}
+    explicit DefinesVarAnnotation(std::weak_ptr<Variable> defines) : _defines(std::move(defines)) {}
     ~DefinesVarAnnotation() override = default;
 
-    [[nodiscard]] const std::vector<std::weak_ptr<Variable>>& defines() const { return _defines; }
+    [[nodiscard]] std::weak_ptr<Variable> defines() const { return _defines; }
     [[nodiscard]] AnnotationType type() override { return AnnotationType::DEFINES_VAR; }
   };
 
