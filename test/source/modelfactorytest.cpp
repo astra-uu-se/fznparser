@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <limits>
 #include <memory>
 #include <string>
 #include <variant>
@@ -105,4 +106,12 @@ TEST(ModelFactoryTest, parsing_of_annotations) {
 
   auto ann = constraint->annotations().get<DefinesVarAnnotation>();
   EXPECT_EQ(model->variables()[2], ann->defines().lock());
+}
+
+TEST(ModelFactoryTest, unbounded_int_domain) {
+  auto model = ModelFactory::create(STUB_DIR "/test-model-5.fzn");
+
+  auto variable = std::dynamic_pointer_cast<fznparser::SearchVariable>(model->variables()[0]);
+  EXPECT_EQ(variable->domain()->lowerBound(), std::numeric_limits<int64_t>::min());
+  EXPECT_EQ(variable->domain()->upperBound(), std::numeric_limits<int64_t>::max());
 }

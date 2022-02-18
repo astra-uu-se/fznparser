@@ -106,7 +106,7 @@ antlrcpp::Any FznVisitor::visitBasicVarType(FlatZincParser::BasicVarTypeContext 
       return static_cast<fznparser::Domain *>(new fznparser::IntDomain(0, 1));
     } else if (ctx->basicParType()->getText() == "int") {
       return static_cast<fznparser::Domain *>(new fznparser::IntDomain(
-          std::numeric_limits<int64_t>::min(), std::numeric_limits<int64_t>::min()));
+          std::numeric_limits<int64_t>::min(), std::numeric_limits<int64_t>::max()));
     }
   }
 
