@@ -1,8 +1,55 @@
-build*
-out
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Build stuff
+build
+build/*
+
+# Misc
 .vscode
-.vs
-cpm_modules
+vcode.code-workspace
+src/main
+src/main.dSYM/*
+xcode
 .DS_Store
 .idea
 cmake-build-debug
+cmake-build-debug-coverage 
+cmake-build-release 
+benchmark-data.json
+
+# benchmark tmp plot files
+/tmp.json
+/tmp-*.json
+/plots/*
+/benchmark-json/*
