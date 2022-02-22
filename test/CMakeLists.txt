@@ -35,7 +35,7 @@ endif()
 # Add a definition for the directory that contains the test stubs.
 add_compile_definitions(STUB_DIR="${CMAKE_CURRENT_SOURCE_DIR}/stubs")
 
-file(GLOB sources CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/source/*.cpp)
+file(GLOB sources CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
 add_executable(${PROJECT_NAME} ${sources})
 target_link_libraries(${PROJECT_NAME} PRIVATE gtest fznparser::fznparser)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
