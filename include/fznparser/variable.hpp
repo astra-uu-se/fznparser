@@ -67,62 +67,52 @@ namespace fznparser {
     std::string_view name() { return std::string_view(_name); }
   };
 
-  class Variable;
+  class SearchVariable;
   class DefinesVarAnnotation : public Annotation {
   private:
-    std::weak_ptr<Variable> _defines;
+    std::weak_ptr<SearchVariable> _defines;
 
   public:
-    explicit DefinesVarAnnotation(std::weak_ptr<Variable> defines) : _defines(std::move(defines)) {}
+    explicit DefinesVarAnnotation(std::weak_ptr<SearchVariable> defines) : _defines(std::move(defines)) {}
     ~DefinesVarAnnotation() override = default;
 
-    [[nodiscard]] std::weak_ptr<Variable> defines() const { return _defines; }
+    [[nodiscard]] std::weak_ptr<SearchVariable> defines() const { return _defines; }
     [[nodiscard]] AnnotationType type() override { return AnnotationType::DEFINES_VAR; }
   };
 
-  class Variable : public NamedLiteral {
+  class SearchVariable : public NamedLiteral {
   private:
     AnnotationCollection _annotations;
-
-  public:
-    Variable(std::string name, AnnotationCollection annotations)
-        : NamedLiteral(std::move(name)), _annotations(std::move(annotations)) {}
-    ~Variable() override = default;
-
-    const AnnotationCollection& annotations() { return _annotations; }
-  };
-
-  class SearchVariable : public Variable {
-  private:
     std::unique_ptr<Domain> _domain;
 
   public:
     SearchVariable(std::string name, AnnotationCollection annotations,
                    std::unique_ptr<Domain> domain)
-        : Variable(std::move(name), annotations), _domain(std::move(domain)) {}
+        : NamedLiteral(std::move(name)), _annotations(std::move(annotations)), _domain(std::move(domain)) {}
     ~SearchVariable() override = default;
 
     Domain* domain() { return _domain.get(); }
     LiteralType type() override { return LiteralType::SEARCH_VARIABLE; }
+    const AnnotationCollection& annotations() { return _annotations; }
   };
 
   /**
    * An array of search variables. In line with the FlatZinc specification, variable arrays are
-   * always 1-dimensional. Hence, the type of the content items is SearchVariable instead of the
-   * common Variable type.
+   * always 1-dimensional.
    *
    * The index set for array variables is always 1..n where n is the size of the
    * array. There is therefore no need to separately store the index set, as the
    * number of variables gives all the information.
    */
-  class VariableArray : public Variable {
+  class VariableArray : public NamedLiteral {
   private:
+    AnnotationCollection _annotations;
     std::vector<std::shared_ptr<SearchVariable>> _contents;
 
   public:
     VariableArray(std::string name, AnnotationCollection annotations,
                   std::vector<std::shared_ptr<SearchVariable>> contents)
-        : Variable(std::move(name), annotations), _contents(std::move(contents)) {}
+        : NamedLiteral(std::move(name)), _annotations(std::move(annotations)), _contents(std::move(contents)) {}
     ~VariableArray() override = default;
 
     [[nodiscard]] const std::vector<std::shared_ptr<SearchVariable>>& contents() const {
@@ -131,6 +121,7 @@ namespace fznparser {
     [[nodiscard]] size_t size() const { return _contents.size(); }
 
     LiteralType type() override { return LiteralType::VARIABLE_ARRAY; }
+    const AnnotationCollection& annotations() { return _annotations; }
   };
 
   class SingleParameter : public NamedLiteral {
@@ -164,5 +155,6 @@ namespace fznparser {
     LiteralType type() override { return LiteralType::PARAMETER_ARRAY; }
   };
 
+  typedef std::variant<std::shared_ptr<SearchVariable>, std::shared_ptr<VariableArray>> Variable;
   typedef std::variant<std::shared_ptr<SingleParameter>, std::shared_ptr<ParameterArray>> Parameter;
 }  // namespace fznparser
