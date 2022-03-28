@@ -116,9 +116,11 @@ constraintItem : 'constraint' Identifier '(' expr (',' expr)* ')' annotations ';
 // ===== Solve item
 
 solveItem : 'solve' annotations 'satisfy' ';'
-               | 'solve' annotations 'minimize' basicExpr ';'
-               | 'solve' annotations 'maximize' basicExpr ';'
+               | 'solve' annotations optimization basicExpr ';'
+               | 'solve' annotations optimization basicExpr ';'
     ;
+
+optimization : 'minimize' | 'maximize';
 
 // ===== Annotations
 
