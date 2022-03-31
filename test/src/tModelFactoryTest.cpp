@@ -6,7 +6,7 @@
 #include <variant>
 #include <vector>
 
-#include "fznparser/modelfactory.hpp"
+#include "fznparser/modelFactory.hpp"
 
 using namespace fznparser;
 
