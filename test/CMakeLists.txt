@@ -53,14 +53,3 @@ endif()
 # ---- Add fznparserTests ----
 
 enable_testing()
-
-# Note: doctest and similar testing frameworks can automatically configure CMake tests. For other
-# testing frameworks add the tests target instead: add_test(NAME ${PROJECT_NAME} COMMAND
-# ${PROJECT_NAME})
-
-# ---- code coverage ----
-
-if(ENABLE_TEST_COVERAGE)
-  target_compile_options(fznparser PUBLIC -O0 -g -fprofile-arcs -ftest-coverage)
-  target_link_options(fznparser PUBLIC -fprofile-arcs -ftest-coverage)
-endif()
