@@ -11,7 +11,7 @@
 #include "domain.hpp"
 
 namespace fznparser {
-  enum AnnotationType { DEFINES_VAR, DEFINED_VAR, INTRODUCED_VAR, OUTPUT };
+  enum AnnotationType { DEFINES_VAR, DEFINED_VAR, INTRODUCED_VAR, OUTPUT, OUTPUT_ARRAY };
 
   class Annotation {
   public:
@@ -23,6 +23,20 @@ namespace fznparser {
   public:
     ~OutputAnnotation() override = default;
     AnnotationType type() override { return OUTPUT; }
+  };
+
+  class OutputArrayAnnotation : public Annotation {
+  private:
+    std::vector<int64_t> _dimensions;
+
+  public:
+    OutputArrayAnnotation(std::vector<int64_t> dimensions) : _dimensions(std::move(dimensions)) {}
+    ~OutputArrayAnnotation() override = default;
+    AnnotationType type() override { return OUTPUT_ARRAY; }
+
+    [[nodiscard]] const std::vector<int64_t>& dimensions() const noexcept {
+      return _dimensions;
+    }
   };
 
   class DefinedVarAnnotation : public Annotation {

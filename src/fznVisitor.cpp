@@ -128,6 +128,21 @@ antlrcpp::Any FznVisitor::visitAnnotations(FlatZincParser::AnnotationsContext *c
   return _annotations;
 }
 
+static std::pair<int64_t, int64_t> parseIntRange(FlatZincParser::SetLiteralContext* setLiteral) {
+  assert(setLiteral);
+  assert(setLiteral->intLiteral().size() == 2);
+
+  int64_t rangeStart = 0, rangeEnd = 0;
+  std::stringstream startStream(setLiteral->intLiteral()[0]->getText());
+  startStream >> rangeStart;
+  std::stringstream endStream(setLiteral->intLiteral()[1]->getText());
+  endStream >> rangeEnd;
+
+  assert(rangeEnd >= rangeStart);
+
+  return std::make_pair(rangeStart, rangeEnd);
+}
+
 antlrcpp::Any FznVisitor::visitAnnotation([[maybe_unused]] FlatZincParser::AnnotationContext *ctx) {
   std::string name = ctx->Identifier()->getText();
   if (name == "defines_var") {
@@ -137,7 +152,25 @@ antlrcpp::Any FznVisitor::visitAnnotation([[maybe_unused]] FlatZincParser::Annot
         = std::dynamic_pointer_cast<fznparser::Variable>(_literalMap.at(variableName));
 
     _annotations.add<fznparser::DefinesVarAnnotation>(variable);
-  } else if (name == "output_array" || name == "output_var") {
+  } else if (name == "output_array") {
+    assert(ctx->annExpr().size() == 1);
+    auto ranges = ctx->annExpr()[0]->basicAnnExpr();
+
+    std::vector<int64_t> dimensions;
+    dimensions.reserve(ranges.size());
+
+    for (const auto& expr : ranges) {
+      assert(expr->basicLiteralExpr());
+
+      auto setLiteral = expr->basicLiteralExpr()->setLiteral();
+      const auto [rangeStart, rangeEnd] = parseIntRange(setLiteral);
+      assert(rangeStart == 1);
+
+      dimensions.push_back(rangeEnd);
+    }
+
+    _annotations.add<fznparser::OutputArrayAnnotation>(std::move(dimensions));
+  } else if (name == "output_var") {
     _annotations.add<fznparser::OutputAnnotation>();
   } else if (name == "is_defined_var") {
     _annotations.add<fznparser::DefinedVarAnnotation>();
