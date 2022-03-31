@@ -1,4 +1,4 @@
-#include "fznparser/modelfactory.hpp"
+#include "fznparser/modelFactory.hpp"
 
 #include <map>
 #include <string>
