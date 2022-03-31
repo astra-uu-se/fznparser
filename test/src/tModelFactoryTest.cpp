@@ -41,7 +41,7 @@ TEST(ModelFactoryTest, parsing_of_array_variables) {
     EXPECT_EQ(arrayVar->contents()[1], variables[1]);
 
     EXPECT_EQ(arrayVar->annotations().size(), 1);
-    EXPECT_TRUE(arrayVar->annotations().has<OutputAnnotation>());
+    EXPECT_TRUE(arrayVar->annotations().has<OutputArrayAnnotation>());
 }
 
 TEST(ModelFactoryTest, parsing_of_constraints) {
