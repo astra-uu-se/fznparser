@@ -5,7 +5,7 @@
 
 #include "FlatZincLexer.h"
 #include "FlatZincParser.h"
-#include "FznVisitor.hpp"
+#include "fznVisitor.hpp"
 
 std::unique_ptr<fznparser::Model> fznparser::ModelFactory::create(
     const std::filesystem::path& modelFile) {
