@@ -7,7 +7,7 @@
 #include <variant>
 #include <vector>
 
-#include "annotationcollection.hpp"
+#include "annotationCollection.hpp"
 #include "domain.hpp"
 
 namespace fznparser {
