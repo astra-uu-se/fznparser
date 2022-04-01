@@ -25,7 +25,7 @@ namespace fznparser {
     IntervalDomain(int64_t lb, int64_t ub) : _lb(lb), _ub(ub) {}
     ~IntervalDomain() override = default;
 
-    int64_t size() override { return _ub - _lb; }
+    int64_t size() override { return _ub - _lb + 1; }
     int64_t lowerBound() override { return _lb; }
     int64_t upperBound() override { return _ub; }
 

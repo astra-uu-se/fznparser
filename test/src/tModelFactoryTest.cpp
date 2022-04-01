@@ -157,3 +157,14 @@ TEST(ModelFactoryTest, bool_domains) {
   EXPECT_EQ(v1->domain()->upperBound(), 1);
   EXPECT_EQ(v1->domain()->type(), DomainType::BOOL);
 }
+
+TEST(ModelFactoryTest, interval_domains) {
+  auto model = ModelFactory::create(STUB_DIR "/interval-domain.fzn");
+
+  auto v1 = std::dynamic_pointer_cast<fznparser::SearchVariable>(model->variables()[0]);
+
+  EXPECT_EQ(v1->domain()->size(), 50);
+  EXPECT_EQ(v1->domain()->lowerBound(), 1);
+  EXPECT_EQ(v1->domain()->upperBound(), 50);
+  EXPECT_EQ(v1->domain()->type(), DomainType::INTERVAL);
+}

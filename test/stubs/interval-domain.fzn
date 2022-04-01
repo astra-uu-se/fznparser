@@ -1,0 +1,2 @@
+var 1..50: X_INTRODUCED_183_;
+solve  satisfy;
