@@ -3,7 +3,7 @@
 #include <cstdint>
 
 namespace fznparser {
-  enum DomainType { INTERVAL, SET };
+  enum DomainType { BOOL, INTERVAL, SET };
 
   class Domain {
   public:
@@ -45,5 +45,17 @@ namespace fznparser {
     int64_t upperBound() override { return _values.back(); }
 
     DomainType type() override { return SET; }
+  };
+
+  class BoolDomain : public Domain {
+  public:
+    BoolDomain() = default;
+    ~BoolDomain() override = default;
+
+    int64_t size() override { return 2; }
+    int64_t lowerBound() override { return 0; }
+    int64_t upperBound() override { return 1; }
+
+    DomainType type() override { return BOOL; }
   };
 }  // namespace fznparser

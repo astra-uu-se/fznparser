@@ -139,8 +139,21 @@ TEST(ModelFactoryTest, set_domains_for_int_variables) {
   EXPECT_EQ(v1->domain()->size(), 5);
   EXPECT_EQ(v1->domain()->lowerBound(), 1);
   EXPECT_EQ(v1->domain()->upperBound(), 600);
+  EXPECT_EQ(v1->domain()->type(), DomainType::SET);
 
   EXPECT_EQ(v2->domain()->size(), 3);
   EXPECT_EQ(v2->domain()->lowerBound(), 4);
   EXPECT_EQ(v2->domain()->upperBound(), 230);
+  EXPECT_EQ(v2->domain()->type(), DomainType::SET);
+}
+
+TEST(ModelFactoryTest, bool_domains) {
+  auto model = ModelFactory::create(STUB_DIR "/bool-domain.fzn");
+
+  auto v1 = std::dynamic_pointer_cast<fznparser::SearchVariable>(model->variables()[0]);
+
+  EXPECT_EQ(v1->domain()->size(), 2);
+  EXPECT_EQ(v1->domain()->lowerBound(), 0);
+  EXPECT_EQ(v1->domain()->upperBound(), 1);
+  EXPECT_EQ(v1->domain()->type(), DomainType::BOOL);
 }

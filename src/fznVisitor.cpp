@@ -103,7 +103,7 @@ antlrcpp::Any FznVisitor::visitVarDeclItem(FlatZincParser::VarDeclItemContext *c
 antlrcpp::Any FznVisitor::visitBasicVarType(FlatZincParser::BasicVarTypeContext *ctx) {
   if (ctx->basicParType()) {
     if (ctx->basicParType()->getText() == "bool") {
-      return static_cast<fznparser::Domain *>(new fznparser::IntervalDomain(0, 1));
+      return static_cast<fznparser::Domain *>(new fznparser::BoolDomain());
     } else if (ctx->basicParType()->getText() == "int") {
       return static_cast<fznparser::Domain *>(new fznparser::IntervalDomain(
           std::numeric_limits<int64_t>::min(), std::numeric_limits<int64_t>::max()));
