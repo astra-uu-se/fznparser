@@ -103,9 +103,9 @@ antlrcpp::Any FznVisitor::visitVarDeclItem(FlatZincParser::VarDeclItemContext *c
 antlrcpp::Any FznVisitor::visitBasicVarType(FlatZincParser::BasicVarTypeContext *ctx) {
   if (ctx->basicParType()) {
     if (ctx->basicParType()->getText() == "bool") {
-      return static_cast<fznparser::Domain *>(new fznparser::IntDomain(0, 1));
+      return static_cast<fznparser::Domain *>(new fznparser::BoolDomain());
     } else if (ctx->basicParType()->getText() == "int") {
-      return static_cast<fznparser::Domain *>(new fznparser::IntDomain(
+      return static_cast<fznparser::Domain *>(new fznparser::IntervalDomain(
           std::numeric_limits<int64_t>::min(), std::numeric_limits<int64_t>::max()));
     }
   }
@@ -114,7 +114,18 @@ antlrcpp::Any FznVisitor::visitBasicVarType(FlatZincParser::BasicVarTypeContext 
     int64_t lb = std::stol(ctx->intRange()->intLiteral()[0]->getText());
     int64_t ub = std::stol(ctx->intRange()->intLiteral()[1]->getText());
 
-    return static_cast<fznparser::Domain *>(new fznparser::IntDomain(lb, ub));
+    return static_cast<fznparser::Domain *>(new fznparser::IntervalDomain(lb, ub));
+  }
+
+  if (ctx->set()) {
+    std::vector<int64_t> values;
+    values.reserve(ctx->set()->intLiteral().size());
+
+    for (const auto& literal : ctx->set()->intLiteral()) {
+      values.push_back(std::stol(literal->getText()));
+    }
+
+    return static_cast<fznparser::Domain *>(new fznparser::SetDomain(values));
   }
 
   throw std::logic_error("Domain not supported");

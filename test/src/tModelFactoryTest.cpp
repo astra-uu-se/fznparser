@@ -21,13 +21,13 @@ TEST(ModelFactoryTest, parsing_of_variables) {
     std::shared_ptr<SearchVariable> var1 = std::dynamic_pointer_cast<SearchVariable>(variables[0]);
     std::shared_ptr<SearchVariable> var2 = std::dynamic_pointer_cast<SearchVariable>(variables[1]);
 
-    EXPECT_EQ(var1->domain()->type(), DomainType::INT);
-    EXPECT_EQ(var2->domain()->type(), DomainType::INT);
+    EXPECT_EQ(var1->domain()->type(), DomainType::INTERVAL);
+    EXPECT_EQ(var2->domain()->type(), DomainType::INTERVAL);
 
-    EXPECT_EQ(dynamic_cast<IntDomain *>(var1->domain())->lowerBound(), 1);
-    EXPECT_EQ(dynamic_cast<IntDomain *>(var2->domain())->lowerBound(), 1);
-    EXPECT_EQ(dynamic_cast<IntDomain *>(var1->domain())->upperBound(), 3);
-    EXPECT_EQ(dynamic_cast<IntDomain *>(var2->domain())->upperBound(), 3);
+    EXPECT_EQ(dynamic_cast<IntervalDomain *>(var1->domain())->lowerBound(), 1);
+    EXPECT_EQ(dynamic_cast<IntervalDomain *>(var2->domain())->lowerBound(), 1);
+    EXPECT_EQ(dynamic_cast<IntervalDomain *>(var1->domain())->upperBound(), 3);
+    EXPECT_EQ(dynamic_cast<IntervalDomain *>(var2->domain())->upperBound(), 3);
 }
 
 TEST(ModelFactoryTest, parsing_of_array_variables) {
@@ -128,4 +128,43 @@ TEST(ModelFactoryTest, multi_dimensional_output_array) {
     EXPECT_EQ(ann->dimensions().size(), 2);
     EXPECT_EQ(ann->dimensions()[0], 4);
     EXPECT_EQ(ann->dimensions()[1], 8);
+}
+
+TEST(ModelFactoryTest, set_domains_for_int_variables) {
+  auto model = ModelFactory::create(STUB_DIR "/set-domain.fzn");
+
+  auto v1 = std::dynamic_pointer_cast<fznparser::SearchVariable>(model->variables()[0]);
+  auto v2 = std::dynamic_pointer_cast<fznparser::SearchVariable>(model->variables()[1]);
+
+  EXPECT_EQ(v1->domain()->size(), 5);
+  EXPECT_EQ(v1->domain()->lowerBound(), 1);
+  EXPECT_EQ(v1->domain()->upperBound(), 600);
+  EXPECT_EQ(v1->domain()->type(), DomainType::SET);
+
+  EXPECT_EQ(v2->domain()->size(), 3);
+  EXPECT_EQ(v2->domain()->lowerBound(), 4);
+  EXPECT_EQ(v2->domain()->upperBound(), 230);
+  EXPECT_EQ(v2->domain()->type(), DomainType::SET);
+}
+
+TEST(ModelFactoryTest, bool_domains) {
+  auto model = ModelFactory::create(STUB_DIR "/bool-domain.fzn");
+
+  auto v1 = std::dynamic_pointer_cast<fznparser::SearchVariable>(model->variables()[0]);
+
+  EXPECT_EQ(v1->domain()->size(), 2);
+  EXPECT_EQ(v1->domain()->lowerBound(), 0);
+  EXPECT_EQ(v1->domain()->upperBound(), 1);
+  EXPECT_EQ(v1->domain()->type(), DomainType::BOOL);
+}
+
+TEST(ModelFactoryTest, interval_domains) {
+  auto model = ModelFactory::create(STUB_DIR "/interval-domain.fzn");
+
+  auto v1 = std::dynamic_pointer_cast<fznparser::SearchVariable>(model->variables()[0]);
+
+  EXPECT_EQ(v1->domain()->size(), 50);
+  EXPECT_EQ(v1->domain()->lowerBound(), 1);
+  EXPECT_EQ(v1->domain()->upperBound(), 50);
+  EXPECT_EQ(v1->domain()->type(), DomainType::INTERVAL);
 }
