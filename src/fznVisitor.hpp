@@ -27,5 +27,5 @@ public:
   antlrcpp::Any visitBasicLiteralExpr(FlatZincParser::BasicLiteralExprContext *ctx) override;
 
   antlrcpp::Any visitIntLiteral(FlatZincParser::IntLiteralContext *ctx) override;
-  antlrcpp::Any visitSetLiteral(FlatZincParser::SetLiteralContext *ctx) override;
+  antlrcpp::Any visitExplicitIntSet(FlatZincParser::ExplicitIntSetContext *ctx) override;
 };

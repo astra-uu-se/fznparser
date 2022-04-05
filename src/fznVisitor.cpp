@@ -139,16 +139,12 @@ antlrcpp::Any FznVisitor::visitAnnotations(FlatZincParser::AnnotationsContext *c
   return _annotations;
 }
 
-static std::pair<int64_t, int64_t> parseIntRange(FlatZincParser::SetLiteralContext *setLiteral) {
-  assert(setLiteral);
-  assert(setLiteral->intLiteral().size() == 2);
+static std::pair<int64_t, int64_t> parseIntRange(FlatZincParser::IntIntervalContext *intervalCtx) {
+  assert(intervalCtx);
+  assert(intervalCtx->intLiteral().size() == 2);
 
-  int64_t rangeStart = 0, rangeEnd = 0;
-  std::stringstream startStream(setLiteral->intLiteral()[0]->getText());
-  startStream >> rangeStart;
-  std::stringstream endStream(setLiteral->intLiteral()[1]->getText());
-  endStream >> rangeEnd;
-
+  int64_t rangeStart = std::stol(intervalCtx->intLiteral()[0]->getText());
+  int64_t rangeEnd = std::stol(intervalCtx->intLiteral()[1]->getText());
   assert(rangeEnd >= rangeStart);
 
   return std::make_pair(rangeStart, rangeEnd);
@@ -172,9 +168,11 @@ antlrcpp::Any FznVisitor::visitAnnotation([[maybe_unused]] FlatZincParser::Annot
 
     for (const auto &expr : ranges) {
       assert(expr->basicLiteralExpr());
+      assert(expr->basicLiteralExpr()->setLiteral());
+      assert(expr->basicLiteralExpr()->setLiteral()->intInterval());
 
-      auto setLiteral = expr->basicLiteralExpr()->setLiteral();
-      const auto [rangeStart, rangeEnd] = parseIntRange(setLiteral);
+      auto interval = expr->basicLiteralExpr()->setLiteral()->intInterval();
+      const auto [rangeStart, rangeEnd] = parseIntRange(interval);
       assert(rangeStart == 1);
 
       dimensions.push_back(rangeEnd);
@@ -275,8 +273,8 @@ antlrcpp::Any FznVisitor::visitParArrayLiteral(
 antlrcpp::Any FznVisitor::visitBasicLiteralExpr(FlatZincParser::BasicLiteralExprContext *ctx) {
   if (ctx->intLiteral()) {
     return ctx->intLiteral()->accept(this);
-  } else if (ctx->setLiteral()) {
-    return ctx->setLiteral()->accept(this);
+  } else if (ctx->setLiteral() && ctx->setLiteral()->explicitIntSet()) {
+    return ctx->setLiteral()->explicitIntSet()->accept(this);
   } else {
     throw std::runtime_error("Unimplemented literal type.");
   }
@@ -287,7 +285,7 @@ antlrcpp::Any FznVisitor::visitIntLiteral(FlatZincParser::IntLiteralContext *ctx
       std::make_shared<fznparser::ValueLiteral>(std::stol(ctx->getText())));
 }
 
-antlrcpp::Any FznVisitor::visitSetLiteral(FlatZincParser::SetLiteralContext *ctx) {
+antlrcpp::Any FznVisitor::visitExplicitIntSet(FlatZincParser::ExplicitIntSetContext *ctx) {
   std::vector<std::shared_ptr<fznparser::Literal>> literals;
   literals.reserve(ctx->intLiteral().size());
 
