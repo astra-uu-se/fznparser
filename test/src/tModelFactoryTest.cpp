@@ -170,3 +170,18 @@ TEST(ModelFactoryTest, interval_domains) {
   EXPECT_EQ(v1->domain()->upperBound(), 50);
   EXPECT_EQ(v1->domain()->type(), DomainType::INTERVAL);
 }
+
+TEST(ModelFactoryTest, set_literal_constraint_argument) {
+  auto model = ModelFactory::create(STUB_DIR "/set-constraint-argument.fzn");
+
+  EXPECT_EQ(model->constraints().size(), 1);
+  auto constraint = model->constraints().front();
+
+  EXPECT_EQ(constraint->arguments().size(), 2);
+  EXPECT_TRUE(std::holds_alternative<std::vector<std::shared_ptr<fznparser::Literal>>>(constraint->arguments()[1]));
+
+  auto literals = std::get<std::vector<std::shared_ptr<fznparser::Literal>>>(constraint->arguments()[1]);
+  EXPECT_EQ(literals.size(), 2);
+  EXPECT_EQ(std::dynamic_pointer_cast<fznparser::ValueLiteral>(literals[0])->value(), 1);
+  EXPECT_EQ(std::dynamic_pointer_cast<fznparser::ValueLiteral>(literals[1])->value(), 3);
+}

@@ -85,11 +85,13 @@ boolLiteral : 'false'
 
 
 // ===== Set literals
-setLiteral : '{' intLiteral (',' intLiteral )* '}'
-                | intLiteral '..' intLiteral
+setLiteral : explicitIntSet
+                | intInterval
                 | '{' FloatLiteral ( ',' FloatLiteral )* '}'
                 | FloatLiteral '..' FloatLiteral
     ;
+explicitIntSet : '{' intLiteral (',' intLiteral )* '}';
+intInterval : intLiteral '..' intLiteral;
 
 arrayLiteral : '[' (basicExpr ( ',' basicExpr )*)? ']' ;
 
