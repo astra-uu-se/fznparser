@@ -43,6 +43,7 @@ namespace fznparser {
     int64_t size() override { return static_cast<int64_t>(_values.size()); }
     int64_t lowerBound() override { return _values.front(); }
     int64_t upperBound() override { return _values.back(); }
+    [[nodiscard]] const std::vector<int64_t>& values() const noexcept { return _values; }
 
     DomainType type() override { return SET; }
   };

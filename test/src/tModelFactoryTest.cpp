@@ -140,11 +140,13 @@ TEST(ModelFactoryTest, set_domains_for_int_variables) {
   EXPECT_EQ(v1->domain()->lowerBound(), 1);
   EXPECT_EQ(v1->domain()->upperBound(), 600);
   EXPECT_EQ(v1->domain()->type(), DomainType::SET);
+  EXPECT_EQ(std::vector<int64_t>({1, 2, 5, 200, 600}), dynamic_cast<fznparser::SetDomain*>(v1->domain())->values());
 
   EXPECT_EQ(v2->domain()->size(), 3);
   EXPECT_EQ(v2->domain()->lowerBound(), 4);
   EXPECT_EQ(v2->domain()->upperBound(), 230);
   EXPECT_EQ(v2->domain()->type(), DomainType::SET);
+  EXPECT_EQ(std::vector<int64_t>({4, 6, 230}), dynamic_cast<fznparser::SetDomain*>(v2->domain())->values());
 }
 
 TEST(ModelFactoryTest, bool_domains) {
