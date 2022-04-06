@@ -124,6 +124,12 @@ namespace fznparser {
     const Identifier name;
     const std::vector<Argument> arguments;
     const std::vector<Annotation> annotations;
+
+    bool operator==(const Constraint& other) const noexcept {
+      return name == other.name && arguments == other.arguments && annotations == other.annotations;
+    }
+
+    bool operator!=(const Constraint& other) const noexcept { return !(*this == other); }
   };
 
   struct Satisfy {};

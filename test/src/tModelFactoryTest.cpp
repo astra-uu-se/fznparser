@@ -69,3 +69,13 @@ TEST(ModelFactoryTest, variable_arrays_are_parsed) {
   VariableArray array2{"array2", {Identifier("v3"), true, false}, {}};
   EXPECT_EQ(model.variables()[4], Variable(array2));
 }
+
+TEST(ModelFactoryTest, constraints_are_parsed) {
+  auto model = ModelFactory::create(STUB_DIR "/constraints.fzn");
+
+  EXPECT_EQ(model.constraints().size(), 1);
+
+  Constraint intLinEq{
+      "int_lin_eq", {Identifier("coeffs"), Array{Identifier("v1"), Identifier("v2")}, Int(2)}, {}};
+  EXPECT_EQ(model.constraints()[0], intLinEq);
+}

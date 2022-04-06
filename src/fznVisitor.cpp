@@ -19,7 +19,12 @@ antlrcpp::Any FznVisitor::visitModel(FlatZincParser::ModelContext* ctx) {
     variables.push_back(varDeclItem->accept(this).as<Variable>());
   }
 
-  return FZNModel(std::move(parameters), std::move(variables), Satisfy{});
+  std::vector<Constraint> constraints;
+  for (auto& constraintItem : ctx->constraintItem()) {
+    constraints.push_back(constraintItem->accept(this).as<Constraint>());
+  }
+
+  return FZNModel(std::move(parameters), std::move(variables), std::move(constraints), Satisfy{});
 }
 
 antlrcpp::Any FznVisitor::visitParDeclItem(FlatZincParser::ParDeclItemContext* ctx) {
@@ -97,7 +102,7 @@ antlrcpp::Any FznVisitor::visitBasicExpr(FlatZincParser::BasicExprContext* ctx) 
 }
 
 antlrcpp::Any FznVisitor::visitArrayLiteral(FlatZincParser::ArrayLiteralContext* ctx) {
-  std::vector<BasicExpr> expressions;
+  Array expressions;
   expressions.reserve(ctx->basicExpr().size());
 
   for (auto& basicExpr : ctx->basicExpr()) {
@@ -105,6 +110,40 @@ antlrcpp::Any FznVisitor::visitArrayLiteral(FlatZincParser::ArrayLiteralContext*
   }
 
   return expressions;
+}
+
+antlrcpp::Any FznVisitor::visitConstraintItem(FlatZincParser::ConstraintItemContext* ctx) {
+  auto identifier = createIdentifier(ctx->Identifier());
+
+  std::vector<Constraint::Argument> arguments;
+  arguments.reserve(ctx->expr().size());
+  for (auto& expr : ctx->expr()) {
+    arguments.push_back(expr->accept(this).as<Constraint::Argument>());
+  }
+
+  return Constraint{identifier, arguments, {}};
+}
+
+static Constraint::Argument createArgumentFromBasicExpr(BasicExpr& expr) {
+  if (std::holds_alternative<Identifier>(expr)) {
+    return std::get<Identifier>(expr);
+  }
+
+  if (std::holds_alternative<Value>(expr)) {
+    return std::get<Value>(expr);
+  }
+
+  throw std::runtime_error("Unhandled basic expr variant when converting to constraint argument.");
+}
+
+antlrcpp::Any FznVisitor::visitExpr(FlatZincParser::ExprContext* ctx) {
+  if (ctx->basicExpr()) {
+    return createArgumentFromBasicExpr(ctx->basicExpr()->accept(this).as<BasicExpr>());
+  } else if (ctx->arrayLiteral()) {
+    return Constraint::Argument(ctx->arrayLiteral()->accept(this).as<Array>());
+  } else {
+    throw std::runtime_error("Unhandled variant in expr.");
+  }
 }
 
 antlrcpp::Any FznVisitor::visitBasicLiteralExpr(FlatZincParser::BasicLiteralExprContext* ctx) {
