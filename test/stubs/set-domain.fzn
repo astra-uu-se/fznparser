@@ -1,3 +1,0 @@
-var {1, 2, 5, 200, 600}: X_INTRODUCED_52_;
-var {4, 6, 230}: X_INTRODUCED_53_;
-solve  satisfy;
