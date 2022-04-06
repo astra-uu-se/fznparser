@@ -1,6 +1,9 @@
 #pragma once
 
+#include <unordered_map>
 #include <utility>
+#include <variant>
+#include <vector>
 
 #include "fznparser/ast.hpp"
 
@@ -16,13 +19,14 @@ namespace fznparser {
     std::vector<Constraint> _constraints;
     Objective _objective;
 
+    std::unordered_map<std::string_view, size_t> _parameterIndices{};
+    std::unordered_map<std::string_view, size_t> _variableIndices{};
+
   public:
+    using Identifiable = std::variant<SearchVariable, VariableArray, Parameter>;
+
     FZNModel(std::vector<Parameter> parameters, std::vector<Variable> variables,
-             std::vector<Constraint> constraints, Objective objective)
-        : _parameters(std::move(parameters)),
-          _variables(std::move(variables)),
-          _constraints(std::move(constraints)),
-          _objective(std::move(objective)) {}
+             std::vector<Constraint> constraints, Objective objective);
 
     /**
      * Since the models can be quite large, the copy constructor
@@ -30,6 +34,8 @@ namespace fznparser {
      */
     FZNModel(FZNModel& other) = delete;
     FZNModel(FZNModel&& other) = default;
+
+    [[nodiscard]] std::optional<Identifiable> identify(const std::string_view& id) const noexcept;
 
     [[nodiscard]] const std::vector<Parameter>& parameters() const noexcept { return _parameters; }
     [[nodiscard]] const std::vector<Variable>& variables() const noexcept { return _variables; }
