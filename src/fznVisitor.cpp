@@ -14,7 +14,12 @@ antlrcpp::Any FznVisitor::visitModel(FlatZincParser::ModelContext* ctx) {
     parameters.push_back(parDeclItem->accept(this).as<Parameter>());
   }
 
-  return FZNModel(std::move(parameters), Satisfy{});
+  std::vector<Variable> variables;
+  for (auto& varDeclItem : ctx->varDeclItem()) {
+    variables.push_back(varDeclItem->accept(this).as<Variable>());
+  }
+
+  return FZNModel(std::move(parameters), std::move(variables), Satisfy{});
 }
 
 antlrcpp::Any FznVisitor::visitParDeclItem(FlatZincParser::ParDeclItemContext* ctx) {
@@ -31,6 +36,59 @@ antlrcpp::Any FznVisitor::visitParExpr(FlatZincParser::ParExprContext* ctx) {
     return Parameter::ParamValue(ctx->parArrayLiteral()->accept(this).as<std::vector<Value>>());
   } else {
     throw std::runtime_error("Unhandled variant in parExpr.");
+  }
+}
+
+antlrcpp::Any FznVisitor::visitVarDeclItem(FlatZincParser::VarDeclItemContext* ctx) {
+  if (ctx->basicVarType()) {
+    auto domain = ctx->basicVarType()->accept(this).as<Domain>();
+    auto identifier = createIdentifier(ctx->Identifier());
+
+    auto value = [&]() -> std::optional<BasicExpr> {
+      if (ctx->basicExpr()) {
+        return ctx->basicExpr()->accept(this).as<BasicExpr>();
+      } else {
+        return {};
+      }
+    }();
+
+    return Variable(SearchVariable{identifier, domain, {}, value});
+  } else {
+    throw std::runtime_error("Unhandled variant in varDeclItem.");
+  }
+}
+
+static Domain createDomainFromParType(FlatZincParser::BasicParTypeContext* ctx) {
+  auto text = ctx->getText();
+
+  if (text == "int") {
+    return Domain(BasicDomain<Int>{});
+  } else if (text == "bool") {
+    return Domain(BasicDomain<bool>{});
+  } else {
+    throw std::runtime_error(std::string("Unknown basic domain: ").append(text));
+  }
+}
+
+antlrcpp::Any FznVisitor::visitBasicVarType(FlatZincParser::BasicVarTypeContext* ctx) {
+  if (ctx->basicParType()) {
+    return createDomainFromParType(ctx->basicParType());
+  } else if (ctx->set()) {
+    return Domain(ctx->set()->accept(this).as<std::vector<Int>>());
+  } else if (ctx->intRange()) {
+    return Domain(ctx->intRange()->accept(this).as<IntRange>());
+  } else {
+    throw std::runtime_error("Unhandled variant in basicVarType");
+  }
+}
+
+antlrcpp::Any FznVisitor::visitBasicExpr(FlatZincParser::BasicExprContext* ctx) {
+  if (ctx->Identifier()) {
+    return BasicExpr(createIdentifier(ctx->Identifier()));
+  } else if (ctx->basicLiteralExpr()) {
+    return BasicExpr(ctx->basicLiteralExpr()->accept(this).as<Value>());
+  } else {
+    throw std::runtime_error("Unhandled variant in basicExpr.");
   }
 }
 
@@ -63,16 +121,16 @@ antlrcpp::Any FznVisitor::visitIntLiteral(FlatZincParser::IntLiteralContext* ctx
 }
 
 antlrcpp::Any FznVisitor::visitSetLiteral(FlatZincParser::SetLiteralContext* ctx) {
-  if (ctx->explicitIntSet()) {
-    return Value(ctx->explicitIntSet()->accept(this).as<Set>());
-  } else if (ctx->intInterval()) {
-    return Value(ctx->intInterval()->accept(this).as<Set>());
+  if (ctx->set()) {
+    return Value(Set(ctx->set()->accept(this).as<std::vector<Int>>()));
+  } else if (ctx->intRange()) {
+    return Value(Set(ctx->intRange()->accept(this).as<IntRange>()));
   } else {
     throw std::runtime_error("Unhandled variant in setLiteral.");
   }
 }
 
-antlrcpp::Any FznVisitor::visitExplicitIntSet(FlatZincParser::ExplicitIntSetContext* ctx) {
+antlrcpp::Any FznVisitor::visitSet(FlatZincParser::SetContext* ctx) {
   std::vector<Int> values;
   values.reserve(ctx->intLiteral().size());
 
@@ -80,16 +138,16 @@ antlrcpp::Any FznVisitor::visitExplicitIntSet(FlatZincParser::ExplicitIntSetCont
     values.push_back(std::stol(literal->getText()));
   }
 
-  return Set(values);
+  return values;
 }
 
-antlrcpp::Any FznVisitor::visitIntInterval(FlatZincParser::IntIntervalContext* ctx) {
+antlrcpp::Any FznVisitor::visitIntRange(FlatZincParser::IntRangeContext* ctx) {
   assert(ctx->intLiteral().size() == 2);
 
   Int lowerBound = std::stol(ctx->intLiteral().front()->getText());
   Int upperBound = std::stol(ctx->intLiteral().back()->getText());
 
-  return Set(IntervalSet{lowerBound, upperBound});
+  return IntRange{lowerBound, upperBound};
 }
 
 antlrcpp::Any FznVisitor::visitParArrayLiteral(FlatZincParser::ParArrayLiteralContext* ctx) {

@@ -30,6 +30,30 @@ TEST(ModelFactoryTest, parameters_are_parsed) {
 
   Parameter explicitSet{"explicitSet", Set(std::vector<Int>{Int(1), Int(4), Int(5)})};
   EXPECT_EQ(model.parameters()[5], explicitSet);
-  Parameter intervalSet{"intervalSet", IntervalSet{1, 10}};
+  Parameter intervalSet{"intervalSet", IntRange{1, 10}};
   EXPECT_EQ(model.parameters()[6], intervalSet);
+}
+
+TEST(ModelFactoryTest, variables_are_parsed) {
+  auto model = ModelFactory::create(STUB_DIR "/variables.fzn");
+
+  EXPECT_EQ(model.variables().size(), 6);
+
+  SearchVariable v1{"v1", BasicDomain<bool>{}, {}, {}};
+  EXPECT_EQ(model.variables()[0], Variable(v1));
+
+  SearchVariable v2{"v2", IntRange{0, 5}, {}, {}};
+  EXPECT_EQ(model.variables()[1], Variable(v2));
+
+  SearchVariable v3{"v3", std::vector<Int>{3, 5, 10}, {}, {}};
+  EXPECT_EQ(model.variables()[2], Variable(v3));
+
+  SearchVariable v4{"v4", IntRange{1, 5}, {}, Int(5)};
+  EXPECT_EQ(model.variables()[3], Variable(v4));
+
+  SearchVariable v5{"v5", IntRange{1, 5}, {}, Identifier("n")};
+  EXPECT_EQ(model.variables()[4], Variable(v5));
+
+  SearchVariable v6{"v6", BasicDomain<Int>{}, {}, {}};
+  EXPECT_EQ(model.variables()[5], Variable(v6));
 }
