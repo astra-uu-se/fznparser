@@ -40,9 +40,10 @@ antlrcpp::Any FznVisitor::visitParExpr(FlatZincParser::ParExprContext* ctx) {
 }
 
 antlrcpp::Any FznVisitor::visitVarDeclItem(FlatZincParser::VarDeclItemContext* ctx) {
+  auto identifier = createIdentifier(ctx->Identifier());
+
   if (ctx->basicVarType()) {
     auto domain = ctx->basicVarType()->accept(this).as<Domain>();
-    auto identifier = createIdentifier(ctx->Identifier());
 
     auto value = [&]() -> std::optional<BasicExpr> {
       if (ctx->basicExpr()) {
@@ -53,6 +54,9 @@ antlrcpp::Any FznVisitor::visitVarDeclItem(FlatZincParser::VarDeclItemContext* c
     }();
 
     return Variable(SearchVariable{identifier, domain, {}, value});
+  } else if (ctx->arrayVarType()) {
+    auto contents = ctx->arrayLiteral()->accept(this).as<std::vector<BasicExpr>>();
+    return Variable(VariableArray{identifier, contents, {}});
   } else {
     throw std::runtime_error("Unhandled variant in varDeclItem.");
   }
@@ -90,6 +94,17 @@ antlrcpp::Any FznVisitor::visitBasicExpr(FlatZincParser::BasicExprContext* ctx) 
   } else {
     throw std::runtime_error("Unhandled variant in basicExpr.");
   }
+}
+
+antlrcpp::Any FznVisitor::visitArrayLiteral(FlatZincParser::ArrayLiteralContext* ctx) {
+  std::vector<BasicExpr> expressions;
+  expressions.reserve(ctx->basicExpr().size());
+
+  for (auto& basicExpr : ctx->basicExpr()) {
+    expressions.push_back(basicExpr->accept(this).as<BasicExpr>());
+  }
+
+  return expressions;
 }
 
 antlrcpp::Any FznVisitor::visitBasicLiteralExpr(FlatZincParser::BasicLiteralExprContext* ctx) {

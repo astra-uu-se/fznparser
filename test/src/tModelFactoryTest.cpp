@@ -57,3 +57,15 @@ TEST(ModelFactoryTest, variables_are_parsed) {
   SearchVariable v6{"v6", BasicDomain<Int>{}, {}, {}};
   EXPECT_EQ(model.variables()[5], Variable(v6));
 }
+
+TEST(ModelFactoryTest, variable_arrays_are_parsed) {
+  auto model = ModelFactory::create(STUB_DIR "/variable-arrays.fzn");
+
+  EXPECT_EQ(model.variables().size(), 5);
+
+  VariableArray array1{"array1", {Identifier("v1"), Int(2), Identifier("v2"), Int(5)}, {}};
+  EXPECT_EQ(model.variables()[3], Variable(array1));
+
+  VariableArray array2{"array2", {Identifier("v3"), true, false}, {}};
+  EXPECT_EQ(model.variables()[4], Variable(array2));
+}

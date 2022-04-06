@@ -16,6 +16,8 @@ public:
   antlrcpp::Any visitBasicVarType(FlatZincParser::BasicVarTypeContext *ctx) override;
   antlrcpp::Any visitBasicExpr(FlatZincParser::BasicExprContext *ctx) override;
 
+  antlrcpp::Any visitArrayLiteral(FlatZincParser::ArrayLiteralContext *ctx) override;
+
   antlrcpp::Any visitBasicLiteralExpr(FlatZincParser::BasicLiteralExprContext *ctx) override;
   antlrcpp::Any visitBoolLiteral(FlatZincParser::BoolLiteralContext *ctx) override;
   antlrcpp::Any visitIntLiteral(FlatZincParser::IntLiteralContext *ctx) override;
