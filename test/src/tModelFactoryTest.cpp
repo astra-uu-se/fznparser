@@ -79,3 +79,24 @@ TEST(ModelFactoryTest, constraints_are_parsed) {
       "int_lin_eq", {Identifier("coeffs"), Array{Identifier("v1"), Identifier("v2")}, Int(2)}, {}};
   EXPECT_EQ(model.constraints()[0], intLinEq);
 }
+
+TEST(ModelFactoryTest, annotations_are_recognised) {
+  auto model = ModelFactory::create(STUB_DIR "/annotations.fzn");
+
+  EXPECT_EQ(model.variables().size(), 4);
+
+  SearchVariable a{"a", BasicDomain<Int>{}, {TagAnnotation{"output_var"}}, {}};
+  EXPECT_EQ(model.variables()[0], Variable(a));
+
+  VariableArray arr{"arr",
+                    {Identifier("b"), Identifier("c"), Identifier("c"), Identifier("d")},
+                    {OutputArrayAnnotation{{2, 2}}}};
+  EXPECT_EQ(model.variables()[3], Variable(arr));
+
+  EXPECT_EQ(model.constraints().size(), 1);
+
+  Constraint plus{"int_plus",
+                  {Identifier("a"), Identifier("b"), Identifier("c")},
+                  {DefinesVariableAnnotation{Identifier("c")}}};
+  EXPECT_EQ(model.constraints()[0], plus);
+}

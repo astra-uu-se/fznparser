@@ -46,6 +46,7 @@ antlrcpp::Any FznVisitor::visitParExpr(FlatZincParser::ParExprContext* ctx) {
 
 antlrcpp::Any FznVisitor::visitVarDeclItem(FlatZincParser::VarDeclItemContext* ctx) {
   auto identifier = createIdentifier(ctx->Identifier());
+  auto annotations = ctx->annotations()->accept(this).as<std::vector<Annotation>>();
 
   if (ctx->basicVarType()) {
     auto domain = ctx->basicVarType()->accept(this).as<Domain>();
@@ -58,10 +59,10 @@ antlrcpp::Any FznVisitor::visitVarDeclItem(FlatZincParser::VarDeclItemContext* c
       }
     }();
 
-    return Variable(SearchVariable{identifier, domain, {}, value});
+    return Variable(SearchVariable{identifier, domain, annotations, value});
   } else if (ctx->arrayVarType()) {
     auto contents = ctx->arrayLiteral()->accept(this).as<std::vector<BasicExpr>>();
-    return Variable(VariableArray{identifier, contents, {}});
+    return Variable(VariableArray{identifier, contents, annotations});
   } else {
     throw std::runtime_error("Unhandled variant in varDeclItem.");
   }
@@ -114,6 +115,7 @@ antlrcpp::Any FznVisitor::visitArrayLiteral(FlatZincParser::ArrayLiteralContext*
 
 antlrcpp::Any FznVisitor::visitConstraintItem(FlatZincParser::ConstraintItemContext* ctx) {
   auto identifier = createIdentifier(ctx->Identifier());
+  auto annotations = ctx->annotations()->accept(this).as<std::vector<Annotation>>();
 
   std::vector<Constraint::Argument> arguments;
   arguments.reserve(ctx->expr().size());
@@ -121,7 +123,7 @@ antlrcpp::Any FznVisitor::visitConstraintItem(FlatZincParser::ConstraintItemCont
     arguments.push_back(expr->accept(this).as<Constraint::Argument>());
   }
 
-  return Constraint{identifier, arguments, {}};
+  return Constraint{identifier, arguments, annotations};
 }
 
 static Constraint::Argument createArgumentFromBasicExpr(BasicExpr& expr) {
@@ -143,6 +145,53 @@ antlrcpp::Any FznVisitor::visitExpr(FlatZincParser::ExprContext* ctx) {
     return Constraint::Argument(ctx->arrayLiteral()->accept(this).as<Array>());
   } else {
     throw std::runtime_error("Unhandled variant in expr.");
+  }
+}
+
+antlrcpp::Any FznVisitor::visitAnnotations(FlatZincParser::AnnotationsContext* ctx) {
+  std::vector<Annotation> annotations;
+  annotations.reserve(ctx->annotation().size());
+
+  for (auto& annotation : ctx->annotation()) {
+    annotations.push_back(annotation->accept(this).as<Annotation>());
+  }
+
+  return annotations;
+}
+
+antlrcpp::Any FznVisitor::visitAnnotation(FlatZincParser::AnnotationContext* ctx) {
+  auto identifier = createIdentifier(ctx->Identifier());
+
+  if (identifier == "output_array") {
+    assert(ctx->annExpr().size() == 1);
+    assert(!ctx->annExpr()[0]->basicAnnExpr().empty());
+
+    std::vector<Int> sizes;
+    sizes.reserve(ctx->annExpr()[0]->basicAnnExpr().size());
+    for (auto& basicAnnExpr : ctx->annExpr()[0]->basicAnnExpr()) {
+      assert(basicAnnExpr->basicLiteralExpr());
+      assert(basicAnnExpr->basicLiteralExpr()->setLiteral());
+      assert(basicAnnExpr->basicLiteralExpr()->setLiteral()->intRange());
+
+      auto range
+          = basicAnnExpr->basicLiteralExpr()->setLiteral()->intRange()->accept(this).as<IntRange>();
+      assert(range.lowerBound == 1);
+
+      sizes.push_back(range.upperBound);
+    }
+
+    return Annotation(OutputArrayAnnotation{sizes});
+  } else if (identifier == "defines_var") {
+    assert(ctx->annExpr().size() == 1);
+    assert(ctx->annExpr()[0]->basicAnnExpr().size() == 1);
+    assert(ctx->annExpr()[0]->basicAnnExpr()[0]->annotation());
+    assert(ctx->annExpr()[0]->basicAnnExpr()[0]->annotation()->Identifier());
+
+    auto definedVariableIdentifier
+        = createIdentifier(ctx->annExpr()[0]->basicAnnExpr()[0]->annotation()->Identifier());
+    return Annotation(DefinesVariableAnnotation{definedVariableIdentifier});
+  } else {
+    return Annotation(TagAnnotation{identifier});
   }
 }
 

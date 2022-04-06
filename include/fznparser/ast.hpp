@@ -41,11 +41,11 @@ namespace fznparser {
     bool operator!=(const Parameter& other) const noexcept { return !(*this == other); }
   };
 
-  struct OutputVariableAnnotation {
-    bool operator==(const OutputVariableAnnotation&) const noexcept { return true; }
-    bool operator!=(const OutputVariableAnnotation& other) const noexcept {
-      return !(*this == other);
-    }
+  struct TagAnnotation {
+    const std::string tag;
+
+    bool operator==(const TagAnnotation& other) const noexcept { return tag == other.tag; }
+    bool operator!=(const TagAnnotation& other) const noexcept { return !(*this == other); }
   };
 
   struct OutputArrayAnnotation {
@@ -75,8 +75,7 @@ namespace fznparser {
     }
   };
 
-  using Annotation
-      = std::variant<DefinesVariableAnnotation, OutputArrayAnnotation, OutputVariableAnnotation>;
+  using Annotation = std::variant<DefinesVariableAnnotation, OutputArrayAnnotation, TagAnnotation>;
 
   template <typename Element> struct BasicDomain {
     bool operator==(const BasicDomain<Element>&) const noexcept { return true; }
