@@ -14,6 +14,12 @@ namespace fznparser {
   struct IntervalSet {
     const Int lowerBound;
     const Int upperBound;
+
+    bool operator==(const IntervalSet& other) const noexcept {
+      return lowerBound == other.lowerBound && upperBound == other.upperBound;
+    }
+
+    bool operator!=(const IntervalSet& other) const noexcept { return !(*this == other); }
   };
 
   using Set = std::variant<IntervalSet, std::vector<Int>>;
@@ -23,8 +29,16 @@ namespace fznparser {
   using Array = std::vector<ArrayElement>;
 
   struct Parameter {
+    using ParamValue = std::variant<Value, std::vector<Value>>;
+
     const Identifier name;
-    const std::variant<Value, std::vector<Value>> value;
+    const ParamValue value;
+
+    bool operator==(const Parameter& other) const noexcept {
+      return name == other.name && value == other.value;
+    }
+
+    bool operator!=(const Parameter& other) const noexcept { return !(*this == other); }
   };
 
   struct OutputVariableAnnotation {};

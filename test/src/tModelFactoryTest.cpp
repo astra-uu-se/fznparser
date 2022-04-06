@@ -9,3 +9,27 @@ TEST(ModelFactoryTest, empty_satisfy_is_parsed) {
 
   EXPECT_TRUE(std::holds_alternative<fznparser::Satisfy>(model.objective()));
 }
+
+TEST(ModelFactoryTest, parameters_are_parsed) {
+  auto model = ModelFactory::create(STUB_DIR "/parameters.fzn");
+
+  EXPECT_EQ(model.parameters().size(), 7);
+
+  Parameter expectedInt{"n", Int(4)};
+  EXPECT_EQ(model.parameters()[0], expectedInt);
+
+  Parameter expectedBoolF{"bF", false};
+  EXPECT_EQ(model.parameters()[1], expectedBoolF);
+  Parameter expectedBoolT{"bT", true};
+  EXPECT_EQ(model.parameters()[2], expectedBoolT);
+
+  Parameter intArray{"nums", std::vector<Value>{Int(1), Int(2), Int(3), Int(4)}};
+  EXPECT_EQ(model.parameters()[3], intArray);
+  Parameter boolsArray{"bools", std::vector<Value>{false, false, true}};
+  EXPECT_EQ(model.parameters()[4], boolsArray);
+
+  Parameter explicitSet{"explicitSet", Set(std::vector<Int>{Int(1), Int(4), Int(5)})};
+  EXPECT_EQ(model.parameters()[5], explicitSet);
+  Parameter intervalSet{"intervalSet", IntervalSet{1, 10}};
+  EXPECT_EQ(model.parameters()[6], intervalSet);
+}

@@ -11,10 +11,12 @@ namespace fznparser {
    */
   class FZNModel {
   private:
+    std::vector<Parameter> _parameters;
     Objective _objective;
 
   public:
-    explicit FZNModel(Objective objective) : _objective(std::move(objective)) {}
+    FZNModel(std::vector<Parameter> parameters, Objective objective)
+        : _parameters(std::move(parameters)), _objective(std::move(objective)) {}
 
     /**
      * Since the models can be quite large, the copy constructor
@@ -23,6 +25,7 @@ namespace fznparser {
     FZNModel(FZNModel& other) = delete;
     FZNModel(FZNModel&& other) = default;
 
+    [[nodiscard]] const std::vector<Parameter>& parameters() const noexcept { return _parameters; }
     [[nodiscard]] const Objective& objective() const noexcept { return _objective; }
   };
 
