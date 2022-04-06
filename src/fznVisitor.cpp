@@ -24,7 +24,29 @@ antlrcpp::Any FznVisitor::visitModel(FlatZincParser::ModelContext* ctx) {
     constraints.push_back(constraintItem->accept(this).as<Constraint>());
   }
 
-  return FZNModel(std::move(parameters), std::move(variables), std::move(constraints), Satisfy{});
+  auto objective = ctx->solveItem()->accept(this).as<Objective>();
+
+  return FZNModel(std::move(parameters), std::move(variables), std::move(constraints), objective);
+}
+
+antlrcpp::Any FznVisitor::visitSolveItem(FlatZincParser::SolveItemContext* ctx) {
+  if (!ctx->optimization()) {
+    return Objective(Satisfy{});
+  }
+
+  auto optimization = ctx->optimization()->getText();
+
+  assert(ctx->basicExpr());
+  assert(ctx->basicExpr()->Identifier());
+  auto variable = createIdentifier(ctx->basicExpr()->Identifier());
+
+  if (optimization == "minimize") {
+    return Objective(Minimise{variable});
+  } else if (optimization == "maximize") {
+    return Objective(Maximise{variable});
+  } else {
+    throw std::runtime_error(std::string("Unknown optimisation procedure: ").append(optimization));
+  }
 }
 
 antlrcpp::Any FznVisitor::visitParDeclItem(FlatZincParser::ParDeclItemContext* ctx) {

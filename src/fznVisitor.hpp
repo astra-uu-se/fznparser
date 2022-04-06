@@ -7,6 +7,7 @@ using namespace fznparser::core;
 class FznVisitor : FlatZincBaseVisitor {
 public:
   antlrcpp::Any visitModel(FlatZincParser::ModelContext *ctx) override;
+  antlrcpp::Any visitSolveItem(FlatZincParser::SolveItemContext *ctx) override;
 
   antlrcpp::Any visitParDeclItem(FlatZincParser::ParDeclItemContext *ctx) override;
   antlrcpp::Any visitParArrayLiteral(FlatZincParser::ParArrayLiteralContext *ctx) override;

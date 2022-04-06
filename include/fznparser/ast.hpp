@@ -131,14 +131,23 @@ namespace fznparser {
     bool operator!=(const Constraint& other) const noexcept { return !(*this == other); }
   };
 
-  struct Satisfy {};
+  struct Satisfy {
+    constexpr bool operator==(const Satisfy&) const noexcept { return true; }
+    constexpr bool operator!=(const Satisfy&) const noexcept { return false; }
+  };
 
   struct Minimise {
     const Identifier variable;
+
+    bool operator==(const Minimise& other) const noexcept { return variable == other.variable; }
+    bool operator!=(const Minimise& other) const noexcept { return !(*this == other); }
   };
 
   struct Maximise {
     const Identifier variable;
+
+    bool operator==(const Maximise& other) const noexcept { return variable == other.variable; }
+    bool operator!=(const Maximise& other) const noexcept { return !(*this == other); }
   };
 
   using Objective = std::variant<Satisfy, Minimise, Maximise>;

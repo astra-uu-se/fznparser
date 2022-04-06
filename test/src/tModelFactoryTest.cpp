@@ -7,7 +7,7 @@ using namespace fznparser;
 TEST(ModelFactoryTest, empty_satisfy_is_parsed) {
   auto model = ModelFactory::create(STUB_DIR "/satisfy-empty.fzn");
 
-  EXPECT_TRUE(std::holds_alternative<fznparser::Satisfy>(model.objective()));
+  EXPECT_EQ(model.objective(), Objective(Satisfy{}));
 }
 
 TEST(ModelFactoryTest, parameters_are_parsed) {
@@ -99,4 +99,16 @@ TEST(ModelFactoryTest, annotations_are_recognised) {
                   {Identifier("a"), Identifier("b"), Identifier("c")},
                   {DefinesVariableAnnotation{Identifier("c")}}};
   EXPECT_EQ(model.constraints()[0], plus);
+}
+
+TEST(ModelFactoryTest, minimise_objective) {
+  auto model = ModelFactory::create(STUB_DIR "/minimise-objective.fzn");
+
+  EXPECT_EQ(model.objective(), Objective(Minimise{Identifier("a")}));
+}
+
+TEST(ModelFactoryTest, maximise_objective) {
+  auto model = ModelFactory::create(STUB_DIR "/maximise-objective.fzn");
+
+  EXPECT_EQ(model.objective(), Objective(Maximise{Identifier("a")}));
 }
