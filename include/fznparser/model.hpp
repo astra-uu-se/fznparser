@@ -1,67 +1,48 @@
 #pragma once
 
-#include <memory>
-#include <optional>
+#include <unordered_map>
 #include <utility>
+#include <variant>
 #include <vector>
 
-#include "constraint.hpp"
-#include "variable.hpp"
+#include "fznparser/ast.hpp"
 
 namespace fznparser {
-  enum Objective { SATISFY, MINIMIZE, MAXIMIZE };
 
-  class Model {
+  /**
+   * The container for the FlatZinc model.
+   */
+  class FZNModel {
   private:
     std::vector<Parameter> _parameters;
-    std::vector<std::shared_ptr<Variable>> _variables;
-    std::vector<std::shared_ptr<Constraint>> _constraints;
+    std::vector<Variable> _variables;
+    std::vector<Constraint> _constraints;
     Objective _objective;
-    std::optional<std::shared_ptr<Variable>> _objectiveValue;
+
+    std::unordered_map<std::string_view, size_t> _parameterIndices{};
+    std::unordered_map<std::string_view, size_t> _variableIndices{};
 
   public:
-    /**
-     * Create a model for a satisfaction problem.
-     *
-     * @param params The parameters of the model.
-     * @param vars The variables of the model.
-     * @param cons The constraints of the model.
-     */
-    Model(std::vector<Parameter> params, std::vector<std::shared_ptr<Variable>> vars,
-          std::vector<std::shared_ptr<Constraint>> cons)
-        : Model(std::move(params), std::move(vars), std::move(cons), Objective::SATISFY, {}) {}
+    using Identifiable = std::variant<Variable, Parameter>;
+
+    FZNModel(std::vector<Parameter> parameters, std::vector<Variable> variables,
+             std::vector<Constraint> constraints, Objective objective);
 
     /**
-     * Create a model for an optimization problem.
-     *
-     * @param params The parameters of the model.
-     * @param vars The variables of the model.
-     * @param cons The constraints of the model.
-     * @param objective The objective (minimization or maximization).
-     * @param objectiveValue The variable to optimize. This must be an element of \p vars as well.
+     * Since the models can be quite large, the copy constructor
+     * is deleted, but a move constructor is defined.
      */
-    Model(std::vector<Parameter> params, std::vector<std::shared_ptr<Variable>> vars,
-          std::vector<std::shared_ptr<Constraint>> cons, Objective objective,
-          std::optional<std::shared_ptr<Variable>> objectiveValue)
-        : _parameters(std::move(params)),
-          _variables(std::move(vars)),
-          _constraints(std::move(cons)),
-          _objective(objective),
-          _objectiveValue(std::move(objectiveValue)) {}
+    FZNModel(const FZNModel& other) = delete;
+    FZNModel(FZNModel&& other) = default;
 
-    [[nodiscard]] const std::vector<std::shared_ptr<Constraint>>& constraints() const {
+    [[nodiscard]] std::optional<Identifiable> identify(const std::string_view& id) const noexcept;
+
+    [[nodiscard]] const std::vector<Parameter>& parameters() const noexcept { return _parameters; }
+    [[nodiscard]] const std::vector<Variable>& variables() const noexcept { return _variables; }
+    [[nodiscard]] const std::vector<Constraint>& constraints() const noexcept {
       return _constraints;
     }
-
-    [[nodiscard]] const std::vector<std::shared_ptr<Variable>>& variables() const {
-      return _variables;
-    }
-
-    [[nodiscard]] const std::vector<Parameter>& parameters() const { return _parameters; }
-
-    [[nodiscard]] Objective objective() const { return _objective; }
-    [[nodiscard]] std::optional<std::shared_ptr<Variable>> objective_value() const {
-      return _objectiveValue;
-    }
+    [[nodiscard]] const Objective& objective() const noexcept { return _objective; }
   };
+
 }  // namespace fznparser

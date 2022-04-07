@@ -1,0 +1,9 @@
+array [1..2] of int: coeffs = [1, -1];
+
+var int: v1;
+var int: v2;
+
+constraint int_lin_eq(coeffs, [v1, v2], 2);
+constraint set_in(v1, {1, 4});
+
+solve satisfy;

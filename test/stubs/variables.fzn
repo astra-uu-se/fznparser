@@ -1,0 +1,10 @@
+int: n = 3;
+
+var bool: v1;
+var 0..5: v2;
+var {3, 5, 10}: v3;
+var 1..5: v4 = 5;
+var 1..5: v5 = n;
+var int: v6;
+
+solve satisfy;

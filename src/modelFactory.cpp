@@ -7,8 +7,7 @@
 #include "FlatZincParser.h"
 #include "fznVisitor.hpp"
 
-std::unique_ptr<fznparser::Model> fznparser::ModelFactory::create(
-    const std::filesystem::path& modelFile) {
+fznparser::FZNModel fznparser::ModelFactory::create(const std::filesystem::path& modelFile) {
   std::ifstream stream;
   stream.open(modelFile);
 
@@ -25,7 +24,5 @@ std::unique_ptr<fznparser::Model> fznparser::ModelFactory::create(
   FlatZincParser::ModelContext* tree = parser.model();
 
   FznVisitor visitor;
-  fznparser::Model* model = visitor.visitModel(tree).as<fznparser::Model*>();
-
-  return std::unique_ptr<fznparser::Model>(model);
+  return std::move(visitor.visitModel(tree).as<fznparser::FZNModel>());
 }
