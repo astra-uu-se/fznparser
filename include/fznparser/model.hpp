@@ -23,7 +23,7 @@ namespace fznparser {
     std::unordered_map<std::string_view, size_t> _variableIndices{};
 
   public:
-    using Identifiable = std::variant<SearchVariable, VariableArray, Parameter>;
+    using Identifiable = std::variant<Variable, Parameter>;
 
     FZNModel(std::vector<Parameter> parameters, std::vector<Variable> variables,
              std::vector<Constraint> constraints, Objective objective);

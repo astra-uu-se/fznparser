@@ -50,19 +50,69 @@ antlrcpp::Any FznVisitor::visitSolveItem(FlatZincParser::SolveItemContext* ctx) 
 }
 
 antlrcpp::Any FznVisitor::visitParDeclItem(FlatZincParser::ParDeclItemContext* ctx) {
+  auto type = determineParameterType(ctx->parType());
   auto identifier = createIdentifier(ctx->Identifier());
-  auto value = ctx->parExpr()->accept(this).as<Parameter::ParamValue>();
+  _parsingParameterType = type;
 
-  return Parameter{identifier, value};
+  switch (type) {
+    case ParameterType::INT: {
+      auto value = ctx->parExpr()->accept(this).as<Int>();
+      _parsingParameterType = {};
+      return Parameter(IntParameter{identifier, value});
+    }
+
+    case ParameterType::BOOL: {
+      auto value = ctx->parExpr()->accept(this).as<bool>();
+      _parsingParameterType = {};
+      return Parameter(BoolParameter{identifier, value});
+    }
+
+    case ParameterType::SET_OF_INT: {
+      auto value = ctx->parExpr()->accept(this).as<Set<Int>>();
+      _parsingParameterType = {};
+      return Parameter(SetOfIntParameter{identifier, value});
+    }
+
+    case ParameterType::INT_ARRAY: {
+      auto value = ctx->parExpr()->accept(this).as<std::vector<Int>>();
+      _parsingParameterType = {};
+      return Parameter(ArrayOfIntParameter{identifier, value});
+    }
+
+    case ParameterType::BOOL_ARRAY: {
+      auto value = ctx->parExpr()->accept(this).as<std::vector<bool>>();
+      _parsingParameterType = {};
+      return Parameter(ArrayOfBoolParameter{identifier, value});
+    }
+
+    case ParameterType::SET_OF_INT_ARRAY: {
+      auto value = ctx->parExpr()->accept(this).as<std::vector<Set<Int>>>();
+      _parsingParameterType = {};
+      return Parameter(ArrayOfSetOfIntParameter{identifier, value});
+    }
+
+    default:
+      throw std::logic_error("Unhandled parameter type.");
+  }
 }
 
 antlrcpp::Any FznVisitor::visitParExpr(FlatZincParser::ParExprContext* ctx) {
   if (ctx->basicLiteralExpr()) {
-    return Parameter::ParamValue(ctx->basicLiteralExpr()->accept(this).as<Value>());
+    return ctx->basicLiteralExpr()->accept(this);
   } else if (ctx->parArrayLiteral()) {
-    return Parameter::ParamValue(ctx->parArrayLiteral()->accept(this).as<std::vector<Value>>());
+    return ctx->parArrayLiteral()->accept(this);
   } else {
     throw std::runtime_error("Unhandled variant in parExpr.");
+  }
+}
+
+template <typename Type>
+static std::optional<BasicExpr<Type>> parseOptionalValue(antlr4::tree::ParseTreeVisitor* visitor,
+                                                         FlatZincParser::VarDeclItemContext* ctx) {
+  if (ctx->basicExpr()) {
+    return ctx->basicExpr()->accept(visitor).as<BasicExpr<Type>>();
+  } else {
+    return {};
   }
 }
 
@@ -71,32 +121,64 @@ antlrcpp::Any FznVisitor::visitVarDeclItem(FlatZincParser::VarDeclItemContext* c
   auto annotations = ctx->annotations()->accept(this).as<std::vector<Annotation>>();
 
   if (ctx->basicVarType()) {
-    auto domain = ctx->basicVarType()->accept(this).as<Domain>();
+    auto domainType = determineVariableType(ctx->basicVarType());
+    _parsingVariableType = domainType;
 
-    auto value = [&]() -> std::optional<BasicExpr> {
-      if (ctx->basicExpr()) {
-        return ctx->basicExpr()->accept(this).as<BasicExpr>();
-      } else {
-        return {};
+    switch (domainType) {
+      case VariableType::INT: {
+        auto domain = ctx->basicVarType()->accept(this).as<Domain<Int>>();
+        auto value = parseOptionalValue<Int>(this, ctx);
+        _parsingVariableType = {};
+        return Variable(IntVariable{identifier, domain, annotations, value});
       }
-    }();
 
-    return Variable(SearchVariable{identifier, domain, annotations, value});
+      case VariableType::BOOL: {
+        auto domain = ctx->basicVarType()->accept(this).as<Domain<bool>>();
+        auto value = parseOptionalValue<bool>(this, ctx);
+        _parsingVariableType = {};
+        return Variable(BoolVariable{identifier, domain, annotations, value});
+      }
+
+      default:
+        throw std::runtime_error("Unknown variable type.");
+    }
   } else if (ctx->arrayVarType()) {
-    auto contents = ctx->arrayLiteral()->accept(this).as<std::vector<BasicExpr>>();
-    return Variable(VariableArray{identifier, contents, annotations});
-  } else {
-    throw std::runtime_error("Unhandled variant in varDeclItem.");
+    auto domainType = determineVariableType(ctx->arrayVarType()->basicVarType());
+    _parsingVariableType = domainType;
+
+    switch (domainType) {
+      case VariableType::INT: {
+        auto contents = ctx->arrayLiteral()->accept(this).as<Array<Int>>();
+        _parsingVariableType = {};
+        return Variable(IntVariableArray{
+            identifier,
+            contents,
+            annotations,
+        });
+      }
+
+      case VariableType::BOOL: {
+        auto contents = ctx->arrayLiteral()->accept(this).as<Array<bool>>();
+        _parsingVariableType = {};
+        return Variable(BoolVariableArray{identifier, contents, annotations});
+      }
+
+      case VariableType::UNKNOWN: {
+        throw std::logic_error("When parsing variable arrays, the type should always be known.");
+      }
+    }
   }
+
+  throw std::runtime_error("Unhandled variant in varDeclItem.");
 }
 
-static Domain createDomainFromParType(FlatZincParser::BasicParTypeContext* ctx) {
+static antlrcpp::Any createDomainFromParType(FlatZincParser::BasicParTypeContext* ctx) {
   auto text = ctx->getText();
 
   if (text == "int") {
-    return Domain(BasicDomain<Int>{});
+    return Domain<Int>(BasicDomain<Int>{});
   } else if (text == "bool") {
-    return Domain(BasicDomain<bool>{});
+    return Domain<bool>(BasicDomain<bool>{});
   } else {
     throw std::runtime_error(std::string("Unknown basic domain: ").append(text));
   }
@@ -106,33 +188,74 @@ antlrcpp::Any FznVisitor::visitBasicVarType(FlatZincParser::BasicVarTypeContext*
   if (ctx->basicParType()) {
     return createDomainFromParType(ctx->basicParType());
   } else if (ctx->set()) {
-    return Domain(ctx->set()->accept(this).as<std::vector<Int>>());
+    return Domain<Int>(ctx->set()->accept(this).as<std::vector<Int>>());
   } else if (ctx->intRange()) {
-    return Domain(ctx->intRange()->accept(this).as<IntRange>());
+    return Domain<Int>(ctx->intRange()->accept(this).as<IntRange>());
   } else {
     throw std::runtime_error("Unhandled variant in basicVarType");
   }
 }
 
-antlrcpp::Any FznVisitor::visitBasicExpr(FlatZincParser::BasicExprContext* ctx) {
+template <typename Type>
+static antlrcpp::Any handleBasicExpr(antlr4::tree::ParseTreeVisitor* visitor,
+                                     FlatZincParser::BasicExprContext* ctx) {
   if (ctx->Identifier()) {
-    return BasicExpr(createIdentifier(ctx->Identifier()));
+    return BasicExpr<Type>(createIdentifier(ctx->Identifier()));
   } else if (ctx->basicLiteralExpr()) {
-    return BasicExpr(ctx->basicLiteralExpr()->accept(this).as<Value>());
+    return BasicExpr<Type>(ctx->basicLiteralExpr()->accept(visitor).as<Type>());
   } else {
     throw std::runtime_error("Unhandled variant in basicExpr.");
   }
 }
 
-antlrcpp::Any FznVisitor::visitArrayLiteral(FlatZincParser::ArrayLiteralContext* ctx) {
-  Array expressions;
+antlrcpp::Any FznVisitor::visitBasicExpr(FlatZincParser::BasicExprContext* ctx) {
+  if (!_parsingVariableType) {
+    // Parsing constraint arguments, which means the type is not known up-front. It also means we
+    // shouldn't be parsing an identifier (since we wouldn't know the Type in BasicExpr<Type>).
+    assert(!ctx->Identifier());
+    assert(ctx->basicLiteralExpr());
+
+    return ctx->basicLiteralExpr()->accept(this);
+  }
+
+  switch (*_parsingVariableType) {
+    case VariableType::INT:
+      return handleBasicExpr<Int>(this, ctx);
+    case VariableType::BOOL:
+      return handleBasicExpr<bool>(this, ctx);
+    case VariableType::UNKNOWN:
+      return handleBasicExpr<UnknownVariableType>(this, ctx);
+    default:
+      throw std::logic_error("Unknown variable type.");
+  }
+}
+
+template <typename Type>
+static antlrcpp::Any handleArrayLiteral(antlr4::tree::ParseTreeVisitor* visitor,
+                                        FlatZincParser::ArrayLiteralContext* ctx) {
+  Array<Type> expressions;
   expressions.reserve(ctx->basicExpr().size());
 
   for (auto& basicExpr : ctx->basicExpr()) {
-    expressions.push_back(basicExpr->accept(this).as<BasicExpr>());
+    expressions.push_back(basicExpr->accept(visitor).as<BasicExpr<Type>>());
   }
 
   return expressions;
+}
+
+antlrcpp::Any FznVisitor::visitArrayLiteral(FlatZincParser::ArrayLiteralContext* ctx) {
+  assert(_parsingVariableType.has_value());
+
+  switch (*_parsingVariableType) {
+    case VariableType::INT:
+      return handleArrayLiteral<Int>(this, ctx);
+    case VariableType::BOOL:
+      return handleArrayLiteral<bool>(this, ctx);
+    case VariableType::UNKNOWN:
+      return handleArrayLiteral<UnknownVariableType>(this, ctx);
+    default:
+      throw std::logic_error("Unknown variable type.");
+  }
 }
 
 antlrcpp::Any FznVisitor::visitConstraintItem(FlatZincParser::ConstraintItemContext* ctx) {
@@ -148,26 +271,27 @@ antlrcpp::Any FznVisitor::visitConstraintItem(FlatZincParser::ConstraintItemCont
   return Constraint{identifier, arguments, annotations};
 }
 
-static Constraint::Argument createArgumentFromBasicExpr(BasicExpr& expr) {
-  if (std::holds_alternative<Identifier>(expr)) {
-    return std::get<Identifier>(expr);
-  }
-
-  if (std::holds_alternative<Value>(expr)) {
-    return std::get<Value>(expr);
-  }
-
-  throw std::runtime_error("Unhandled basic expr variant when converting to constraint argument.");
-}
-
 antlrcpp::Any FznVisitor::visitExpr(FlatZincParser::ExprContext* ctx) {
-  if (ctx->basicExpr()) {
-    return createArgumentFromBasicExpr(ctx->basicExpr()->accept(this).as<BasicExpr>());
+  if (ctx->basicExpr() && ctx->basicExpr()->Identifier()) {
+    return Constraint::Argument(createIdentifier(ctx->basicExpr()->Identifier()));
+  } else if (ctx->basicExpr()) {
+    auto result = ctx->basicExpr()->accept(this);
+
+    if (result.is<Int>()) {
+      return Constraint::Argument(result.as<Int>());
+    } else if (result.is<bool>()) {
+      return Constraint::Argument(result.as<bool>());
+    } else if (result.is<Set<Int>>()) {
+      return Constraint::Argument(result.as<Set<Int>>());
+    }
   } else if (ctx->arrayLiteral()) {
-    return Constraint::Argument(ctx->arrayLiteral()->accept(this).as<Array>());
-  } else {
-    throw std::runtime_error("Unhandled variant in expr.");
+    _parsingVariableType = VariableType::UNKNOWN;
+    auto result = ctx->arrayLiteral()->accept(this);
+    _parsingVariableType = {};
+    return Constraint::Argument(result.as<Array<UnknownVariableType>>());
   }
+
+  throw std::runtime_error("Unhandled variant in expr.");
 }
 
 antlrcpp::Any FznVisitor::visitAnnotations(FlatZincParser::AnnotationsContext* ctx) {
@@ -233,23 +357,23 @@ antlrcpp::Any FznVisitor::visitBoolLiteral(FlatZincParser::BoolLiteralContext* c
   std::string text = ctx->getText();
 
   if (text == "true") {
-    return Value(true);
+    return true;
   } else if (text == "false") {
-    return Value(false);
+    return false;
   } else {
     throw std::runtime_error("Unhandled bool literal.");
   }
 }
 
 antlrcpp::Any FznVisitor::visitIntLiteral(FlatZincParser::IntLiteralContext* ctx) {
-  return Value(std::stol(ctx->getText()));
+  return Int(std::stol(ctx->getText()));
 }
 
 antlrcpp::Any FznVisitor::visitSetLiteral(FlatZincParser::SetLiteralContext* ctx) {
   if (ctx->set()) {
-    return Value(Set(ctx->set()->accept(this).as<std::vector<Int>>()));
+    return Set<Int>(ctx->set()->accept(this).as<std::vector<Int>>());
   } else if (ctx->intRange()) {
-    return Value(Set(ctx->intRange()->accept(this).as<IntRange>()));
+    return Set<Int>(ctx->intRange()->accept(this).as<IntRange>());
   } else {
     throw std::runtime_error("Unhandled variant in setLiteral.");
   }
@@ -275,13 +399,66 @@ antlrcpp::Any FznVisitor::visitIntRange(FlatZincParser::IntRangeContext* ctx) {
   return IntRange{lowerBound, upperBound};
 }
 
-antlrcpp::Any FznVisitor::visitParArrayLiteral(FlatZincParser::ParArrayLiteralContext* ctx) {
-  std::vector<Value> values;
+template <typename Type>
+static antlrcpp::Any handleParArrayLiteral(antlr4::tree::ParseTreeVisitor* visitor,
+                                           FlatZincParser::ParArrayLiteralContext* ctx) {
+  std::vector<Type> values;
   values.reserve(ctx->basicLiteralExpr().size());
 
   for (auto& basicLiteralExpr : ctx->basicLiteralExpr()) {
-    values.push_back(basicLiteralExpr->accept(this).as<Value>());
+    values.push_back(basicLiteralExpr->accept(visitor).as<Type>());
   }
 
   return values;
+}
+
+antlrcpp::Any FznVisitor::visitParArrayLiteral(FlatZincParser::ParArrayLiteralContext* ctx) {
+  assert(_parsingParameterType.has_value());
+  switch (*_parsingParameterType) {
+    case ParameterType::INT_ARRAY:
+      return handleParArrayLiteral<Int>(this, ctx);
+    case ParameterType::BOOL_ARRAY:
+      return handleParArrayLiteral<bool>(this, ctx);
+    case ParameterType::SET_OF_INT_ARRAY:
+      return handleParArrayLiteral<Set<Int>>(this, ctx);
+    default:
+      throw std::logic_error(
+          "Parameter array literal should be parsing INT_ARRAY, BOOL_ARRAY or SET_OF_INT_ARRAY.");
+  }
+}
+
+FznVisitor::VariableType FznVisitor::determineVariableType(
+    FlatZincParser::BasicVarTypeContext* ctx) {
+  if (ctx->intRange() || ctx->set()) {
+    return VariableType::INT;
+  }
+
+  if (ctx->basicParType()) {
+    auto type = ctx->basicParType()->getText();
+
+    if (type == "int") {
+      return VariableType::INT;
+    } else if (type == "bool") {
+      return VariableType::BOOL;
+    }
+  }
+
+  throw std::runtime_error("Unsupported variable type.");
+}
+
+FznVisitor::ParameterType FznVisitor::determineParameterType(FlatZincParser::ParTypeContext* ctx) {
+  auto type = ctx->basicParType()->getText();
+  if (ctx->indexSet()) {
+    if (type == "int") return ParameterType::INT_ARRAY;
+    if (type == "bool") return ParameterType::BOOL_ARRAY;
+    if (type == "set of int") return ParameterType::SET_OF_INT_ARRAY;
+
+    throw std::runtime_error(std::string("Unhandled parameter type: array of ").append(type));
+  } else {
+    if (type == "int") return ParameterType::INT;
+    if (type == "bool") return ParameterType::BOOL;
+    if (type == "set of int") return ParameterType::SET_OF_INT;
+
+    throw std::runtime_error(std::string("Unhandled parameter type: ").append(type));
+  }
 }

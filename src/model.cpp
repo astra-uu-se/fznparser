@@ -9,24 +9,14 @@ FZNModel::FZNModel(std::vector<Parameter> parameters, std::vector<Variable> vari
       _constraints(std::move(constraints)),
       _objective(std::move(objective)) {
   for (size_t i = 0; i < _parameters.size(); ++i) {
-    _parameterIndices.emplace(_parameters[i].name, i);
+    std::visit([&](const auto& parameter) { _parameterIndices.emplace(parameter.name, i); },
+               _parameters[i]);
   }
 
   for (size_t i = 0; i < _variables.size(); ++i) {
     std::visit([&](const auto& variable) { _variableIndices.emplace(variable.name, i); },
                _variables[i]);
   }
-}
-
-static FZNModel::Identifiable variableToIdentifiable(const Variable& variable) {
-  if (std::holds_alternative<SearchVariable>(variable)) {
-    return std::get<SearchVariable>(variable);
-  } else if (std::holds_alternative<VariableArray>(variable)) {
-    return std::get<VariableArray>(variable);
-  }
-
-  // Should never happen. See the comment in FZNModel::identify().
-  throw std::runtime_error("Unhandled variable case when converting to identifiable.");
 }
 
 std::optional<FZNModel::Identifiable> FZNModel::identify(
@@ -36,12 +26,7 @@ std::optional<FZNModel::Identifiable> FZNModel::identify(
   }
 
   if (auto varsIt = _variableIndices.find(id); varsIt != _variableIndices.end()) {
-    // This is a hack. Since Variable is a variant and Identifiable is a variant of a superset of
-    // the types covered by Variable, every Variable can be an Identifiable. However, we have to
-    // unwrap the Variable variant to get the underlying types out.
-    // In C++20, std::visit can return a value, so then this can be replaced with:
-    // return std::visit([](const auto& variable) { return variable; }, _variables[varsIt->second]);
-    return variableToIdentifiable(_variables[varsIt->second]);
+    return _variables[varsIt->second];
   }
 
   return {};

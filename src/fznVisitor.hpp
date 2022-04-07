@@ -5,6 +5,16 @@
 using namespace fznparser::core;
 
 class FznVisitor : FlatZincBaseVisitor {
+private:
+  enum class ParameterType { INT, BOOL, INT_ARRAY, BOOL_ARRAY, SET_OF_INT, SET_OF_INT_ARRAY };
+
+  // Unknown type is used when parsing array literals in constraint arguments, when we do not know
+  // the type of the variable.
+  enum class VariableType { INT, BOOL, UNKNOWN };
+
+  std::optional<ParameterType> _parsingParameterType;
+  std::optional<VariableType> _parsingVariableType;
+
 public:
   antlrcpp::Any visitModel(FlatZincParser::ModelContext *ctx) override;
   antlrcpp::Any visitSolveItem(FlatZincParser::SolveItemContext *ctx) override;
@@ -31,4 +41,8 @@ public:
   antlrcpp::Any visitSetLiteral(FlatZincParser::SetLiteralContext *ctx) override;
   antlrcpp::Any visitSet(FlatZincParser::SetContext *ctx) override;
   antlrcpp::Any visitIntRange(FlatZincParser::IntRangeContext *ctx) override;
+
+private:
+  static VariableType determineVariableType(FlatZincParser::BasicVarTypeContext *ctx);
+  static ParameterType determineParameterType(FlatZincParser::ParTypeContext *ctx);
 };

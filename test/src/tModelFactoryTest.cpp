@@ -15,23 +15,23 @@ TEST(ModelFactoryTest, parameters_are_parsed) {
 
   EXPECT_EQ(model.parameters().size(), 7);
 
-  Parameter expectedInt{"n", Int(4)};
-  EXPECT_EQ(model.parameters()[0], expectedInt);
+  IntParameter expectedInt{"n", Int(4)};
+  EXPECT_EQ(model.parameters()[0], Parameter(expectedInt));
 
-  Parameter expectedBoolF{"bF", false};
-  EXPECT_EQ(model.parameters()[1], expectedBoolF);
-  Parameter expectedBoolT{"bT", true};
-  EXPECT_EQ(model.parameters()[2], expectedBoolT);
+  BoolParameter expectedBoolF{"bF", false};
+  EXPECT_EQ(model.parameters()[1], Parameter(expectedBoolF));
+  BoolParameter expectedBoolT{"bT", true};
+  EXPECT_EQ(model.parameters()[2], Parameter(expectedBoolT));
 
-  Parameter intArray{"nums", std::vector<Value>{Int(1), Int(2), Int(3), Int(4)}};
-  EXPECT_EQ(model.parameters()[3], intArray);
-  Parameter boolsArray{"bools", std::vector<Value>{false, false, true}};
-  EXPECT_EQ(model.parameters()[4], boolsArray);
+  ArrayOfIntParameter intArray{"nums", {Int(1), Int(2), Int(3), Int(4)}};
+  EXPECT_EQ(model.parameters()[3], Parameter(intArray));
+  ArrayOfBoolParameter boolsArray{"bools", {false, false, true}};
+  EXPECT_EQ(model.parameters()[4], Parameter(boolsArray));
 
-  Parameter explicitSet{"explicitSet", Set(std::vector<Int>{Int(1), Int(4), Int(5)})};
-  EXPECT_EQ(model.parameters()[5], explicitSet);
-  Parameter intervalSet{"intervalSet", IntRange{1, 10}};
-  EXPECT_EQ(model.parameters()[6], intervalSet);
+  SetOfIntParameter explicitSet{"explicitSet", std::vector<Int>{Int(1), Int(4), Int(5)}};
+  EXPECT_EQ(model.parameters()[5], Parameter(explicitSet));
+  SetOfIntParameter intervalSet{"intervalSet", IntRange{1, 10}};
+  EXPECT_EQ(model.parameters()[6], Parameter(intervalSet));
 }
 
 TEST(ModelFactoryTest, variables_are_parsed) {
@@ -39,22 +39,22 @@ TEST(ModelFactoryTest, variables_are_parsed) {
 
   EXPECT_EQ(model.variables().size(), 6);
 
-  SearchVariable v1{"v1", BasicDomain<bool>{}, {}, {}};
+  BoolVariable v1{"v1", BasicDomain<bool>{}, {}, {}};
   EXPECT_EQ(model.variables()[0], Variable(v1));
 
-  SearchVariable v2{"v2", IntRange{0, 5}, {}, {}};
+  IntVariable v2{"v2", IntRange{0, 5}, {}, {}};
   EXPECT_EQ(model.variables()[1], Variable(v2));
 
-  SearchVariable v3{"v3", std::vector<Int>{3, 5, 10}, {}, {}};
+  IntVariable v3{"v3", std::vector<Int>{3, 5, 10}, {}, {}};
   EXPECT_EQ(model.variables()[2], Variable(v3));
 
-  SearchVariable v4{"v4", IntRange{1, 5}, {}, Int(5)};
+  IntVariable v4{"v4", IntRange{1, 5}, {}, Int(5)};
   EXPECT_EQ(model.variables()[3], Variable(v4));
 
-  SearchVariable v5{"v5", IntRange{1, 5}, {}, Identifier("n")};
+  IntVariable v5{"v5", IntRange{1, 5}, {}, Identifier("n")};
   EXPECT_EQ(model.variables()[4], Variable(v5));
 
-  SearchVariable v6{"v6", BasicDomain<Int>{}, {}, {}};
+  IntVariable v6{"v6", BasicDomain<Int>{}, {}, {}};
   EXPECT_EQ(model.variables()[5], Variable(v6));
 }
 
@@ -63,10 +63,10 @@ TEST(ModelFactoryTest, variable_arrays_are_parsed) {
 
   EXPECT_EQ(model.variables().size(), 5);
 
-  VariableArray array1{"array1", {Identifier("v1"), Int(2), Identifier("v2"), Int(5)}, {}};
+  IntVariableArray array1{"array1", {Identifier("v1"), Int(2), Identifier("v2"), Int(5)}, {}};
   EXPECT_EQ(model.variables()[3], Variable(array1));
 
-  VariableArray array2{"array2", {Identifier("v3"), true, false}, {}};
+  BoolVariableArray array2{"array2", {Identifier("v3"), true, false}, {}};
   EXPECT_EQ(model.variables()[4], Variable(array2));
 }
 
@@ -75,8 +75,10 @@ TEST(ModelFactoryTest, constraints_are_parsed) {
 
   EXPECT_EQ(model.constraints().size(), 1);
 
-  Constraint intLinEq{
-      "int_lin_eq", {Identifier("coeffs"), Array{Identifier("v1"), Identifier("v2")}, Int(2)}, {}};
+  Constraint intLinEq{"int_lin_eq",
+                      {Identifier("coeffs"),
+                       Array<UnknownVariableType>{Identifier("v1"), Identifier("v2")}, Int(2)},
+                      {}};
   EXPECT_EQ(model.constraints()[0], intLinEq);
 }
 
@@ -85,12 +87,12 @@ TEST(ModelFactoryTest, annotations_are_recognised) {
 
   EXPECT_EQ(model.variables().size(), 4);
 
-  SearchVariable a{"a", BasicDomain<Int>{}, {TagAnnotation{"output_var"}}, {}};
+  IntVariable a{"a", BasicDomain<Int>{}, {TagAnnotation{"output_var"}}, {}};
   EXPECT_EQ(model.variables()[0], Variable(a));
 
-  VariableArray arr{"arr",
-                    {Identifier("b"), Identifier("c"), Identifier("c"), Identifier("d")},
-                    {OutputArrayAnnotation{{2, 2}}}};
+  IntVariableArray arr{"arr",
+                       {Identifier("b"), Identifier("c"), Identifier("c"), Identifier("d")},
+                       {OutputArrayAnnotation{{2, 2}}}};
   EXPECT_EQ(model.variables()[3], Variable(arr));
 
   EXPECT_EQ(model.constraints().size(), 1);
