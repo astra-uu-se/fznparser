@@ -32,7 +32,7 @@ namespace fznparser {
      * Since the models can be quite large, the copy constructor
      * is deleted, but a move constructor is defined.
      */
-    FZNModel(FZNModel& other) = delete;
+    FZNModel(const FZNModel& other) = delete;
     FZNModel(FZNModel&& other) = default;
 
     [[nodiscard]] std::optional<Identifiable> identify(const std::string_view& id) const noexcept;
