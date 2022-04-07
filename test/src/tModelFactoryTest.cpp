@@ -13,7 +13,7 @@ TEST(ModelFactoryTest, empty_satisfy_is_parsed) {
 TEST(ModelFactoryTest, parameters_are_parsed) {
   auto model = ModelFactory::create(STUB_DIR "/parameters.fzn");
 
-  EXPECT_EQ(model.parameters().size(), 7);
+  EXPECT_EQ(model.parameters().size(), 8);
 
   IntParameter expectedInt{"n", Int(4)};
   EXPECT_EQ(model.parameters()[0], Parameter(expectedInt));
@@ -32,6 +32,10 @@ TEST(ModelFactoryTest, parameters_are_parsed) {
   EXPECT_EQ(model.parameters()[5], Parameter(explicitSet));
   SetOfIntParameter intervalSet{"intervalSet", IntRange{1, 10}};
   EXPECT_EQ(model.parameters()[6], Parameter(intervalSet));
+
+  ArrayOfSetOfIntParameter arrayOfSets{
+      "sets", {std::vector<Int>{Int(4), Int(50), Int(55)}, IntRange{1, 10}}};
+  EXPECT_EQ(model.parameters()[7], Parameter(arrayOfSets));
 }
 
 TEST(ModelFactoryTest, variables_are_parsed) {
@@ -73,13 +77,16 @@ TEST(ModelFactoryTest, variable_arrays_are_parsed) {
 TEST(ModelFactoryTest, constraints_are_parsed) {
   auto model = ModelFactory::create(STUB_DIR "/constraints.fzn");
 
-  EXPECT_EQ(model.constraints().size(), 1);
+  EXPECT_EQ(model.constraints().size(), 2);
 
   Constraint intLinEq{"int_lin_eq",
                       {Identifier("coeffs"),
                        Array<UnknownVariableType>{Identifier("v1"), Identifier("v2")}, Int(2)},
                       {}};
   EXPECT_EQ(model.constraints()[0], intLinEq);
+
+  Constraint setIn{"set_in", {Identifier("v1"), Set<Int>(std::vector<Int>{Int(1), Int(4)})}, {}};
+  EXPECT_EQ(model.constraints()[1], setIn);
 }
 
 TEST(ModelFactoryTest, annotations_are_recognised) {
