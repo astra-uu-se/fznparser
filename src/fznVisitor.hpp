@@ -12,7 +12,7 @@ private:
 
   // Unknown type is used when parsing array literals in constraint arguments, when we do not know
   // the type of the variable.
-  enum class VariableType { INT, BOOL, UNKNOWN };
+  enum class VariableType { INT, BOOL };
 
   std::optional<ParameterType> _parsingParameterType;
   std::optional<VariableType> _parsingVariableType;

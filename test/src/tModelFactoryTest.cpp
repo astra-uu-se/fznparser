@@ -28,13 +28,13 @@ TEST(ModelFactoryTest, parameters_are_parsed) {
   ArrayOfBoolParameter boolsArray{"bools", {false, false, true}};
   EXPECT_EQ(model.parameters()[4], Parameter(boolsArray));
 
-  SetOfIntParameter explicitSet{"explicitSet", std::vector<Int>{Int(1), Int(4), Int(5)}};
+  SetOfIntParameter explicitSet{"explicitSet", LiteralSet<Int>{Int(1), Int(4), Int(5)}};
   EXPECT_EQ(model.parameters()[5], Parameter(explicitSet));
   SetOfIntParameter intervalSet{"intervalSet", IntRange{1, 10}};
   EXPECT_EQ(model.parameters()[6], Parameter(intervalSet));
 
   ArrayOfSetOfIntParameter arrayOfSets{
-      "sets", {std::vector<Int>{Int(4), Int(50), Int(55)}, IntRange{1, 10}}};
+      "sets", {LiteralSet<Int>{Int(4), Int(50), Int(55)}, IntRange{1, 10}}};
   EXPECT_EQ(model.parameters()[7], Parameter(arrayOfSets));
 }
 
@@ -49,7 +49,7 @@ TEST(ModelFactoryTest, variables_are_parsed) {
   IntVariable v2{"v2", IntRange{0, 5}, {}, {}};
   EXPECT_EQ(model.variables()[1], Variable(v2));
 
-  IntVariable v3{"v3", std::vector<Int>{3, 5, 10}, {}, {}};
+  IntVariable v3{"v3", LiteralSet<Int>{3, 5, 10}, {}, {}};
   EXPECT_EQ(model.variables()[2], Variable(v3));
 
   IntVariable v4{"v4", IntRange{1, 5}, {}, Int(5)};
@@ -79,13 +79,13 @@ TEST(ModelFactoryTest, constraints_are_parsed) {
 
   EXPECT_EQ(model.constraints().size(), 2);
 
-  Constraint intLinEq{"int_lin_eq",
-                      {Identifier("coeffs"),
-                       Array<UnknownVariableType>{Identifier("v1"), Identifier("v2")}, Int(2)},
-                      {}};
+  Constraint intLinEq{
+      "int_lin_eq",
+      {Identifier("coeffs"), Constraint::ArrayArgument{Identifier("v1"), Identifier("v2")}, Int(2)},
+      {}};
   EXPECT_EQ(model.constraints()[0], intLinEq);
 
-  Constraint setIn{"set_in", {Identifier("v1"), Set<Int>(std::vector<Int>{Int(1), Int(4)})}, {}};
+  Constraint setIn{"set_in", {Identifier("v1"), Set<Int>(LiteralSet<Int>{Int(1), Int(4)})}, {}};
   EXPECT_EQ(model.constraints()[1], setIn);
 }
 

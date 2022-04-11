@@ -148,7 +148,7 @@ antlrcpp::Any FznVisitor::visitVarDeclItem(FlatZincParser::VarDeclItemContext* c
 
     switch (domainType) {
       case VariableType::INT: {
-        auto contents = ctx->arrayLiteral()->accept(this).as<Array<Int>>();
+        auto contents = ctx->arrayLiteral()->accept(this).as<std::vector<BasicExpr<Int>>>();
         _parsingVariableType = {};
         return Variable(IntVariableArray{
             identifier,
@@ -158,14 +158,13 @@ antlrcpp::Any FznVisitor::visitVarDeclItem(FlatZincParser::VarDeclItemContext* c
       }
 
       case VariableType::BOOL: {
-        auto contents = ctx->arrayLiteral()->accept(this).as<Array<bool>>();
+        auto contents = ctx->arrayLiteral()->accept(this).as<std::vector<BasicExpr<bool>>>();
         _parsingVariableType = {};
         return Variable(BoolVariableArray{identifier, contents, annotations});
       }
 
-      case VariableType::UNKNOWN: {
-        throw std::logic_error("When parsing variable arrays, the type should always be known.");
-      }
+      default:
+        throw std::logic_error("Unhandled variable type in array declaration.");
     }
   }
 
@@ -188,7 +187,7 @@ antlrcpp::Any FznVisitor::visitBasicVarType(FlatZincParser::BasicVarTypeContext*
   if (ctx->basicParType()) {
     return createDomainFromParType(ctx->basicParType());
   } else if (ctx->set()) {
-    return Domain<Int>(ctx->set()->accept(this).as<std::vector<Int>>());
+    return Domain<Int>(ctx->set()->accept(this).as<LiteralSet<Int>>());
   } else if (ctx->intRange()) {
     return Domain<Int>(ctx->intRange()->accept(this).as<IntRange>());
   } else {
@@ -210,12 +209,12 @@ static antlrcpp::Any handleBasicExpr(antlr4::tree::ParseTreeVisitor* visitor,
 
 antlrcpp::Any FznVisitor::visitBasicExpr(FlatZincParser::BasicExprContext* ctx) {
   if (!_parsingVariableType) {
-    // Parsing constraint arguments, which means the type is not known up-front. It also means we
-    // shouldn't be parsing an identifier (since we wouldn't know the Type in BasicExpr<Type>).
-    assert(!ctx->Identifier());
-    assert(ctx->basicLiteralExpr());
-
-    return ctx->basicLiteralExpr()->accept(this);
+    // Parsing constraint arguments, which shouldn't be wrapped in the BasicExpr<T> type.
+    if (ctx->basicLiteralExpr()) {
+      return ctx->basicLiteralExpr()->accept(this);
+    } else {
+      return createIdentifier(ctx->Identifier());
+    }
   }
 
   switch (*_parsingVariableType) {
@@ -223,8 +222,6 @@ antlrcpp::Any FznVisitor::visitBasicExpr(FlatZincParser::BasicExprContext* ctx) 
       return handleBasicExpr<Int>(this, ctx);
     case VariableType::BOOL:
       return handleBasicExpr<bool>(this, ctx);
-    case VariableType::UNKNOWN:
-      return handleBasicExpr<UnknownVariableType>(this, ctx);
     default:
       throw std::logic_error("Unknown variable type.");
   }
@@ -233,7 +230,7 @@ antlrcpp::Any FznVisitor::visitBasicExpr(FlatZincParser::BasicExprContext* ctx) 
 template <typename Type>
 static antlrcpp::Any handleArrayLiteral(antlr4::tree::ParseTreeVisitor* visitor,
                                         FlatZincParser::ArrayLiteralContext* ctx) {
-  Array<Type> expressions;
+  std::vector<BasicExpr<Type>> expressions;
   expressions.reserve(ctx->basicExpr().size());
 
   for (auto& basicExpr : ctx->basicExpr()) {
@@ -244,17 +241,37 @@ static antlrcpp::Any handleArrayLiteral(antlr4::tree::ParseTreeVisitor* visitor,
 }
 
 antlrcpp::Any FznVisitor::visitArrayLiteral(FlatZincParser::ArrayLiteralContext* ctx) {
-  assert(_parsingVariableType.has_value());
+  if (_parsingVariableType) {
+    // Parsing variable array, for which we know the type up front.
+    switch (*_parsingVariableType) {
+      case VariableType::INT:
+        return handleArrayLiteral<Int>(this, ctx);
+      case VariableType::BOOL:
+        return handleArrayLiteral<bool>(this, ctx);
+      default:
+        throw std::logic_error("Unknown variable type.");
+    }
+  } else {
+    // Parsing an array constraint argument, for which we don't know the type up front.
+    Constraint::ArrayArgument argument;
+    argument.reserve(ctx->basicExpr().size());
 
-  switch (*_parsingVariableType) {
-    case VariableType::INT:
-      return handleArrayLiteral<Int>(this, ctx);
-    case VariableType::BOOL:
-      return handleArrayLiteral<bool>(this, ctx);
-    case VariableType::UNKNOWN:
-      return handleArrayLiteral<UnknownVariableType>(this, ctx);
-    default:
-      throw std::logic_error("Unknown variable type.");
+    for (auto& basicExpr : ctx->basicExpr()) {
+      auto result = basicExpr->accept(this);
+      if (result.is<Int>()) {
+        argument.push_back(result.as<Int>());
+      } else if (result.is<bool>()) {
+        argument.push_back(result.as<bool>());
+      } else if (result.is<Identifier>()) {
+        argument.push_back(result.as<Identifier>());
+      } else if (result.is<Set<Int>>()) {
+        argument.push_back(result.as<Set<Int>>());
+      } else {
+        throw std::logic_error("Unhandled array element in parsing array constraint argument.");
+      }
+    }
+
+    return argument;
   }
 }
 
@@ -285,10 +302,8 @@ antlrcpp::Any FznVisitor::visitExpr(FlatZincParser::ExprContext* ctx) {
       return Constraint::Argument(result.as<Set<Int>>());
     }
   } else if (ctx->arrayLiteral()) {
-    _parsingVariableType = VariableType::UNKNOWN;
     auto result = ctx->arrayLiteral()->accept(this);
-    _parsingVariableType = {};
-    return Constraint::Argument(result.as<Array<UnknownVariableType>>());
+    return Constraint::Argument(result.as<Constraint::ArrayArgument>());
   }
 
   throw std::runtime_error("Unhandled variant in expr.");
@@ -371,7 +386,7 @@ antlrcpp::Any FznVisitor::visitIntLiteral(FlatZincParser::IntLiteralContext* ctx
 
 antlrcpp::Any FznVisitor::visitSetLiteral(FlatZincParser::SetLiteralContext* ctx) {
   if (ctx->set()) {
-    return Set<Int>(ctx->set()->accept(this).as<std::vector<Int>>());
+    return Set<Int>(ctx->set()->accept(this).as<LiteralSet<Int>>());
   } else if (ctx->intRange()) {
     return Set<Int>(ctx->intRange()->accept(this).as<IntRange>());
   } else {
@@ -387,7 +402,7 @@ antlrcpp::Any FznVisitor::visitSet(FlatZincParser::SetContext* ctx) {
     values.push_back(std::stol(literal->getText()));
   }
 
-  return values;
+  return LiteralSet<Int>{values};
 }
 
 antlrcpp::Any FznVisitor::visitIntRange(FlatZincParser::IntRangeContext* ctx) {

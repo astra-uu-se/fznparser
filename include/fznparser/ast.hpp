@@ -22,12 +22,27 @@ namespace fznparser {
     bool operator!=(const IntRange& other) const noexcept { return !(*this == other); }
   };
 
+  template <typename Type> struct LiteralSet {
+    const std::vector<Type> values;
+
+    explicit LiteralSet(std::vector<Type> v) : values{v} {}
+    LiteralSet(std::initializer_list<Type> init) : values{init} {}
+
+    [[nodiscard]] inline auto size() const noexcept { return values.size(); }
+    [[nodiscard]] inline auto begin() const noexcept { return values.begin(); }
+    [[nodiscard]] inline auto end() const noexcept { return values.end(); }
+    [[nodiscard]] const Type& operator[](size_t index) const { return values[index]; }
+
+    bool operator==(const LiteralSet<Type>& other) const noexcept { return values == other.values; }
+
+    bool operator!=(const LiteralSet<Type>& other) const noexcept { return !(*this == other); }
+  };
+
   template <typename T> using Set
-      = std::conditional_t<std::is_same_v<T, Int>, std::variant<IntRange, std::vector<Int>>,
-                           std::vector<T>>;
+      = std::conditional_t<std::is_same_v<T, Int>, std::variant<IntRange, LiteralSet<Int>>,
+                           LiteralSet<T>>;
 
   template <typename T> using BasicExpr = std::variant<Identifier, T>;
-  template <typename T> using Array = std::vector<BasicExpr<T>>;
 
   struct TagAnnotation {
     const std::string tag;
@@ -95,7 +110,7 @@ namespace fznparser {
   template <typename Type> using Domain = std::conditional_t<
       std::is_same_v<Type, bool>, BasicDomain<bool>,
       std::conditional_t<std::is_same_v<Type, Int>,
-                         std::variant<BasicDomain<Int>, IntRange, std::vector<Int>>,
+                         std::variant<BasicDomain<Int>, IntRange, LiteralSet<Int>>,
                          std::false_type>>;
 
   enum class ValueType { INT, BOOL };
@@ -127,7 +142,7 @@ namespace fznparser {
 
   template <typename Type> struct VariableArray {
     const Identifier name;
-    const Array<Type> contents;
+    const std::vector<BasicExpr<Type>> contents;
     const std::vector<Annotation> annotations;
 
     [[nodiscard]] inline auto size() const noexcept { return contents.size(); }
@@ -159,10 +174,9 @@ namespace fznparser {
   using BoolVariableArray = VariableArray<bool>;
   using Variable = std::variant<IntVariable, BoolVariable, IntVariableArray, BoolVariableArray>;
 
-  using UnknownVariableType = std::variant<bool, Int, Set<Int>>;
-
   struct Constraint {
-    using Argument = std::variant<bool, Int, Array<UnknownVariableType>, Set<Int>, Identifier>;
+    using ArrayArgument = std::vector<std::variant<bool, Int, Identifier, Set<Int>>>;
+    using Argument = std::variant<bool, Int, ArrayArgument, Set<Int>, Identifier>;
 
     const Identifier name;
     const std::vector<Argument> arguments;
