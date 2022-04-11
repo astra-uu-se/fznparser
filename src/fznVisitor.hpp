@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include "FlatZincBaseVisitor.h"
 
 using namespace fznparser::core;
