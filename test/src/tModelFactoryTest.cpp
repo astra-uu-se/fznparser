@@ -1,5 +1,13 @@
 #include <gtest/gtest.h>
 
+#include <algorithm>
+#include <filesystem>
+#include <fstream>
+#include <regex>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+
 #include "fznparser/modelFactory.hpp"
 
 using namespace fznparser;
@@ -120,4 +128,83 @@ TEST(ModelFactoryTest, maximise_objective) {
   auto model = ModelFactory::create(STUB_DIR "/maximise-objective.fzn");
 
   EXPECT_EQ(model.objective(), Objective(Maximise{Identifier("a")}));
+}
+
+TEST(ModelFactoryTest, models) {
+  size_t numModels = 0;
+  for (const auto& entry : std::filesystem::directory_iterator(FZN_DIR)) {
+    if (!entry.is_regular_file()) {
+      continue;
+    }
+    std::string ext = entry.path().extension().string();
+    std::transform(ext.begin(), ext.end(), ext.begin(),
+                   [](const unsigned char c) { return std::tolower(c); });
+    if (ext.compare(".fzn") != 0) {
+      continue;
+    }
+    const std::string filepath = entry.path().string();
+    fznparser::FZNModel model = ModelFactory::create(entry.path().string());
+
+    std::ifstream filestream(filepath);
+    std::string line;
+    const std::regex constraintRegex("^constraint\\s+([A-Za-z_]+[A-Za-z0-9_]*)");
+    const std::regex varRegex("(^var|.* of var ).*[^:]:\\s*([A-Za-z_]+[A-Za-z0-9_]*)");
+    std::unordered_set<std::string> variables;
+    std::unordered_map<std::string, size_t> constraints;
+    std::smatch match;
+    while (std::getline(filestream, line)) {
+      size_t annotationsStart = line.find("::", 0);
+      if (annotationsStart != std::string::npos) {
+        EXPECT_EQ(line.at(annotationsStart), ':');
+        line = line.substr(0, annotationsStart);
+        EXPECT_NE(line.back(), ':');
+      }
+      if (std::regex_search(line, match, constraintRegex)) {
+        EXPECT_EQ(match.size(), 2);
+        const std::string constraintName = match[1].str();
+        EXPECT_GT(constraintName.size(), 0);
+        if (constraints.find(constraintName) == constraints.end()) {
+          constraints.emplace(constraintName, 1);
+        } else {
+          ++constraints.at(constraintName);
+        }
+      } else if (line.find('(') != std::string::npos) {
+        continue;
+      } else if (std::regex_search(line, match, varRegex)) {
+        EXPECT_EQ(match.size(), 3);
+        const std::string varName = match[2].str();
+        EXPECT_GT(varName.size(), 0);
+        variables.emplace(varName);
+      }
+    }
+
+    for (const auto& con : model.constraints()) {
+      EXPECT_FALSE(constraints.empty());
+      const std::string conName = con.name;
+      EXPECT_NE(constraints.find(conName), constraints.end());
+      EXPECT_GT(constraints.at(conName), 0);
+      --constraints.at(conName);
+    }
+
+    for (const auto& var : model.variables()) {
+      EXPECT_FALSE(variables.empty());
+      std::string varName;
+      std::visit([&](const auto& v) { varName = v.name; }, var);
+      if (variables.find(varName) == variables.end()) {
+        EXPECT_EQ(varName, "");
+      }
+      EXPECT_NE(variables.find(varName), variables.end());
+      variables.erase(varName);
+    }
+    for (const std::string& s : variables) {
+      EXPECT_EQ(s, "");
+    }
+
+    EXPECT_TRUE(variables.empty());
+    for (const auto& pair : constraints) {
+      EXPECT_EQ(pair.second, 0);
+    }
+    ++numModels;
+  }
+  EXPECT_GE(numModels, size_t(4));
 }
