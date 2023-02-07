@@ -5,7 +5,6 @@ project(fznparserTests LANGUAGES CXX)
 enable_testing()
 
 # ---- Dependencies ----
-
 include(../cmake/CPM.cmake)
 
 CPMAddPackage(
@@ -13,8 +12,8 @@ CPMAddPackage(
   GITHUB_REPOSITORY google/googletest
   GIT_TAG release-1.11.0
   OPTIONS
-      "INSTALL_GTEST OFF"
-      "gtest_force_shared_crt ON"
+  "INSTALL_GTEST OFF"
+  "gtest_force_shared_crt ON"
 )
 
 CPMAddPackage(NAME fznparser SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/..)
@@ -22,6 +21,7 @@ CPMAddPackage(NAME fznparser SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/..)
 # ---- Create binary ----
 # Add a definition for the directory that contains the test stubs.
 add_compile_definitions(STUB_DIR="${CMAKE_CURRENT_SOURCE_DIR}/stubs")
+add_compile_definitions(FZN_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../fzn-models")
 
 file(GLOB sources CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
 add_executable(${PROJECT_NAME} ${sources})
