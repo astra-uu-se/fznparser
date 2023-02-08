@@ -1,6 +1,15 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+
 project(fznparserTests LANGUAGES CXX)
+
+if(MSVC)
+  add_compile_options(/std:c++20 /permissive /W4 /w14640)
+else()
+  add_compile_options(-std=c++20 -Wall -Wextra -Wnon-virtual-dtor -pedantic)
+endif()
 
 enable_testing()
 
@@ -26,7 +35,7 @@ add_compile_definitions(FZN_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../fzn-models")
 file(GLOB sources CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
 add_executable(${PROJECT_NAME} ${sources})
 target_link_libraries(${PROJECT_NAME} PRIVATE gtest fznparser::fznparser)
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIRED YES)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
   target_compile_options(fznparser PUBLIC -Wall -Wpedantic -Wextra -Werror)

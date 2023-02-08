@@ -47,7 +47,7 @@ include(cmake/antlr4/ExternalAntlr4Cpp.cmake)
 
 # set variable pointing to the antlr tool that supports C++
 # this is not required if the jar file can be found under PATH environment
-set(ANTLR_EXECUTABLE ${PROJECT_SOURCE_DIR}/ext/antlr/antlr-4.9.3-complete.jar)
+set(ANTLR_EXECUTABLE ${PROJECT_SOURCE_DIR}/ext/antlr/antlr-4.9.4-complete.jar)
 
 # add macros to generate ANTLR Cpp code from grammar
 find_package(ANTLR REQUIRED)
@@ -71,10 +71,9 @@ set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 # being a cross-platform target, we enforce standards conformance on MSVC
 target_compile_options(${PROJECT_NAME}
   PRIVATE
-  -Wall
+  -std=c++20
   -Wextra
   -Wnon-virtual-dtor
-  -pedantic
   PUBLIC
   "$<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/permissive->")
 
