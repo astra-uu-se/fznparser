@@ -1,5 +1,9 @@
 export CMAKE_OPTIONS+= ${ENV_CMAKE_OPTIONS}
+export CC=${which gcc-11}
+export CXX=${which g++-11}
 
+CC=$(shell which gcc-11)
+CXX=$(shell which g++-11)
 CMAKE=$(shell which cmake)
 MKFILE_PATH=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 BUILD_DIR=${MKFILE_PATH}build
@@ -19,13 +23,14 @@ clean:
 .PHONY: build
 build:
 	mkdir -p ${BUILD_DIR}
-	${CMAKE} -S test -B ${TEST_DIR}
-	${CMAKE} --build ${TEST_DIR}
+	cd ${BUILD_DIR}; \
+	${CMAKE} ${CMAKE_OPTIONS} -D CMAKE_C_COMPILER=${CC} -D CMAKE_CXX_COMPILER=${CXX} -S ${MKFILE_PATH}test; \
+	${MAKE}
 
 .PHONY: test
 test: build
 	CTEST_OUTPUT_ON_FAILURE=1;
-	exec ${TEST_DIR}/fznparserTests
+	exec ${BUILD_DIR}/fznparserTests
 
 .PHONY: fzn
 fzn: fzn-sanity
