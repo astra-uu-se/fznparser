@@ -385,7 +385,7 @@ const auto par_expr = rule<struct par_expr, ParExpr>{"par_expr"} =
 const auto par_decl_item =
     rule<struct par_decl_item, ParDeclItem>{
         "par_decl_item"} = par_type >> lit(':') >> var_par_identifier >>
-                           lit('=') >> par_expr;
+                           lit('=') >> par_expr >> lit(';');
 
 /*
 <string-contents> ::= ([^"\n\] | \[^\n(])*
@@ -441,14 +441,14 @@ const auto annotations = rule<struct annotations, Annotations>{"annotations"} =
 
 const auto basic_var_decl =
     rule<struct basic_var_decl, BasicVarDecl>{
-        "basic_var_decl"} = basic_var_type >> lit(':') >> var_par_identifier
-                            >> annotations >> -(lit('=') >> basic_expr) >>
+        "basic_var_decl"} = basic_var_type >> lit(':') >> var_par_identifier >>
+                            -annotations >> -(lit('=') >> basic_expr) >>
                             lit(';');
 
 const auto array_var_decl =
     rule<struct array_var_decl, ArrayVarDecl>{
-        "array_var_decl"} = array_var_type >> lit(':') >> var_par_identifier
-                            >> annotations >> lit('=') >> array_literal >>
+        "array_var_decl"} = array_var_type >> lit(':') >> var_par_identifier >>
+                            -annotations >> lit('=') >> array_literal >>
                             lit(';');
 
 const auto var_decl_item =

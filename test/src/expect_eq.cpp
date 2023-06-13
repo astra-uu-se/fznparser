@@ -5,15 +5,23 @@ namespace fznparser::testing {
 namespace x3 = ::boost::spirit::x3;
 
 template <class T>
+void expect_eq_type(const T &actual, const T &expected,
+                    const std::string &input) {
+  EXPECT_TRUE(actual.type() == expected.type())
+      << "Expected type: " << expected.type().name()
+      << " but got: " << actual.type().name() << "\n\"" << input << "\"";
+}
+
+template <class T>
 void expect_eq_bounded(const T &actual, const T &expected,
-                       const std::string input) {
+                       const std::string &input) {
   expect_eq(actual.lowerBound, expected.lowerBound, input);
   expect_eq(actual.upperBound, expected.upperBound, input);
 }
 
 template <class T>
 void expect_eq_vector(const T &actual, const T &expected,
-                      const std::string input) {
+                      const std::string &input) {
   EXPECT_EQ(actual.size(), expected.size()) << ("\"" + input + "\"");
   for (size_t i = 0; i < actual.size(); ++i) {
     expect_eq(actual.at(i), expected.at(i), input);
@@ -53,7 +61,7 @@ void expect_eq(const BasicParTypeArray &actual,
 
 void expect_eq(const ParType &actual, const ParType &expected,
                const std::string &input) {
-  EXPECT_TRUE(actual.type() == expected.type()) << ("\"" + input + "\"");
+  expect_eq_type(actual, expected, input);
   if (actual.type() == typeid(BasicParType)) {
     return expect_eq(get<BasicParType>(actual), get<BasicParType>(expected),
                      input);
@@ -101,7 +109,7 @@ void expect_eq(const BasicVarSetTypeBounded &actual,
 
 void expect_eq(const BasicVarType &actual, const BasicVarType &expected,
                const std::string &input) {
-  EXPECT_TRUE(actual.type() == expected.type()) << ("\"" + input + "\"");
+  expect_eq_type(actual, expected, input);
   if (actual.type() == typeid(BasicVarBoolType)) {
     return expect_eq(get<BasicVarBoolType>(actual),
                      get<BasicVarBoolType>(expected), input);
@@ -142,7 +150,7 @@ void expect_eq(const IndexSetUnbounded &, const IndexSetUnbounded &,
 
 void expect_eq(const PredIndexSet &actual, const PredIndexSet &expected,
                const std::string &input) {
-  EXPECT_TRUE(actual.type() == expected.type()) << ("\"" + input + "\"");
+  expect_eq_type(actual, expected, input);
   if (actual.type() == typeid(IndexSet)) {
     expect_eq(get<IndexSet>(actual), get<IndexSet>(expected), input);
   } else if (actual.type() == typeid(IndexSetUnbounded)) {
@@ -190,7 +198,7 @@ void expect_eq(const BasicPredParamTypeSetSet &actual,
 
 void expect_eq(const BasicPredParamType &actual,
                const BasicPredParamType &expected, const std::string &input) {
-  EXPECT_TRUE(actual.type() == expected.type()) << ("\"" + input + "\"");
+  expect_eq_type(actual, expected, input);
   if (actual.type() == typeid(BasicParType)) {
     return expect_eq(get<BasicParType>(expected), get<BasicParType>(actual),
                      input);
@@ -240,7 +248,7 @@ void expect_eq(const BasicPredParamType &actual,
 
 void expect_eq(const PredParamType &actual, const PredParamType &expected,
                const std::string &input) {
-  EXPECT_TRUE(actual.type() == expected.type()) << ("\"" + input + "\"");
+  expect_eq_type(actual, expected, input);
   if (actual.type() == typeid(BasicParType)) {
     expect_eq(get<BasicParType>(actual), get<BasicParType>(expected), input);
   } else if (actual.type() == typeid(BasicVarBoolType)) {
@@ -332,28 +340,7 @@ void expect_eq(const FloatSetLiteralSet &actual,
 
 void expect_eq(const BasicLiteralExpr &actual, const BasicLiteralExpr &expected,
                const std::string &input) {
-  if (actual.type() == typeid(IntSetLiteralSet)) {
-    if (expected.type() == typeid(IntSetLiteralSet)) {
-      return expect_eq(get<IntSetLiteralSet>(actual),
-                       get<IntSetLiteralSet>(expected), input);
-    } else if (expected.type() == typeid(FloatSetLiteralSet)) {
-      return expect_eq(get<IntSetLiteralSet>(actual),
-                       get<FloatSetLiteralSet>(expected), input);
-    } else {
-      FAIL() << ("\"" + input + "\"");
-    }
-  } else if (actual.type() == typeid(FloatSetLiteralSet)) {
-    if (expected.type() == typeid(IntSetLiteralSet)) {
-      return expect_eq(get<FloatSetLiteralSet>(actual),
-                       get<IntSetLiteralSet>(expected), input);
-    } else if (expected.type() == typeid(FloatSetLiteralSet)) {
-      return expect_eq(get<FloatSetLiteralSet>(actual),
-                       get<FloatSetLiteralSet>(expected), input);
-    } else {
-      FAIL() << ("\"" + input + "\"");
-    }
-  }
-  EXPECT_TRUE(actual.type() == expected.type()) << ("\"" + input + "\"");
+  expect_eq_type(actual, expected, input);
   if (actual.type() == typeid(bool)) {
     EXPECT_EQ(get<bool>(actual), get<bool>(expected)) << ("\"" + input + "\"");
   } else if (actual.type() == typeid(int64_t)) {
@@ -362,12 +349,21 @@ void expect_eq(const BasicLiteralExpr &actual, const BasicLiteralExpr &expected,
   } else if (actual.type() == typeid(double)) {
     EXPECT_EQ(get<double>(actual), get<double>(expected))
         << ("\"" + input + "\"");
+  } else if (actual.type() == typeid(SetLiteralEmpty)) {
+    expect_eq(get<SetLiteralEmpty>(actual), get<SetLiteralEmpty>(expected),
+              input);
   } else if (actual.type() == typeid(IntSetLiteralBounded)) {
     expect_eq(get<IntSetLiteralBounded>(actual),
               get<IntSetLiteralBounded>(expected), input);
+  } else if (actual.type() == typeid(IntSetLiteralSet)) {
+    expect_eq(get<IntSetLiteralSet>(actual), get<IntSetLiteralSet>(expected),
+              input);
   } else if (actual.type() == typeid(FloatSetLiteralBounded)) {
     expect_eq(get<FloatSetLiteralBounded>(actual),
               get<FloatSetLiteralBounded>(expected), input);
+  } else if (actual.type() == typeid(FloatSetLiteralSet)) {
+    expect_eq(get<FloatSetLiteralSet>(actual),
+              get<FloatSetLiteralSet>(expected), input);
   } else {
     FAIL() << ("\"" + input + "\"");
   }
@@ -375,7 +371,7 @@ void expect_eq(const BasicLiteralExpr &actual, const BasicLiteralExpr &expected,
 
 void expect_eq(const BasicExpr &actual, const BasicExpr &expected,
                const std::string &input) {
-  EXPECT_TRUE(actual.type() == expected.type()) << ("\"" + input + "\"");
+  expect_eq_type(actual, expected, input);
   if (actual.type() == typeid(bool)) {
     EXPECT_EQ(get<bool>(actual), get<bool>(expected)) << ("\"" + input + "\"");
   } else if (actual.type() == typeid(int64_t)) {
@@ -414,28 +410,7 @@ void expect_eq(const ArrayLiteral &actual, const ArrayLiteral &expected,
 
 void expect_eq(const Expr &actual, const Expr &expected,
                const std::string &input) {
-  if (actual.type() == typeid(IntSetLiteralSet)) {
-    if (expected.type() == typeid(IntSetLiteralSet)) {
-      return expect_eq(get<IntSetLiteralSet>(actual),
-                       get<IntSetLiteralSet>(expected), input);
-    } else if (expected.type() == typeid(FloatSetLiteralSet)) {
-      return expect_eq(get<IntSetLiteralSet>(actual),
-                       get<FloatSetLiteralSet>(expected), input);
-    } else {
-      FAIL() << ("\"" + input + "\"");
-    }
-  } else if (actual.type() == typeid(FloatSetLiteralSet)) {
-    if (expected.type() == typeid(IntSetLiteralSet)) {
-      return expect_eq(get<FloatSetLiteralSet>(actual),
-                       get<IntSetLiteralSet>(expected), input);
-    } else if (expected.type() == typeid(FloatSetLiteralSet)) {
-      return expect_eq(get<FloatSetLiteralSet>(actual),
-                       get<FloatSetLiteralSet>(expected), input);
-    } else {
-      FAIL() << ("\"" + input + "\"");
-    }
-  }
-  EXPECT_TRUE(actual.type() == expected.type()) << ("\"" + input + "\"");
+  expect_eq_type(actual, expected, input);
   if (actual.type() == typeid(bool)) {
     EXPECT_EQ(get<bool>(actual), get<bool>(expected)) << ("\"" + input + "\"");
   } else if (actual.type() == typeid(int64_t)) {
@@ -444,12 +419,21 @@ void expect_eq(const Expr &actual, const Expr &expected,
   } else if (actual.type() == typeid(double)) {
     EXPECT_EQ(get<double>(actual), get<double>(expected))
         << ("\"" + input + "\"");
+  } else if (actual.type() == typeid(SetLiteralEmpty)) {
+    expect_eq(get<SetLiteralEmpty>(actual), get<SetLiteralEmpty>(expected),
+              input);
   } else if (actual.type() == typeid(IntSetLiteralBounded)) {
     expect_eq(get<IntSetLiteralBounded>(actual),
               get<IntSetLiteralBounded>(expected), input);
+  } else if (actual.type() == typeid(IntSetLiteralSet)) {
+    expect_eq(get<IntSetLiteralSet>(actual), get<IntSetLiteralSet>(expected),
+              input);
   } else if (actual.type() == typeid(FloatSetLiteralBounded)) {
     expect_eq(get<FloatSetLiteralBounded>(actual),
               get<FloatSetLiteralBounded>(expected), input);
+  } else if (actual.type() == typeid(FloatSetLiteralSet)) {
+    expect_eq(get<FloatSetLiteralSet>(actual),
+              get<FloatSetLiteralSet>(expected), input);
   } else if (actual.type() == typeid(std::string)) {
     EXPECT_EQ(get<std::string>(actual), get<std::string>(expected))
         << ("\"" + input + "\"");
@@ -467,28 +451,7 @@ void expect_eq(const ParArrayLiteral &actual, const ParArrayLiteral &expected,
 
 void expect_eq(const ParExpr &actual, const ParExpr &expected,
                const std::string &input) {
-  if (actual.type() == typeid(IntSetLiteralSet)) {
-    if (expected.type() == typeid(IntSetLiteralSet)) {
-      return expect_eq(get<IntSetLiteralSet>(actual),
-                       get<IntSetLiteralSet>(expected), input);
-    } else if (expected.type() == typeid(FloatSetLiteralSet)) {
-      return expect_eq(get<IntSetLiteralSet>(actual),
-                       get<FloatSetLiteralSet>(expected), input);
-    } else {
-      FAIL() << ("\"" + input + "\"");
-    }
-  } else if (actual.type() == typeid(FloatSetLiteralSet)) {
-    if (expected.type() == typeid(IntSetLiteralSet)) {
-      return expect_eq(get<FloatSetLiteralSet>(actual),
-                       get<IntSetLiteralSet>(expected), input);
-    } else if (expected.type() == typeid(FloatSetLiteralSet)) {
-      return expect_eq(get<FloatSetLiteralSet>(actual),
-                       get<FloatSetLiteralSet>(expected), input);
-    } else {
-      FAIL() << ("\"" + input + "\"");
-    }
-  }
-  EXPECT_TRUE(actual.type() == expected.type()) << ("\"" + input + "\"");
+  expect_eq_type(actual, expected, input);
   if (actual.type() == typeid(bool)) {
     EXPECT_EQ(get<bool>(actual), get<bool>(expected)) << ("\"" + input + "\"");
   } else if (actual.type() == typeid(int64_t)) {
@@ -497,12 +460,21 @@ void expect_eq(const ParExpr &actual, const ParExpr &expected,
   } else if (actual.type() == typeid(double)) {
     EXPECT_EQ(get<double>(actual), get<double>(expected))
         << ("\"" + input + "\"");
+  } else if (actual.type() == typeid(SetLiteralEmpty)) {
+    expect_eq(get<SetLiteralEmpty>(actual), get<SetLiteralEmpty>(expected),
+              input);
   } else if (actual.type() == typeid(IntSetLiteralBounded)) {
     expect_eq(get<IntSetLiteralBounded>(actual),
               get<IntSetLiteralBounded>(expected), input);
+  } else if (actual.type() == typeid(IntSetLiteralSet)) {
+    expect_eq(get<IntSetLiteralSet>(actual), get<IntSetLiteralSet>(expected),
+              input);
   } else if (actual.type() == typeid(FloatSetLiteralBounded)) {
     expect_eq(get<FloatSetLiteralBounded>(actual),
               get<FloatSetLiteralBounded>(expected), input);
+  } else if (actual.type() == typeid(FloatSetLiteralSet)) {
+    expect_eq(get<FloatSetLiteralSet>(actual),
+              get<FloatSetLiteralSet>(expected), input);
   } else if (actual.type() == typeid(ParArrayLiteral)) {
     expect_eq(get<ParArrayLiteral>(actual), get<ParArrayLiteral>(expected),
               input);
@@ -532,28 +504,7 @@ void expect_eq(const Annotation &actual, const Annotation &expected,
 
 void expect_eq(const BasicAnnExpr &actual, const BasicAnnExpr &expected,
                const std::string &input) {
-  if (actual.type() == typeid(IntSetLiteralSet)) {
-    if (expected.type() == typeid(IntSetLiteralSet)) {
-      return expect_eq(get<IntSetLiteralSet>(actual),
-                       get<IntSetLiteralSet>(expected), input);
-    } else if (expected.type() == typeid(FloatSetLiteralSet)) {
-      return expect_eq(get<IntSetLiteralSet>(actual),
-                       get<FloatSetLiteralSet>(expected), input);
-    } else {
-      FAIL() << ("\"" + input + "\"");
-    }
-  } else if (actual.type() == typeid(FloatSetLiteralSet)) {
-    if (expected.type() == typeid(IntSetLiteralSet)) {
-      return expect_eq(get<FloatSetLiteralSet>(actual),
-                       get<IntSetLiteralSet>(expected), input);
-    } else if (expected.type() == typeid(FloatSetLiteralSet)) {
-      return expect_eq(get<FloatSetLiteralSet>(actual),
-                       get<FloatSetLiteralSet>(expected), input);
-    } else {
-      FAIL() << ("\"" + input + "\"");
-    }
-  }
-  EXPECT_TRUE(actual.type() == expected.type()) << ("\"" + input + "\"");
+  expect_eq_type(actual, expected, input);
   if (actual.type() == typeid(bool)) {
     EXPECT_EQ(get<bool>(actual), get<bool>(expected)) << ("\"" + input + "\"");
   } else if (actual.type() == typeid(int64_t)) {
@@ -562,12 +513,21 @@ void expect_eq(const BasicAnnExpr &actual, const BasicAnnExpr &expected,
   } else if (actual.type() == typeid(double)) {
     EXPECT_EQ(get<double>(actual), get<double>(expected))
         << ("\"" + input + "\"");
+  } else if (actual.type() == typeid(SetLiteralEmpty)) {
+    expect_eq(get<SetLiteralEmpty>(actual), get<SetLiteralEmpty>(expected),
+              input);
   } else if (actual.type() == typeid(IntSetLiteralBounded)) {
     expect_eq(get<IntSetLiteralBounded>(actual),
               get<IntSetLiteralBounded>(expected), input);
+  } else if (actual.type() == typeid(IntSetLiteralSet)) {
+    expect_eq(get<IntSetLiteralSet>(actual), get<IntSetLiteralSet>(expected),
+              input);
   } else if (actual.type() == typeid(FloatSetLiteralBounded)) {
     expect_eq(get<FloatSetLiteralBounded>(actual),
               get<FloatSetLiteralBounded>(expected), input);
+  } else if (actual.type() == typeid(FloatSetLiteralSet)) {
+    expect_eq(get<FloatSetLiteralSet>(actual),
+              get<FloatSetLiteralSet>(expected), input);
   } else if (actual.type() == typeid(std::string)) {
     EXPECT_EQ(get<std::string>(actual), get<std::string>(expected))
         << ("\"" + input + "\"");
@@ -609,7 +569,7 @@ void expect_eq(const ArrayVarDecl &actual, const ArrayVarDecl &expected,
 
 void expect_eq(const VarDeclItem &actual, const VarDeclItem &expected,
                const std::string &input) {
-  EXPECT_TRUE(actual.type() == expected.type()) << ("\"" + input + "\"");
+  expect_eq_type(actual, expected, input);
   if (actual.type() == typeid(BasicVarDecl)) {
     expect_eq(get<BasicVarDecl>(actual), get<BasicVarDecl>(expected), input);
   } else if (actual.type() == typeid(ArrayVarDecl)) {
@@ -640,7 +600,7 @@ void expect_eq(const SolveOptimize &actual, const SolveOptimize &expected,
 
 void expect_eq(const SolveItem &actual, const SolveItem &expected,
                const std::string &input) {
-  EXPECT_TRUE(actual.type() == expected.type()) << ("\"" + input + "\"");
+  expect_eq_type(actual, expected, input);
   if (actual.type() == typeid(SolveSatisfy)) {
     expect_eq(get<SolveSatisfy>(actual), get<SolveSatisfy>(expected), input);
   } else if (actual.type() == typeid(SolveOptimize)) {

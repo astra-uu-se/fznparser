@@ -635,6 +635,7 @@ vector<pair<vector<std::string>, ParDeclItem>> par_decl_item_data_pos() {
         extend(str_vec, vpi_str_vec);
         str_vec.emplace_back("=");
         extend(str_vec, pe_str_vec);
+        str_vec.emplace_back(";");
         good_inputs.emplace_back(pair<vector<std::string>, ParDeclItem>{
             str_vec, ParDeclItem{pt, vpi, pe}});
       }
