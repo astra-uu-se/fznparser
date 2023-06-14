@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-namespace fznparser {
+namespace fznparser::parser {
 namespace x3 = ::boost::spirit::x3;
 
 struct IntRange {
@@ -342,47 +342,51 @@ struct Model {
   std::vector<ConstraintItem> constraintItems;
   SolveItem solveItem;
 };
-}  // namespace fznparser
+}  // namespace fznparser::parser
 
-BOOST_FUSION_ADAPT_STRUCT(fznparser::BasicParType);
-BOOST_FUSION_ADAPT_STRUCT(fznparser::IndexSet, upperBound);
-BOOST_FUSION_ADAPT_STRUCT(fznparser::BasicParTypeArray, indexSet, type);
-BOOST_FUSION_ADAPT_STRUCT(fznparser::BoolVar);
-BOOST_FUSION_ADAPT_STRUCT(fznparser::BasicVarBoolType);
-BOOST_FUSION_ADAPT_STRUCT(fznparser::BasicVarIntTypeUnbounded);
-BOOST_FUSION_ADAPT_STRUCT(fznparser::BasicVarIntTypeBounded, lowerBound,
+BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::BasicParType);
+BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::IndexSet, upperBound);
+BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::BasicParTypeArray, indexSet, type);
+BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::BoolVar);
+BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::BasicVarBoolType);
+BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::BasicVarIntTypeUnbounded);
+BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::BasicVarIntTypeBounded, lowerBound,
                           upperBound);
-BOOST_FUSION_ADAPT_STRUCT(fznparser::BasicVarFloatTypeUnbounded);
-BOOST_FUSION_ADAPT_STRUCT(fznparser::BasicVarFloatTypeBounded, lowerBound,
+BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::BasicVarFloatTypeUnbounded);
+BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::BasicVarFloatTypeBounded,
+                          lowerBound, upperBound);
+BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::BasicVarSetTypeBounded, lowerBound,
                           upperBound);
-BOOST_FUSION_ADAPT_STRUCT(fznparser::BasicVarSetTypeBounded, lowerBound,
-                          upperBound);
-BOOST_FUSION_ADAPT_STRUCT(fznparser::ArrayVarType, indexSet, type);
-BOOST_FUSION_ADAPT_STRUCT(fznparser::IndexSetUnbounded);
-BOOST_FUSION_ADAPT_STRUCT(fznparser::BasicPredParamTypeIntBounded, lowerBound,
-                          upperBound);
-BOOST_FUSION_ADAPT_STRUCT(fznparser::BasicPredParamTypeFloatBounded, lowerBound,
-                          upperBound);
-BOOST_FUSION_ADAPT_STRUCT(fznparser::BasicPredParamTypeSetBounded, lowerBound,
-                          upperBound);
-BOOST_FUSION_ADAPT_STRUCT(fznparser::PredParamArrayType, predIndexSet,
+BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::ArrayVarType, indexSet, type);
+BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::IndexSetUnbounded);
+BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::BasicPredParamTypeIntBounded,
+                          lowerBound, upperBound);
+BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::BasicPredParamTypeFloatBounded,
+                          lowerBound, upperBound);
+BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::BasicPredParamTypeSetBounded,
+                          lowerBound, upperBound);
+BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::PredParamArrayType, predIndexSet,
                           basicPredParamType);
-BOOST_FUSION_ADAPT_STRUCT(fznparser::PredParam, type, identifier);
-BOOST_FUSION_ADAPT_STRUCT(fznparser::SetLiteralEmpty);
-BOOST_FUSION_ADAPT_STRUCT(fznparser::IntSetLiteralBounded, lowerBound,
+BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::PredParam, type, identifier);
+BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::SetLiteralEmpty);
+BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::IntSetLiteralBounded, lowerBound,
                           upperBound);
-BOOST_FUSION_ADAPT_STRUCT(fznparser::FloatSetLiteralBounded, lowerBound,
+BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::FloatSetLiteralBounded, lowerBound,
                           upperBound);
-BOOST_FUSION_ADAPT_STRUCT(fznparser::ParDeclItem, type, identifier, expr);
-BOOST_FUSION_ADAPT_STRUCT(fznparser::Annotation, identifier, expressions);
-BOOST_FUSION_ADAPT_STRUCT(fznparser::BasicVarDecl, type, identifier,
+BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::ParDeclItem, type, identifier,
+                          expr);
+BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::Annotation, identifier,
+                          expressions);
+BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::BasicVarDecl, type, identifier,
                           annotations, expr);
-BOOST_FUSION_ADAPT_STRUCT(fznparser::ArrayVarDecl, type, identifier,
+BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::ArrayVarDecl, type, identifier,
                           annotations, literals);
-BOOST_FUSION_ADAPT_STRUCT(fznparser::ConstraintItem, identifier, expressions,
-                          annotations);
-BOOST_FUSION_ADAPT_STRUCT(fznparser::SolveSatisfy, annotations);
-BOOST_FUSION_ADAPT_STRUCT(fznparser::SolveOptimize, annotations, type, expr);
-BOOST_FUSION_ADAPT_STRUCT(fznparser::PredicateItem, identifier, params)
-BOOST_FUSION_ADAPT_STRUCT(fznparser::Model, predicateItems, parDeclItems,
-                          varDeclItems, constraintItems, solveItem);
+BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::ConstraintItem, identifier,
+                          expressions, annotations);
+BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::SolveSatisfy, annotations);
+BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::SolveOptimize, annotations, type,
+                          expr);
+BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::PredicateItem, identifier, params)
+BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::Model, predicateItems,
+                          parDeclItems, varDeclItems, constraintItems,
+                          solveItem);

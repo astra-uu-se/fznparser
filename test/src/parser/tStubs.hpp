@@ -14,12 +14,14 @@
 #include <vector>
 
 #include "expect_eq.hpp"
-#include "fznparser/grammar.hpp"
-#include "fznparser/grammar_def.hpp"
 #include "fznparser/modelFactory.hpp"
+#include "fznparser/parser/grammar.hpp"
+#include "fznparser/parser/grammar_def.hpp"
 #include "test_data.hpp"
 
 namespace fznparser::testing {
+
+using namespace fznparser::parser;
 
 namespace x3 = boost::spirit::x3;
 
@@ -37,8 +39,8 @@ void test_stub(std::string filename, Model actual) {
   input_file.close();
 
   auto iter = input.begin();
-  EXPECT_TRUE(x3::phrase_parse(iter, input.end(), parser::model,
-                               x3::standard::space, expected))
+  EXPECT_TRUE(
+      x3::phrase_parse(iter, input.end(), model, x3::standard::space, expected))
       << filename;
   EXPECT_TRUE(iter == input.end());
   expect_eq(expected, actual, filename);

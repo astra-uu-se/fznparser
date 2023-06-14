@@ -6,9 +6,11 @@
 #include <string>
 #include <vector>
 
-#include "fznparser/grammar_ast.hpp"
+#include "fznparser/parser/grammar_ast.hpp"
 
 namespace fznparser::testing {
+
+using namespace fznparser::parser;
 
 using boost::get;
 
@@ -46,9 +48,6 @@ void expect_eq(const BasicVarFloatTypeUnbounded &,
 
 void expect_eq(const BasicVarFloatTypeBounded &,
                const BasicVarFloatTypeBounded &, const std::string &);
-
-void expect_eq(const BasicVarFloatTypeUnbounded &,
-               const BasicVarFloatTypeUnbounded &, const std::string &);
 
 void expect_eq(const BasicVarSetTypeBounded &, const BasicVarSetTypeBounded &,
                const std::string &);

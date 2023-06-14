@@ -2,7 +2,7 @@
 
 namespace fznparser::testing {
 
-using namespace fznparser;
+using namespace fznparser::parser;
 using std::pair;
 using std::vector;
 

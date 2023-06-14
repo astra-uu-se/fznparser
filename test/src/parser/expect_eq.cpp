@@ -2,6 +2,8 @@
 
 namespace fznparser::testing {
 
+using namespace fznparser::parser;
+
 namespace x3 = ::boost::spirit::x3;
 
 template <class T>

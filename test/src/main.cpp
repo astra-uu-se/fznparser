@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include "tModelFactoryTest.hpp"
-#include "tStubs.hpp"
+#include "parser/tModelFactoryTest.hpp"
+#include "parser/tStubs.hpp"
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);

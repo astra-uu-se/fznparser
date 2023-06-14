@@ -7,13 +7,13 @@
 #include <variant>
 #include <vector>
 
-#include "fznparser/grammar.hpp"
-#include "fznparser/grammar_def.hpp"
 #include "fznparser/modelFactory.hpp"
+#include "fznparser/parser/grammar.hpp"
+#include "fznparser/parser/grammar_def.hpp"
 
 namespace fznparser::testing {
 
-using namespace fznparser;
+using namespace fznparser::parser;
 using std::pair;
 using std::vector;
 

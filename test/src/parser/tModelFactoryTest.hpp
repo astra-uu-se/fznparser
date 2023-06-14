@@ -11,42 +11,45 @@
 #include <unordered_set>
 #include <vector>
 
-#include "expect_eq.hpp"
-#include "fznparser/grammar.hpp"
-#include "fznparser/grammar_def.hpp"
+#include "./expect_eq.hpp"
+#include "./test_data.hpp"
 #include "fznparser/modelFactory.hpp"
-#include "test_data.hpp"
+#include "fznparser/parser/grammar.hpp"
+#include "fznparser/parser/grammar_def.hpp"
 
 namespace fznparser::testing {
 
+using namespace fznparser::parser;
+
 namespace x3 = boost::spirit::x3;
 
-#define create_rule_test(T, rule)                                             \
-  do {                                                                        \
-    for (const std::pair<std::vector<std::string>, T> data :                  \
-         rule##_data_pos()) {                                                 \
-      for (const std::string &p : padding()) {                                \
-        const std::string input = flatten(data.first, p);                     \
-        T actual;                                                             \
-        auto iter = input.begin();                                            \
-        EXPECT_TRUE(x3::phrase_parse(iter, input.end(), parser::rule,         \
-                                     x3::standard::space, actual))            \
-            << ("\"" + input + "\"");                                         \
-        EXPECT_TRUE(iter == input.end()) << ("\"" + input + "\"");            \
-        expect_eq(actual, data.second, input);                                \
-        if (data.first.size() == 1) {                                         \
-          break;                                                              \
-        }                                                                     \
-      }                                                                       \
-    }                                                                         \
-    for (const auto &input : rule##_data_neg()) {                             \
-      EXPECT_FALSE(x3::phrase_parse(input.begin(), input.end(), parser::rule, \
-                                    x3::standard::space))                     \
-          << ("\"" + input + "\"");                                           \
-    }                                                                         \
+#define create_rule_test(T, rule)                                     \
+  do {                                                                \
+    for (const std::pair<std::vector<std::string>, T> data :          \
+         rule##_data_pos()) {                                         \
+      for (const std::string &p : padding()) {                        \
+        const std::string input = flatten(data.first, p);             \
+        T actual;                                                     \
+        auto iter = input.begin();                                    \
+        EXPECT_TRUE(x3::phrase_parse(iter, input.end(), rule,         \
+                                     x3::standard::space, actual))    \
+            << ("\"" + input + "\"");                                 \
+        EXPECT_TRUE(iter == input.end()) << ("\"" + input + "\"");    \
+        expect_eq(actual, data.second, input);                        \
+        if (data.first.size() == 1) {                                 \
+          break;                                                      \
+        }                                                             \
+      }                                                               \
+    }                                                                 \
+    for (const auto &input : rule##_data_neg()) {                     \
+      EXPECT_FALSE(x3::phrase_parse(input.begin(), input.end(), rule, \
+                                    x3::standard::space))             \
+          << ("\"" + input + "\"");                                   \
+    }                                                                 \
   } while (false);
 
 TEST(int_literal_test, test_data) { create_rule_test(int64_t, int_literal); }
+
 TEST(float_literal_test, test_data) { create_rule_test(double, float_literal); }
 TEST(identifier_test, test_data) { create_rule_test(std::string, identifier); }
 TEST(VarParIdentifier_test, test_data) {
@@ -191,7 +194,7 @@ TEST(par_decl_item, manual) {
 
   ParDeclItem actual;
   auto iter = input.begin();
-  EXPECT_TRUE(x3::phrase_parse(iter, input.end(), parser::par_decl_item,
+  EXPECT_TRUE(x3::phrase_parse(iter, input.end(), par_decl_item,
                                x3::standard::space, actual))
       << ("\"" + input + "\"");
   EXPECT_TRUE(iter == input.end()) << ("\"" + input + "\"");
@@ -207,7 +210,7 @@ TEST(basic_var_decl, manual) {
 
   BasicVarDecl actual;
   auto iter = input.begin();
-  EXPECT_TRUE(x3::phrase_parse(iter, input.end(), parser::basic_var_decl,
+  EXPECT_TRUE(x3::phrase_parse(iter, input.end(), basic_var_decl,
                                x3::standard::space, actual))
       << ("\"" + input + "\"");
   EXPECT_TRUE(iter == input.end()) << ("\"" + input + "\"");
@@ -222,8 +225,8 @@ TEST(model, manual) {
 
   Model actual;
   auto iter = input.begin();
-  EXPECT_TRUE(x3::phrase_parse(iter, input.end(), parser::model,
-                               x3::standard::space, actual))
+  EXPECT_TRUE(
+      x3::phrase_parse(iter, input.end(), model, x3::standard::space, actual))
       << ("\"" + input + "\"");
   EXPECT_TRUE(iter == input.end()) << ("\"" + input + "\"");
   expect_eq(actual,

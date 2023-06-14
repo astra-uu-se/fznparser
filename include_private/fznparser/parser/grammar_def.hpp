@@ -4,8 +4,8 @@
 #include <iostream>
 #include <string>
 
-#include "fznparser/grammar.hpp"
-#include "fznparser/grammar_ast.hpp"
+#include "fznparser/parser/grammar.hpp"
+#include "fznparser/parser/grammar_ast.hpp"
 
 namespace fznparser::parser {
 

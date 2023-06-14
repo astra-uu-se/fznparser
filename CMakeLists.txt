@@ -43,15 +43,33 @@ CPMAddPackage(
 # Configure version header
 message("CMAKE_CURRENT_BINARY_DIR: ${CMAKE_CURRENT_BINARY_DIR}")
 message("PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
-configure_file(${PROJECT_SOURCE_DIR}/config.hpp.in ${CMAKE_CURRENT_BINARY_DIR}/include/config.hpp @ONLY)
+configure_file(${PROJECT_SOURCE_DIR}/config.hpp.in
+  ${CMAKE_CURRENT_BINARY_DIR}/include/config.hpp @ONLY)
 
-# Note: globbing sources is considered bad practice as CMake's generators may not detect new files
-# automatically. Keep that in mind when changing files, or explicitly mention them here.
-file(GLOB_RECURSE HEADERS_PUBLIC CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp")
-file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp")
+# Note: globbing sources is considered bad practice as CMake's generators may
+# not detect new files automatically. Keep that in mind when changing files, or
+# explicitly mention them here.
+file(GLOB_RECURSE
+  HEADERS_PUBLIC
+  CONFIGURE_DEPENDS
+  "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp")
+
+file(GLOB_RECURSE
+  HEADERS_PRIVATE
+  CONFIGURE_DEPENDS
+  "${CMAKE_CURRENT_SOURCE_DIR}/include_private/*.hpp")
+
+file(GLOB_RECURSE
+  SOURCES
+  CONFIGURE_DEPENDS
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp")
 
 # ---- Create library ----
-add_library(${PROJECT_NAME} ${SOURCES} ${HEADERS_PUBLIC})
+add_library(${PROJECT_NAME}
+  ${SOURCES}
+  ${HEADERS_PUBLIC}
+  ${HEADERS_PRIVATE})
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
 
@@ -67,10 +85,13 @@ target_compile_options(${PROJECT_NAME}
   "$<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/permissive->")
 
 # Link dependencies
-target_include_directories(${PROJECT_NAME} PUBLIC
+target_include_directories(${PROJECT_NAME}
+  PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<BUILD_INTERFACE:${GENERATED_HEADER_DIR}>
-  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+  PRIVATE
+  ${PROJECT_SOURCE_DIR}/include_private)
 
 target_link_libraries(${PROJECT_NAME}
   PUBLIC
@@ -80,8 +101,8 @@ target_link_libraries(${PROJECT_NAME}
 # ---- Create an installable target ----
 # this allows users to install and find the library via `find_package()`.
 
-# the location where the project's version header will be placed should match the project's regular
-# header paths
+# the location where the project's version header will be placed should match
+# the project's regular header paths
 string(TOLOWER ${PROJECT_NAME}/version.h VERSION_HEADER_LOCATION)
 
 packageProject(

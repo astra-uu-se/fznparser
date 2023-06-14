@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "fznparser/grammar_ast.hpp"
+#include "fznparser/parser/grammar_ast.hpp"
 
 namespace fznparser::parser {
 
