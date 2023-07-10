@@ -11,22 +11,23 @@ static Identifier createIdentifier(antlr4::tree::TerminalNode* node) {
 antlrcpp::Any FznVisitor::visitModel(FlatZincParser::ModelContext* ctx) {
   std::vector<Parameter> parameters;
   for (auto& parDeclItem : ctx->parDeclItem()) {
-    parameters.push_back(parDeclItem->accept(this).as<Parameter>());
+    parameters.push_back(std::any_cast<Parameter>(parDeclItem->accept(this)));
   }
 
   std::vector<Variable> variables;
   for (auto& varDeclItem : ctx->varDeclItem()) {
-    variables.push_back(varDeclItem->accept(this).as<Variable>());
+    variables.push_back(std::any_cast<Variable>(varDeclItem->accept(this)));
   }
 
   std::vector<Constraint> constraints;
   for (auto& constraintItem : ctx->constraintItem()) {
-    constraints.push_back(constraintItem->accept(this).as<Constraint>());
+    constraints.push_back(std::any_cast<Constraint>(constraintItem->accept(this)));
   }
 
-  auto objective = ctx->solveItem()->accept(this).as<Objective>();
+  auto objective = std::any_cast<Objective>(ctx->solveItem()->accept(this));
 
-  return FZNModel(std::move(parameters), std::move(variables), std::move(constraints), objective);
+  return std::make_any<FZNModel>(std::move(parameters), std::move(variables),
+                                 std::move(constraints), std::move(objective));
 }
 
 antlrcpp::Any FznVisitor::visitSolveItem(FlatZincParser::SolveItemContext* ctx) {
@@ -56,39 +57,39 @@ antlrcpp::Any FznVisitor::visitParDeclItem(FlatZincParser::ParDeclItemContext* c
 
   switch (type) {
     case ParameterType::INT: {
-      auto value = ctx->parExpr()->accept(this).as<Int>();
+      auto value = std::any_cast<Int>(ctx->parExpr()->accept(this));
       _parsingParameterType = {};
-      return Parameter(IntParameter{identifier, value});
+      return std::make_any<Parameter>(IntParameter{identifier, value});
     }
 
     case ParameterType::BOOL: {
-      auto value = ctx->parExpr()->accept(this).as<bool>();
+      auto value = std::any_cast<bool>(ctx->parExpr()->accept(this));
       _parsingParameterType = {};
-      return Parameter(BoolParameter{identifier, value});
+      return std::make_any<Parameter>(BoolParameter{identifier, value});
     }
 
     case ParameterType::SET_OF_INT: {
-      auto value = ctx->parExpr()->accept(this).as<Set<Int>>();
+      auto value = std::any_cast<Set<Int>>(ctx->parExpr()->accept(this));
       _parsingParameterType = {};
-      return Parameter(SetOfIntParameter{identifier, value});
+      return std::make_any<Parameter>(SetOfIntParameter{identifier, value});
     }
 
     case ParameterType::INT_ARRAY: {
-      auto value = ctx->parExpr()->accept(this).as<std::vector<Int>>();
+      auto value = std::any_cast<std::vector<Int>>(ctx->parExpr()->accept(this));
       _parsingParameterType = {};
-      return Parameter(ArrayOfIntParameter{identifier, value});
+      return std::make_any<Parameter>(ArrayOfIntParameter{identifier, value});
     }
 
     case ParameterType::BOOL_ARRAY: {
-      auto value = ctx->parExpr()->accept(this).as<std::vector<bool>>();
+      auto value = std::any_cast<std::vector<bool>>(ctx->parExpr()->accept(this));
       _parsingParameterType = {};
-      return Parameter(ArrayOfBoolParameter{identifier, value});
+      return std::make_any<Parameter>(ArrayOfBoolParameter{identifier, value});
     }
 
     case ParameterType::SET_OF_INT_ARRAY: {
-      auto value = ctx->parExpr()->accept(this).as<std::vector<Set<Int>>>();
+      auto value = std::any_cast<std::vector<Set<Int>>>(ctx->parExpr()->accept(this));
       _parsingParameterType = {};
-      return Parameter(ArrayOfSetOfIntParameter{identifier, value});
+      return std::make_any<Parameter>(ArrayOfSetOfIntParameter{identifier, value});
     }
 
     default:
@@ -110,7 +111,7 @@ template <typename Type>
 static std::optional<BasicExpr<Type>> parseOptionalValue(antlr4::tree::ParseTreeVisitor* visitor,
                                                          FlatZincParser::VarDeclItemContext* ctx) {
   if (ctx->basicExpr()) {
-    return ctx->basicExpr()->accept(visitor).as<BasicExpr<Type>>();
+    return std::any_cast<BasicExpr<Type>>(ctx->basicExpr()->accept(visitor));
   } else {
     return {};
   }
@@ -118,7 +119,7 @@ static std::optional<BasicExpr<Type>> parseOptionalValue(antlr4::tree::ParseTree
 
 antlrcpp::Any FznVisitor::visitVarDeclItem(FlatZincParser::VarDeclItemContext* ctx) {
   auto identifier = createIdentifier(ctx->Identifier());
-  auto annotations = ctx->annotations()->accept(this).as<std::vector<Annotation>>();
+  auto annotations = std::any_cast<std::vector<Annotation>>(ctx->annotations()->accept(this));
 
   if (ctx->basicVarType()) {
     auto domainType = determineVariableType(ctx->basicVarType());
@@ -126,14 +127,14 @@ antlrcpp::Any FznVisitor::visitVarDeclItem(FlatZincParser::VarDeclItemContext* c
 
     switch (domainType) {
       case VariableType::INT: {
-        auto domain = ctx->basicVarType()->accept(this).as<Domain<Int>>();
+        auto domain = std::any_cast<Domain<Int>>(ctx->basicVarType()->accept(this));
         auto value = parseOptionalValue<Int>(this, ctx);
         _parsingVariableType = {};
         return Variable(IntVariable{identifier, domain, annotations, value});
       }
 
       case VariableType::BOOL: {
-        auto domain = ctx->basicVarType()->accept(this).as<Domain<bool>>();
+        auto domain = std::any_cast<Domain<bool>>(ctx->basicVarType()->accept(this));
         auto value = parseOptionalValue<bool>(this, ctx);
         _parsingVariableType = {};
         return Variable(BoolVariable{identifier, domain, annotations, value});
@@ -148,7 +149,8 @@ antlrcpp::Any FznVisitor::visitVarDeclItem(FlatZincParser::VarDeclItemContext* c
 
     switch (domainType) {
       case VariableType::INT: {
-        auto contents = ctx->arrayLiteral()->accept(this).as<std::vector<BasicExpr<Int>>>();
+        auto contents
+            = std::any_cast<std::vector<BasicExpr<Int>>>(ctx->arrayLiteral()->accept(this));
         _parsingVariableType = {};
         return Variable(IntVariableArray{
             identifier,
@@ -158,7 +160,8 @@ antlrcpp::Any FznVisitor::visitVarDeclItem(FlatZincParser::VarDeclItemContext* c
       }
 
       case VariableType::BOOL: {
-        auto contents = ctx->arrayLiteral()->accept(this).as<std::vector<BasicExpr<bool>>>();
+        auto contents
+            = std::any_cast<std::vector<BasicExpr<bool>>>(ctx->arrayLiteral()->accept(this));
         _parsingVariableType = {};
         return Variable(BoolVariableArray{identifier, contents, annotations});
       }
@@ -187,9 +190,9 @@ antlrcpp::Any FznVisitor::visitBasicVarType(FlatZincParser::BasicVarTypeContext*
   if (ctx->basicParType()) {
     return createDomainFromParType(ctx->basicParType());
   } else if (ctx->set()) {
-    return Domain<Int>(ctx->set()->accept(this).as<LiteralSet<Int>>());
+    return std::make_any<Domain<Int>>(std::any_cast<LiteralSet<Int>>(ctx->set()->accept(this)));
   } else if (ctx->intRange()) {
-    return Domain<Int>(ctx->intRange()->accept(this).as<IntRange>());
+    return std::make_any<Domain<Int>>(std::any_cast<IntRange>(ctx->intRange()->accept(this)));
   } else {
     throw std::runtime_error("Unhandled variant in basicVarType");
   }
@@ -201,7 +204,7 @@ static antlrcpp::Any handleBasicExpr(antlr4::tree::ParseTreeVisitor* visitor,
   if (ctx->Identifier()) {
     return BasicExpr<Type>(createIdentifier(ctx->Identifier()));
   } else if (ctx->basicLiteralExpr()) {
-    return BasicExpr<Type>(ctx->basicLiteralExpr()->accept(visitor).as<Type>());
+    return BasicExpr<Type>(std::any_cast<Type>(ctx->basicLiteralExpr()->accept(visitor)));
   } else {
     throw std::runtime_error("Unhandled variant in basicExpr.");
   }
@@ -234,7 +237,7 @@ static antlrcpp::Any handleArrayLiteral(antlr4::tree::ParseTreeVisitor* visitor,
   expressions.reserve(ctx->basicExpr().size());
 
   for (auto& basicExpr : ctx->basicExpr()) {
-    expressions.push_back(basicExpr->accept(visitor).as<BasicExpr<Type>>());
+    expressions.push_back(std::any_cast<BasicExpr<Type>>(basicExpr->accept(visitor)));
   }
 
   return expressions;
@@ -258,14 +261,14 @@ antlrcpp::Any FznVisitor::visitArrayLiteral(FlatZincParser::ArrayLiteralContext*
 
     for (auto& basicExpr : ctx->basicExpr()) {
       auto result = basicExpr->accept(this);
-      if (result.is<Int>()) {
-        argument.push_back(result.as<Int>());
-      } else if (result.is<bool>()) {
-        argument.push_back(result.as<bool>());
-      } else if (result.is<Identifier>()) {
-        argument.push_back(result.as<Identifier>());
-      } else if (result.is<Set<Int>>()) {
-        argument.push_back(result.as<Set<Int>>());
+      if (result.type() == typeid(Int)) {
+        argument.push_back(std::any_cast<Int>(result));
+      } else if (result.type() == typeid(bool)) {
+        argument.push_back(std::any_cast<bool>(result));
+      } else if (result.type() == typeid(Identifier)) {
+        argument.push_back(std::any_cast<Identifier>(result));
+      } else if (result.type() == typeid(Set<Int>)) {
+        argument.push_back(std::any_cast<Set<Int>>(result));
       } else {
         throw std::logic_error("Unhandled array element in parsing array constraint argument.");
       }
@@ -277,12 +280,12 @@ antlrcpp::Any FznVisitor::visitArrayLiteral(FlatZincParser::ArrayLiteralContext*
 
 antlrcpp::Any FznVisitor::visitConstraintItem(FlatZincParser::ConstraintItemContext* ctx) {
   auto identifier = createIdentifier(ctx->Identifier());
-  auto annotations = ctx->annotations()->accept(this).as<std::vector<Annotation>>();
+  auto annotations = std::any_cast<std::vector<Annotation>>(ctx->annotations()->accept(this));
 
   std::vector<Constraint::Argument> arguments;
   arguments.reserve(ctx->expr().size());
   for (auto& expr : ctx->expr()) {
-    arguments.push_back(expr->accept(this).as<Constraint::Argument>());
+    arguments.push_back(std::any_cast<Constraint::Argument>(expr->accept(this)));
   }
 
   return Constraint{identifier, arguments, annotations};
@@ -294,16 +297,16 @@ antlrcpp::Any FznVisitor::visitExpr(FlatZincParser::ExprContext* ctx) {
   } else if (ctx->basicExpr()) {
     auto result = ctx->basicExpr()->accept(this);
 
-    if (result.is<Int>()) {
-      return Constraint::Argument(result.as<Int>());
-    } else if (result.is<bool>()) {
-      return Constraint::Argument(result.as<bool>());
-    } else if (result.is<Set<Int>>()) {
-      return Constraint::Argument(result.as<Set<Int>>());
+    if (result.type() == typeid(Int)) {
+      return Constraint::Argument(std::any_cast<Int>(result));
+    } else if (result.type() == typeid(bool)) {
+      return Constraint::Argument(std::any_cast<bool>(result));
+    } else if (result.type() == typeid(Set<Int>)) {
+      return Constraint::Argument(std::any_cast<Set<Int>>(result));
     }
   } else if (ctx->arrayLiteral()) {
     auto result = ctx->arrayLiteral()->accept(this);
-    return Constraint::Argument(result.as<Constraint::ArrayArgument>());
+    return Constraint::Argument(std::any_cast<Constraint::ArrayArgument>(result));
   }
 
   throw std::runtime_error("Unhandled variant in expr.");
@@ -314,7 +317,7 @@ antlrcpp::Any FznVisitor::visitAnnotations(FlatZincParser::AnnotationsContext* c
   annotations.reserve(ctx->annotation().size());
 
   for (auto& annotation : ctx->annotation()) {
-    annotations.push_back(annotation->accept(this).as<Annotation>());
+    annotations.push_back(std::any_cast<Annotation>(annotation->accept(this)));
   }
 
   return annotations;
@@ -334,8 +337,8 @@ antlrcpp::Any FznVisitor::visitAnnotation(FlatZincParser::AnnotationContext* ctx
       assert(basicAnnExpr->basicLiteralExpr()->setLiteral());
       assert(basicAnnExpr->basicLiteralExpr()->setLiteral()->intRange());
 
-      auto range
-          = basicAnnExpr->basicLiteralExpr()->setLiteral()->intRange()->accept(this).as<IntRange>();
+      auto range = std::any_cast<IntRange>(
+          basicAnnExpr->basicLiteralExpr()->setLiteral()->intRange()->accept(this));
       assert(range.lowerBound == 1);
 
       sizes.push_back(range.upperBound);
@@ -386,9 +389,9 @@ antlrcpp::Any FznVisitor::visitIntLiteral(FlatZincParser::IntLiteralContext* ctx
 
 antlrcpp::Any FznVisitor::visitSetLiteral(FlatZincParser::SetLiteralContext* ctx) {
   if (ctx->set()) {
-    return Set<Int>(ctx->set()->accept(this).as<LiteralSet<Int>>());
+    return Set<Int>(std::any_cast<LiteralSet<Int>>(ctx->set()->accept(this)));
   } else if (ctx->intRange()) {
-    return Set<Int>(ctx->intRange()->accept(this).as<IntRange>());
+    return Set<Int>(std::any_cast<IntRange>(ctx->intRange()->accept(this)));
   } else {
     throw std::runtime_error("Unhandled variant in setLiteral.");
   }
@@ -421,7 +424,7 @@ static antlrcpp::Any handleParArrayLiteral(antlr4::tree::ParseTreeVisitor* visit
   values.reserve(ctx->basicLiteralExpr().size());
 
   for (auto& basicLiteralExpr : ctx->basicLiteralExpr()) {
-    values.push_back(basicLiteralExpr->accept(visitor).as<Type>());
+    values.push_back(std::any_cast<Type>(basicLiteralExpr->accept(visitor)));
   }
 
   return values;

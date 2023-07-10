@@ -25,14 +25,10 @@ namespace fznparser {
   public:
     using Identifiable = std::variant<Variable, Parameter>;
 
-    FZNModel(std::vector<Parameter> parameters, std::vector<Variable> variables,
-             std::vector<Constraint> constraints, Objective objective);
+    FZNModel(std::vector<Parameter>&& parameters, std::vector<Variable>&& variables,
+             std::vector<Constraint>&& constraints, Objective&& objective);
 
-    /**
-     * Since the models can be quite large, the copy constructor
-     * is deleted, but a move constructor is defined.
-     */
-    FZNModel(const FZNModel& other) = delete;
+    FZNModel(const FZNModel& other) = default;
     FZNModel(FZNModel&& other) = default;
 
     [[nodiscard]] std::optional<Identifiable> identify(const std::string_view& id) const noexcept;

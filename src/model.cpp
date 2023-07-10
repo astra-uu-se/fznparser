@@ -2,8 +2,8 @@
 
 using namespace fznparser;
 
-FZNModel::FZNModel(std::vector<Parameter> parameters, std::vector<Variable> variables,
-                   std::vector<Constraint> constraints, Objective objective)
+FZNModel::FZNModel(std::vector<Parameter>&& parameters, std::vector<Variable>&& variables,
+                   std::vector<Constraint>&& constraints, Objective&& objective)
     : _parameters(std::move(parameters)),
       _variables(std::move(variables)),
       _constraints(std::move(constraints)),

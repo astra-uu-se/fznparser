@@ -24,5 +24,5 @@ fznparser::FZNModel fznparser::ModelFactory::create(const std::filesystem::path&
   FlatZincParser::ModelContext* tree = parser.model();
 
   FznVisitor visitor;
-  return std::move(visitor.visitModel(tree).as<fznparser::FZNModel>());
+  return std::move(std::any_cast<fznparser::FZNModel>(visitor.visitModel(tree)));
 }

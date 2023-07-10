@@ -42,12 +42,12 @@ add_definitions(-DANTLR4CPP_STATIC)
 set(ANTLR4_WITH_STATIC_CRT OFF)
 
 # Use the latest release of 4.9.3
-set(ANTLR4_TAG e4c1a74)
+set(ANTLR4_TAG 4.13.0)
 include(cmake/antlr4/ExternalAntlr4Cpp.cmake)
 
 # set variable pointing to the antlr tool that supports C++
 # this is not required if the jar file can be found under PATH environment
-set(ANTLR_EXECUTABLE ${PROJECT_SOURCE_DIR}/ext/antlr/antlr-4.9.4-complete.jar)
+set(ANTLR_EXECUTABLE ${PROJECT_SOURCE_DIR}/ext/antlr/antlr-4.13.0-complete.jar)
 
 # add macros to generate ANTLR Cpp code from grammar
 find_package(ANTLR REQUIRED)
