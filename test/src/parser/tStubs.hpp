@@ -13,11 +13,11 @@
 #include <unordered_set>
 #include <vector>
 
-#include "expect_eq.hpp"
+#include "./../testData.hpp"
+#include "expectEq.hpp"
 #include "fznparser/modelFactory.hpp"
 #include "fznparser/parser/grammar.hpp"
-#include "fznparser/parser/grammar_def.hpp"
-#include "test_data.hpp"
+#include "fznparser/parser/grammarDef.hpp"
 
 namespace fznparser::testing {
 
@@ -25,8 +25,8 @@ using namespace fznparser::parser;
 
 namespace x3 = boost::spirit::x3;
 
-void test_stub(std::string filename, Model actual) {
-  Model expected;
+void test_stub(std::string filename, parser::Model actual) {
+  parser::Model expected;
   std::string path = std::string(STUB_DIR) + "/" + filename;
   std::ifstream input_file(path, std::ios_base::in);
   if (!input_file.is_open()) {
@@ -49,45 +49,46 @@ void test_stub(std::string filename, Model actual) {
 TEST(stubs, annotations) {
   test_stub(
       "annotations.fzn",
-      Model{std::vector<PredicateItem>{}, std::vector<ParDeclItem>{},
-            std::vector<VarDeclItem>{
-                BasicVarDecl{BasicVarIntTypeUnbounded{}, std::string{"a"},
-                             Annotations{Annotation{std::string{"output_var"},
-                                                    std::vector<AnnExpr>{}}},
-                             std::optional<BasicExpr>{std::nullopt}},
-                BasicVarDecl{BasicVarIntTypeUnbounded{}, std::string{"b"},
-                             Annotations{},
-                             std::optional<BasicExpr>{std::nullopt}},
-                BasicVarDecl{BasicVarIntTypeUnbounded{}, std::string{"c"},
-                             Annotations{},
-                             std::optional<BasicExpr>{std::nullopt}},
-                ArrayVarDecl{
-                    ArrayVarType{IndexSet{4}, BasicVarIntTypeUnbounded{}},
-                    std::string{"arr"},
-                    Annotations{Annotation{
-                        std::string{"output_array"},
-                        std::vector<AnnExpr>{std::vector<BasicAnnExpr>{
-                            IntSetLiteralBounded{1, 2},
-                            IntSetLiteralBounded{1, 2}}}}},
-                    ArrayLiteral{std::string{"b"}, std::string{"c"},
-                                 std::string{"c"}, std::string{"d"}}}},
-            std::vector<ConstraintItem>{ConstraintItem{
-                std::string{"int_plus"},
-                std::vector<Expr>{std::string{"a"}, std::string{"b"},
-                                  std::string{"c"}},
-                Annotations{Annotation{
-                    std::string{"defines_var"},
-                    std::vector<AnnExpr>{std::vector<BasicAnnExpr>{
-                        Annotation{std::string{"c"}, std::vector<AnnExpr>{}}}}}}
+      parser::Model{
+          std::vector<PredicateItem>{}, std::vector<ParDeclItem>{},
+          std::vector<VarDeclItem>{
+              BasicVarDecl{BasicVarIntTypeUnbounded{}, std::string{"a"},
+                           Annotations{Annotation{std::string{"output_var"},
+                                                  std::vector<AnnExpr>{}}},
+                           std::optional<BasicExpr>{std::nullopt}},
+              BasicVarDecl{BasicVarIntTypeUnbounded{}, std::string{"b"},
+                           Annotations{},
+                           std::optional<BasicExpr>{std::nullopt}},
+              BasicVarDecl{BasicVarIntTypeUnbounded{}, std::string{"c"},
+                           Annotations{},
+                           std::optional<BasicExpr>{std::nullopt}},
+              ArrayVarDecl{
+                  ArrayVarType{IndexSet{4}, BasicVarIntTypeUnbounded{}},
+                  std::string{"arr"},
+                  Annotations{
+                      Annotation{std::string{"output_array"},
+                                 std::vector<AnnExpr>{std::vector<BasicAnnExpr>{
+                                     IntSetLiteralBounded{1, 2},
+                                     IntSetLiteralBounded{1, 2}}}}},
+                  ArrayLiteral{std::string{"b"}, std::string{"c"},
+                               std::string{"c"}, std::string{"d"}}}},
+          std::vector<ConstraintItem>{ConstraintItem{
+              std::string{"int_plus"},
+              std::vector<Expr>{std::string{"a"}, std::string{"b"},
+                                std::string{"c"}},
+              Annotations{Annotation{
+                  std::string{"defines_var"},
+                  std::vector<AnnExpr>{std::vector<BasicAnnExpr>{
+                      Annotation{std::string{"c"}, std::vector<AnnExpr>{}}}}}}
 
-            }},
-            SolveSatisfy{}});
+          }},
+          SolveSatisfy{}});
 }
 
 TEST(stubs, constraints) {
   test_stub(
       "constraints.fzn",
-      Model{
+      parser::Model{
           std::vector<PredicateItem>{},
           std::vector<ParDeclItem>{ParDeclItem{
               BasicParTypeArray{2, BasicParType::INT}, std::string{"coeffs"},
@@ -115,31 +116,33 @@ TEST(stubs, constraints) {
 }
 
 TEST(stubs, maximize_objective) {
-  test_stub("maximize_objective.fzn",
-            Model{std::vector<PredicateItem>{}, std::vector<ParDeclItem>{},
-                  std::vector<VarDeclItem>{BasicVarDecl{
-                      BasicVarIntTypeUnbounded{}, std::string{"a"},
-                      Annotations{}, std::optional<BasicExpr>{std::nullopt}}},
-                  std::vector<ConstraintItem>{},
-                  SolveOptimize{Annotations{}, OptimizationType::MAXIMIZE,
-                                BasicExpr{std::string{"a"}}}});
+  test_stub(
+      "maximize_objective.fzn",
+      parser::Model{std::vector<PredicateItem>{}, std::vector<ParDeclItem>{},
+                    std::vector<VarDeclItem>{BasicVarDecl{
+                        BasicVarIntTypeUnbounded{}, std::string{"a"},
+                        Annotations{}, std::optional<BasicExpr>{std::nullopt}}},
+                    std::vector<ConstraintItem>{},
+                    SolveOptimize{Annotations{}, OptimizationType::MAXIMIZE,
+                                  BasicExpr{std::string{"a"}}}});
 }
 
 TEST(stubs, minimize_objective) {
-  test_stub("minimize_objective.fzn",
-            Model{std::vector<PredicateItem>{}, std::vector<ParDeclItem>{},
-                  std::vector<VarDeclItem>{BasicVarDecl{
-                      BasicVarIntTypeUnbounded{}, std::string{"a"},
-                      Annotations{}, std::optional<BasicExpr>{std::nullopt}}},
-                  std::vector<ConstraintItem>{},
-                  SolveOptimize{Annotations{}, OptimizationType::MINIMIZE,
-                                BasicExpr{std::string{"a"}}}});
+  test_stub(
+      "minimize_objective.fzn",
+      parser::Model{std::vector<PredicateItem>{}, std::vector<ParDeclItem>{},
+                    std::vector<VarDeclItem>{BasicVarDecl{
+                        BasicVarIntTypeUnbounded{}, std::string{"a"},
+                        Annotations{}, std::optional<BasicExpr>{std::nullopt}}},
+                    std::vector<ConstraintItem>{},
+                    SolveOptimize{Annotations{}, OptimizationType::MINIMIZE,
+                                  BasicExpr{std::string{"a"}}}});
 }
 
 TEST(stubs, parameters) {
   test_stub(
       "parameters.fzn",
-      Model{
+      parser::Model{
           std::vector<PredicateItem>{},
           std::vector<ParDeclItem>{
               ParDeclItem{BasicParType::INT, std::string{"n"},
@@ -171,16 +174,17 @@ TEST(stubs, parameters) {
 }
 
 TEST(stubs, satisfy_empty) {
-  test_stub("satisfy_empty.fzn",
-            Model{std::vector<PredicateItem>{}, std::vector<ParDeclItem>{},
-                  std::vector<VarDeclItem>{}, std::vector<ConstraintItem>{},
-                  SolveSatisfy{}});
+  test_stub(
+      "satisfy_empty.fzn",
+      parser::Model{std::vector<PredicateItem>{}, std::vector<ParDeclItem>{},
+                    std::vector<VarDeclItem>{}, std::vector<ConstraintItem>{},
+                    SolveSatisfy{}});
 }
 
 TEST(stubs, variable_arrays) {
   test_stub(
       "variable_arrays.fzn",
-      Model{
+      parser::Model{
           std::vector<PredicateItem>{}, std::vector<ParDeclItem>{},
           std::vector<VarDeclItem>{
               BasicVarDecl{BasicVarIntTypeUnbounded{}, std::string{"v1"},
@@ -206,7 +210,7 @@ TEST(stubs, variable_arrays) {
 TEST(stubs, variables) {
   test_stub(
       "variables.fzn",
-      Model{
+      parser::Model{
           std::vector<PredicateItem>{},
           std::vector<ParDeclItem>{ParDeclItem{
               BasicParType::INT, std::string{"n"}, ParExpr{int64_t{3}}}},

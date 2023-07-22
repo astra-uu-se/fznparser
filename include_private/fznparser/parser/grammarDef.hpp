@@ -5,7 +5,7 @@
 #include <string>
 
 #include "fznparser/parser/grammar.hpp"
-#include "fznparser/parser/grammar_ast.hpp"
+#include "fznparser/parser/grammarAst.hpp"
 
 namespace fznparser::parser {
 
@@ -393,7 +393,9 @@ const auto par_decl_item =
 */
 const auto string_literal =
     rule<struct string_literal, std::string>{"string_literal"} =
-        lexeme['"' >> *((lit("\\\"") >> attr('"')) | ~x3::char_('"')) >> '"'];
+        lexeme[x3::char_('"') >>
+               *((lit("\\\"") >> attr('"')) | ~x3::char_('"')) >>
+               x3::char_('"')];
 
 const annotation_type annotation{"annotation"};
 const basic_ann_expr_type basic_ann_expr{"basic_ann_expr"};

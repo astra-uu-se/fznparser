@@ -1,4 +1,4 @@
-#include "expect_eq.hpp"
+#include "expectEq.hpp"
 
 namespace fznparser::testing {
 
@@ -74,8 +74,6 @@ void expect_eq(const ParType &actual, const ParType &expected,
     FAIL() << ("\"" + input + "\"");
   }
 }
-
-void expect_eq(const BoolVar &, const BoolVar &, const std::string &) {}
 
 void expect_eq(const BasicVarBoolType &, const BasicVarBoolType &,
                const std::string &) {}
@@ -494,12 +492,12 @@ void expect_eq(const ParDeclItem &actual, const ParDeclItem &expected,
 
 void expect_eq(const PredParamArrayType &actual,
                const PredParamArrayType &expected, const std::string &input) {
-  expect_eq(actual.predIndexSet, expected.predIndexSet, input);
-  expect_eq(actual.basicPredParamType, expected.basicPredParamType, input);
+  expect_eq(actual.indexSet, expected.indexSet, input);
+  expect_eq(actual.type, expected.type, input);
 }
 
-void expect_eq(const Annotation &actual, const Annotation &expected,
-               const std::string &input) {
+void expect_eq(const parser::Annotation &actual,
+               const parser::Annotation &expected, const std::string &input) {
   EXPECT_EQ(actual.identifier, expected.identifier) << ("\"" + input + "\"");
   expect_eq_vector(actual.expressions, expected.expressions, input);
 }
@@ -533,9 +531,9 @@ void expect_eq(const BasicAnnExpr &actual, const BasicAnnExpr &expected,
   } else if (actual.type() == typeid(std::string)) {
     EXPECT_EQ(get<std::string>(actual), get<std::string>(expected))
         << ("\"" + input + "\"");
-  } else if (actual.type() == typeid(x3::forward_ast<Annotation>)) {
-    expect_eq(get<x3::forward_ast<Annotation>>(actual).get(),
-              get<x3::forward_ast<Annotation>>(expected).get(), input);
+  } else if (actual.type() == typeid(x3::forward_ast<parser::Annotation>)) {
+    expect_eq(get<x3::forward_ast<parser::Annotation>>(actual).get(),
+              get<x3::forward_ast<parser::Annotation>>(expected).get(), input);
   } else {
     FAIL() << ("\"" + input + "\"");
   }
@@ -618,7 +616,7 @@ void expect_eq(const PredicateItem &actual, const PredicateItem &expected,
   expect_eq_vector(actual.params, expected.params, input);
 }
 
-void expect_eq(const Model &actual, const Model &expected,
+void expect_eq(const parser::Model &actual, const parser::Model &expected,
                const std::string &input) {
   expect_eq_vector(actual.predicateItems, expected.predicateItems, input);
   expect_eq_vector(actual.parDeclItems, expected.parDeclItems, input);

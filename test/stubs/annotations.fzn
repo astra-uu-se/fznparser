@@ -1,6 +1,7 @@
 var int: a :: output_var;
 var int: b;
 var int: c;
+var int: d;
 
 array [1..4] of var int: arr :: output_array([1..2, 1..2]) = [b, c, c, d];
 

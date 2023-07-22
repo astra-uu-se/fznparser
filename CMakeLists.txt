@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.20.. FATAL_ERROR)
 
 set(META_LIBRARY_NAME "fznparser")
 set(META_PROJECT_VERSION_FULL "0.2")

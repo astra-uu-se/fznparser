@@ -3,7 +3,7 @@
 #include <boost/spirit/home/x3.hpp>
 #include <boost/spirit/include/support_istream_iterator.hpp>
 
-#include "fznparser/parser/grammar_def.hpp"
+#include "fznparser/parser/grammarDef.hpp"
 
 namespace fznparser {
 namespace x3 = ::boost::spirit::x3;

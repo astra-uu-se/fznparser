@@ -11,11 +11,11 @@
 #include <unordered_set>
 #include <vector>
 
-#include "./expect_eq.hpp"
-#include "./test_data.hpp"
+#include "./../testData.hpp"
+#include "./expectEq.hpp"
 #include "fznparser/modelFactory.hpp"
 #include "fznparser/parser/grammar.hpp"
-#include "fznparser/parser/grammar_def.hpp"
+#include "fznparser/parser/grammarDef.hpp"
 
 namespace fznparser::testing {
 
@@ -161,7 +161,9 @@ TEST(basic_ann_expr_test, test_data) {
   create_rule_test(BasicAnnExpr, basic_ann_expr);
 }
 TEST(ann_expr_test, test_data) { create_rule_test(AnnExpr, ann_expr); }
-TEST(annotation_test, test_data) { create_rule_test(Annotation, annotation); }
+TEST(annotation_test, test_data) {
+  create_rule_test(parser::Annotation, annotation);
+}
 TEST(annotations_test, test_data) {
   create_rule_test(Annotations, annotations);
 }
@@ -187,7 +189,7 @@ TEST(solve_item_test, test_data) { create_rule_test(SolveItem, solve_item); }
 TEST(predicate_item_test, test_data) {
   create_rule_test(PredicateItem, predicate_item);
 }
-TEST(model_test, test_data) { create_rule_test(Model, model); }
+TEST(model_test, test_data) { create_rule_test(parser::Model, model); }
 
 TEST(par_decl_item, manual) {
   std::string input = "array [1..2] of int: coeffs = [1, -1];";
@@ -223,20 +225,21 @@ TEST(basic_var_decl, manual) {
 TEST(model, manual) {
   std::string input = "var int: a;\nsolve satisfy;";
 
-  Model actual;
+  parser::Model actual;
   auto iter = input.begin();
   EXPECT_TRUE(
       x3::phrase_parse(iter, input.end(), model, x3::standard::space, actual))
       << ("\"" + input + "\"");
   EXPECT_TRUE(iter == input.end()) << ("\"" + input + "\"");
-  expect_eq(actual,
-            Model{std::vector<PredicateItem>{}, std::vector<ParDeclItem>{},
-                  std::vector<VarDeclItem>{
-                      BasicVarDecl{BasicVarIntTypeUnbounded{}, std::string{"a"},
-                                   Annotations{}, std::optional<BasicExpr>{}}},
-                  std::vector<ConstraintItem>{},
-                  SolveItem{SolveSatisfy{Annotations{}}}},
-            input);
+  expect_eq(
+      actual,
+      parser::Model{std::vector<PredicateItem>{}, std::vector<ParDeclItem>{},
+                    std::vector<VarDeclItem>{BasicVarDecl{
+                        BasicVarIntTypeUnbounded{}, std::string{"a"},
+                        Annotations{}, std::optional<BasicExpr>{}}},
+                    std::vector<ConstraintItem>{},
+                    SolveItem{SolveSatisfy{Annotations{}}}},
+      input);
 }
 
 }  // namespace fznparser::testing

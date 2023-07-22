@@ -4,9 +4,12 @@
 #include <boost/fusion/include/adapt_struct.hpp>
 #include <boost/spirit/home/x3.hpp>
 #include <boost/spirit/home/x3/support/ast/variant.hpp>
+#include <boost/variant/apply_visitor.hpp>
 #include <optional>
 #include <string>
 #include <vector>
+
+#include "fznparser/except.hpp"
 
 namespace fznparser::parser {
 namespace x3 = ::boost::spirit::x3;
@@ -14,16 +17,14 @@ namespace x3 = ::boost::spirit::x3;
 struct IntRange {
   int64_t lowerBound;
   int64_t upperBound;
+  int64_t size() { return upperBound - lowerBound + 1; }
 };
 
 struct FloatRange {
   double lowerBound;
   double upperBound;
+  int64_t size() const { return upperBound - lowerBound; }
 };
-
-/*
-Forward Declaration
-*/
 
 // <identifier> ::= [A-Za-z][A-Za-z0-9_]*
 
@@ -38,6 +39,7 @@ enum class BasicParType { BOOL, INT, FLOAT, SET_OF_INT };
 // <index-set> ::= "1" ".." <int-literal>
 struct IndexSet {
   int64_t upperBound;
+  int64_t size() const { return upperBound; }
 };
 
 // "array" "[" <index-set> "]" "of" <basic-par-type>
@@ -52,20 +54,16 @@ struct BasicParTypeArray {
 */
 using ParType = boost::variant<BasicParType, BasicParTypeArray>;
 
-struct BoolVar {};
-
 // var bool
 struct BasicVarBoolType {};
 
+// "var" "int"
 struct BasicVarIntTypeUnbounded {};
 
-/*
-  "var" "int"
-| "var" <int-literal> ".." <int-literal>
-| "var" "{" <int-literal> "," ... "}"
-*/
+// "var" <int-literal> ".." <int-literal>
 struct BasicVarIntTypeBounded : public IntRange {};
 
+// "var" "{" <int-literal> "," ... "}"
 struct BasicVarIntTypeSet : public std::vector<int64_t> {};
 
 /*
@@ -135,8 +133,8 @@ using BasicPredParamType =
 
 // | "array" "[" <pred-index-set> "]" "of" <basic-pred-param-type>
 struct PredParamArrayType {
-  PredIndexSet predIndexSet;
-  BasicPredParamType basicPredParamType;
+  PredIndexSet indexSet;
+  BasicPredParamType type;
 };
 
 /*
@@ -347,7 +345,6 @@ struct Model {
 BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::BasicParType);
 BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::IndexSet, upperBound);
 BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::BasicParTypeArray, indexSet, type);
-BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::BoolVar);
 BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::BasicVarBoolType);
 BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::BasicVarIntTypeUnbounded);
 BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::BasicVarIntTypeBounded, lowerBound,
@@ -365,8 +362,8 @@ BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::BasicPredParamTypeFloatBounded,
                           lowerBound, upperBound);
 BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::BasicPredParamTypeSetBounded,
                           lowerBound, upperBound);
-BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::PredParamArrayType, predIndexSet,
-                          basicPredParamType);
+BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::PredParamArrayType, indexSet,
+                          type);
 BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::PredParam, type, identifier);
 BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::SetLiteralEmpty);
 BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::IntSetLiteralBounded, lowerBound,

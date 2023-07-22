@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.20.. FATAL_ERROR)
 
 project(fznparserTests LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
@@ -23,7 +23,7 @@ CPMAddPackage(NAME fznparser SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/..)
 # ---- Create binary ----
 # Add a definition for the directory that contains the test stubs.
 add_compile_definitions(STUB_DIR="${CMAKE_CURRENT_SOURCE_DIR}/stubs")
-add_compile_definitions(FZN_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../fzn-models")
+add_compile_definitions(FZN_DIR="${CMAKE_CURRENT_SOURCE_DIR}/fzn-models")
 
 file(GLOB_RECURSE
   SOURCES

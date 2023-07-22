@@ -1,4 +1,4 @@
-#include "test_data.hpp"
+#include "testData.hpp"
 
 namespace fznparser::testing {
 
@@ -208,10 +208,10 @@ vector<pair<vector<std::string>, double>> float_literal_data_pos() {
 
 vector<pair<vector<std::string>, std::string>> string_literal_data_pos() {
   return vector<pair<vector<std::string>, std::string>>{
-      {{"\"abcd\""}, "abcd"},
-      {{"\"e f g h\""}, "e f g h"},
-      {{"\"\\\"ijk\\\"\""}, "\"ijk\""},
-      {{"\"l\tm\tn\to\""}, "l\tm\tn\to"}};
+      {{"\"abcd\""}, "\"abcd\""},
+      {{"\"e f g h\""}, "\"e f g h\""},
+      {{"\"\\\"ijk\\\"\""}, "\"\"ijk\"\""},
+      {{"\"l\tm\tn\to\""}, "\"l\tm\tn\to\""}};
 }
 
 vector<pair<vector<std::string>, std::string>> identifier_data_pos() {
@@ -745,16 +745,17 @@ vector<pair<vector<std::string>, AnnExpr>> ann_expr_data_pos(
   return good_inputs;
 }
 
-vector<pair<vector<std::string>, Annotation>> annotation_data_pos(
+vector<pair<vector<std::string>, parser::Annotation>> annotation_data_pos(
     int64_t recursion) {
-  vector<pair<vector<std::string>, Annotation>> good_inputs{};
+  vector<pair<vector<std::string>, parser::Annotation>> good_inputs{};
   if (recursion < 0) {
     return good_inputs;
   }
   const auto id = identifier_data_pos();
   for (const size_t i : vector<size_t>{1, id.size() - 1}) {
-    good_inputs.emplace_back(pair<vector<std::string>, Annotation>{
-        id.at(i).first, Annotation{id.at(i).second, vector<AnnExpr>{}}});
+    good_inputs.emplace_back(pair<vector<std::string>, parser::Annotation>{
+        id.at(i).first,
+        parser::Annotation{id.at(i).second, vector<AnnExpr>{}}});
   }
   const auto ae = ann_expr_data_pos(recursion - 1);
   if (ae.empty()) {
@@ -773,8 +774,8 @@ vector<pair<vector<std::string>, Annotation>> annotation_data_pos(
     }
     str_vec.emplace_back(")");
 
-    good_inputs.emplace_back(pair<vector<std::string>, Annotation>{
-        str_vec, Annotation{id.front().second, expressions}});
+    good_inputs.emplace_back(pair<vector<std::string>, parser::Annotation>{
+        str_vec, parser::Annotation{id.front().second, expressions}});
   }
 
   return good_inputs;
@@ -1001,8 +1002,8 @@ pair<vector<std::string>, std::vector<T>> flatten(
   return pair<vector<std::string>, std::vector<T>>{str_vec, item_vec};
 }
 
-vector<pair<vector<std::string>, Model>> model_data_pos() {
-  vector<pair<vector<std::string>, Model>> good_inputs{};
+vector<pair<vector<std::string>, parser::Model>> model_data_pos() {
+  vector<pair<vector<std::string>, parser::Model>> good_inputs{};
 
   const auto pid_init = predicate_item_data_pos();
   const auto pdid_init = par_decl_item_data_pos();
@@ -1038,8 +1039,8 @@ vector<pair<vector<std::string>, Model>> model_data_pos() {
           extend(str_vec, pdi_str_vec);
           extend(str_vec, ci_str_vec);
           extend(str_vec, si_str_vec);
-          good_inputs.emplace_back(pair<vector<std::string>, Model>{
-              str_vec, Model{pi, pdi, vector<VarDeclItem>{}, ci, si}});
+          good_inputs.emplace_back(pair<vector<std::string>, parser::Model>{
+              str_vec, parser::Model{pi, pdi, vector<VarDeclItem>{}, ci, si}});
         }
       }
     }

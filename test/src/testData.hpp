@@ -9,7 +9,7 @@
 
 #include "fznparser/modelFactory.hpp"
 #include "fznparser/parser/grammar.hpp"
-#include "fznparser/parser/grammar_def.hpp"
+#include "fznparser/parser/grammarDef.hpp"
 
 namespace fznparser::testing {
 
@@ -96,7 +96,7 @@ vector<pair<vector<std::string>, BasicAnnExpr>> basic_ann_expr_data_pos(
     int64_t recursion = 1);
 vector<pair<vector<std::string>, AnnExpr>> ann_expr_data_pos(
     int64_t recursion = 1);
-vector<pair<vector<std::string>, Annotation>> annotation_data_pos(
+vector<pair<vector<std::string>, parser::Annotation>> annotation_data_pos(
     int64_t recursion = 1);
 vector<pair<vector<std::string>, Annotations>> annotations_data_pos();
 vector<pair<vector<std::string>, BasicVarDecl>> basic_var_decl_data_pos();
@@ -107,7 +107,7 @@ vector<pair<vector<std::string>, SolveSatisfy>> solve_satisfy_data_pos();
 vector<pair<vector<std::string>, SolveOptimize>> solve_optimize_data_pos();
 vector<pair<vector<std::string>, SolveItem>> solve_item_data_pos();
 vector<pair<vector<std::string>, PredicateItem>> predicate_item_data_pos();
-vector<pair<vector<std::string>, Model>> model_data_pos();
+vector<pair<vector<std::string>, parser::Model>> model_data_pos();
 vector<pair<vector<std::string>, std::string>> var_par_identifier_data_pos();
 
 vector<std::string> int_literal_data_neg();

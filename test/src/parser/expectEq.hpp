@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include "fznparser/parser/grammar_ast.hpp"
+#include "fznparser/parser/grammarAst.hpp"
 
 namespace fznparser::testing {
 
@@ -28,8 +28,6 @@ void expect_eq(const BasicParTypeArray &, const BasicParTypeArray &,
                const std::string &);
 
 void expect_eq(const ParType &, const ParType &, const std::string &);
-
-void expect_eq(const BoolVar &, const BoolVar &, const std::string &);
 
 void expect_eq(const BasicVarBoolType &, const BasicVarBoolType &,
                const std::string &);
@@ -124,7 +122,8 @@ void expect_eq(const ParDeclItem &, const ParDeclItem &, const std::string &);
 void expect_eq(const PredParamArrayType &, const PredParamArrayType &,
                const std::string &);
 
-void expect_eq(const Annotation &, const Annotation &, const std::string &);
+void expect_eq(const parser::Annotation &, const parser::Annotation &,
+               const std::string &);
 
 void expect_eq(const BasicAnnExpr &, const BasicAnnExpr &, const std::string &);
 
@@ -154,6 +153,7 @@ void expect_eq(const SolveItem &, const SolveItem &, const std::string &);
 void expect_eq(const PredicateItem &, const PredicateItem &,
                const std::string &);
 
-void expect_eq(const Model &, const Model &, const std::string &);
+void expect_eq(const parser::Model &, const parser::Model &,
+               const std::string &);
 
 }  // namespace fznparser::testing
