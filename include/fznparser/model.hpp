@@ -42,7 +42,12 @@ class Model {
   FloatVar& addFloatVarPar(double);
   const SetVar& addSetVarPar(const IntSet&);
 
+  size_t numVariables() const;
+  size_t numConstraints() const;
+
   bool hasVariable(std::string_view variable) const;
+  const Variable& variable(std::string_view identifier) const;
+
   const std::unordered_map<std::string_view, Variable>& variables() const;
   const std::vector<Constraint>& constraints() const;
   const SolveType& solveType() const;

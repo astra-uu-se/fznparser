@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "fznparser/constraint.hpp"
 
 namespace fznparser {
@@ -36,8 +34,6 @@ void Constraint::addAnnotation(const std::string_view& identifier,
 }
 
 bool Constraint::operator==(const Constraint& other) const {
-  std::cout << "Constraint: comparing: " << toString() << " and "
-            << other.toString() << '\n';
   if (_identifier != other._identifier ||
       _arguments.size() != other._arguments.size() ||
       _annotations.size() != other._annotations.size()) {
@@ -53,8 +49,6 @@ bool Constraint::operator==(const Constraint& other) const {
       return false;
     }
   }
-  std::cout << "Constraint: " << toString() << " == " << other.toString()
-            << '\n';
   return true;
 }
 

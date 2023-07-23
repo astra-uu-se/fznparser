@@ -1,7 +1,5 @@
 #include "fznparser/transformer/modelTransformer.hpp"
 
-#include <iostream>
-
 namespace fznparser {
 
 using namespace fznparser::parser;
@@ -630,7 +628,6 @@ ArrayType generateVarArray(
     annotations.push_back(std::move(transformAnnotation(ann)));
   }
   ArrayType res(arrayVarDecl.identifier, std::move(annotations));
-  res.reserve(arrayVarDecl.literals.size());
   for (const BasicExpr& basicExpr : arrayVarDecl.literals) {
     if (basicExpr.type() == typeid(std::string)) {
       const std::string& identifier = get<std::string>(basicExpr);
@@ -646,9 +643,9 @@ ArrayType generateVarArray(
                            toString(arrayVarDecl.type.type) +
                            " variable with identifier \"" + identifier + "\"");
       }
-      res.push_back(reference_wrapper<const VarType>{get<VarType>(var)});
+      res.append(get<VarType>(var));
     } else if (basicExpr.type() == typeid(ParType)) {
-      res.push_back(get<ParType>(basicExpr));
+      res.append(get<ParType>(basicExpr));
     } else {
       throw FznException("Invalid " + toString(arrayVarDecl.type.type) +
                          " variable array literal");
@@ -666,7 +663,6 @@ SetVarArray generateSetVarArray(
     annotations.push_back(std::move(transformAnnotation(ann)));
   }
   SetVarArray res(arrayVarDecl.identifier, std::move(annotations));
-  res.reserve(arrayVarDecl.literals.size());
   for (const BasicExpr& basicExpr : arrayVarDecl.literals) {
     if (basicExpr.type() == typeid(std::string)) {
       const std::string& identifier = get<std::string>(basicExpr);
@@ -680,9 +676,9 @@ SetVarArray generateSetVarArray(
         throw FznException("Reference to non-set variable with identifier \"" +
                            identifier + "\"");
       }
-      res.push_back(reference_wrapper<const SetVar>(get<SetVar>(var)));
+      res.append(get<SetVar>(var));
     } else if (isIntSet(basicExpr.type())) {
-      res.push_back(toIntSet(basicExpr));
+      res.append(toIntSet(basicExpr));
     } else {
       throw FznException("Invalid bool variable array literal");
     }
@@ -695,7 +691,6 @@ ArrayType generateArgArray(
     const std::unordered_map<std::string_view, Variable>& vars,
     const ArrayLiteral& arrayLiteral) {
   ArrayType res("");
-  res.reserve(arrayLiteral.size());
   for (const BasicExpr& basicExpr : arrayLiteral) {
     if (basicExpr.type() == typeid(std::string)) {
       const std::string& identifier = get<std::string>(basicExpr);
@@ -712,9 +707,9 @@ ArrayType generateArgArray(
             toString(arrayLiteral) + "\" and variable \"" + var.toString() +
             "\"");
       }
-      res.push_back(reference_wrapper<const VarType>{get<VarType>(var)});
+      res.append(get<VarType>(var));
     } else if (basicExpr.type() == typeid(ParType)) {
-      res.push_back(get<ParType>(basicExpr));
+      res.append(get<ParType>(basicExpr));
     } else {
       throw FznException("Invalid " + toString(arrayLiteral) +
                          " variable array literal");
@@ -727,7 +722,6 @@ SetVarArray generateSetVarArray(
     const std::unordered_map<std::string_view, Variable>& vars,
     const ArrayLiteral& arrayLiteral) {
   SetVarArray res("");
-  res.reserve(arrayLiteral.size());
   for (const BasicExpr& basicExpr : arrayLiteral) {
     if (basicExpr.type() == typeid(std::string)) {
       const std::string& identifier = get<std::string>(basicExpr);
@@ -744,9 +738,9 @@ SetVarArray generateSetVarArray(
             toString(arrayLiteral) + "\" and variable \"" + var.toString() +
             "\"");
       }
-      res.push_back(reference_wrapper<const SetVar>{get<SetVar>(var)});
+      res.append(get<SetVar>(var));
     } else if (isIntSet(basicExpr.type())) {
-      res.push_back(toIntSet(basicExpr));
+      res.append(toIntSet(basicExpr));
     } else {
       throw FznException("Invalid " + toString(arrayLiteral) +
                          " variable array literal");

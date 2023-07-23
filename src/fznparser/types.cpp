@@ -1,16 +1,14 @@
 #include "fznparser/types.hpp"
 
-#include <iostream>
-
 using std::get;
 
-std::vector<int64_t> toIntSet(std::vector<int64_t>& vals) {
+std::vector<int64_t> sortAndRemoveDuplicates(std::vector<int64_t>& vals) {
   std::sort(vals.begin(), vals.end());
   vals.erase(std::unique(vals.begin(), vals.end()), vals.end());
   return vals;
 }
 
-std::vector<double> toFloatSet(std::vector<double>& vals) {
+std::vector<double> sortAndRemoveDuplicates(std::vector<double>& vals) {
   std::sort(vals.begin(), vals.end());
   vals.erase(std::unique(vals.begin(), vals.end()), vals.end());
   return vals;
@@ -25,7 +23,7 @@ IntSet::IntSet(int64_t lb, int64_t ub) : _elements(std::make_pair(lb, ub)) {
 }
 
 IntSet::IntSet(std::vector<int64_t>&& vals)
-    : _elements(std::move(toIntSet(vals))) {}
+    : _elements(std::move(sortAndRemoveDuplicates(vals))) {}
 
 bool IntSet::contains(int64_t val) const {
   if (holds_alternative<std::pair<int64_t, int64_t>>(_elements)) {
@@ -34,6 +32,14 @@ bool IntSet::contains(int64_t val) const {
   }
   return std::binary_search(get<std::vector<int64_t>>(_elements).begin(),
                             get<std::vector<int64_t>>(_elements).end(), val);
+}
+
+size_t IntSet::size() const {
+  if (holds_alternative<std::pair<int64_t, int64_t>>(_elements)) {
+    auto [lb, ub] = get<std::pair<int64_t, int64_t>>(_elements);
+    return static_cast<size_t>(ub) - static_cast<size_t>(lb) + 1;
+  }
+  return get<std::vector<int64_t>>(_elements).size();
 }
 
 int64_t IntSet::lowerBound() const {
@@ -65,8 +71,6 @@ const std::vector<int64_t>& IntSet::elements() const {
 }
 
 bool IntSet::operator==(const IntSet& other) const {
-  std::cout << "IntSet: comparing: " << toString() << " and "
-            << other.toString() << '\n';
   if (holds_alternative<std::pair<int64_t, int64_t>>(_elements) &&
       holds_alternative<std::pair<int64_t, int64_t>>(other._elements)) {
     return lowerBound() == other.lowerBound() &&
@@ -114,7 +118,7 @@ FloatSet::FloatSet(double lb, double ub) : _elements(std::make_pair(lb, ub)) {
 }
 
 FloatSet::FloatSet(std::vector<double>&& vals)
-    : _elements(std::move(toFloatSet(vals))) {}
+    : _elements(std::move(sortAndRemoveDuplicates(vals))) {}
 
 bool FloatSet::contains(double val) const {
   if (holds_alternative<std::pair<double, double>>(_elements)) {
@@ -138,8 +142,6 @@ double FloatSet::upperBound() const {
 }
 
 bool FloatSet::operator==(const FloatSet& other) const {
-  std::cout << "FloatSet: comparing: " << toString() << " and "
-            << other.toString() << '\n';
   if (holds_alternative<std::pair<double, double>>(_elements) &&
       holds_alternative<std::pair<double, double>>(other._elements)) {
     return get<std::pair<double, double>>(_elements) ==

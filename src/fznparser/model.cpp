@@ -1,7 +1,5 @@
 #include "fznparser/model.hpp"
 
-#include <iostream>
-
 namespace fznparser {
 
 Model::Model(std::unordered_map<std::string_view, Variable>&& variables,
@@ -31,6 +29,12 @@ const SetVar& Model::addSetVarPar(const IntSet& is) {
   return _setVarPars.emplace_back(SetVar(is, ""));
 }
 
+size_t Model::numVariables() const { return _variables.size(); }
+size_t Model::numConstraints() const { return _constraints.size(); }
+const Variable& Model::variable(std::string_view identifier) const {
+  return _variables.at(identifier);
+}
+
 bool Model::hasVariable(std::string_view identifier) const {
   return _variables.find(identifier) != _variables.end();
 }
@@ -46,8 +50,6 @@ const std::vector<Constraint>& Model::constraints() const {
 const SolveType& Model::solveType() const { return _solveType; }
 
 bool Model::operator==(const Model& other) const {
-  std::cout << "Model: comparing: " << toString() << " and " << other.toString()
-            << '\n';
   if (_variables.size() != other._variables.size() ||
       _constraints.size() != other._constraints.size() ||
       _solveType != other._solveType) {
@@ -68,7 +70,6 @@ bool Model::operator==(const Model& other) const {
       }
     }
     if (!found) {
-      std::cout << "No match for constraint: " << con.toString() << '\n';
       return false;
     }
   }
@@ -91,4 +92,4 @@ std::string Model::toString() const {
   s += _solveType.toString() + ";\n";
   return s;
 }
-}
+}  // namespace fznparser

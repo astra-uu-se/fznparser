@@ -7,7 +7,6 @@
 #include <variant>
 #include <vector>
 
-#include "fznparser/modelFactory.hpp"
 #include "fznparser/parser/grammar.hpp"
 #include "fznparser/parser/grammarDef.hpp"
 

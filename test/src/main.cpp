@@ -1,8 +1,9 @@
 #include <gtest/gtest.h>
 
 #include "parser/tGrammarRules.hpp"
-// #include "parser/tStubs.hpp"
-// #include "tModels.hpp"
+#include "parser/tStubs.hpp"
+#include "tModels.hpp"
+#include "tParser.hpp"
 
 #include "transformer/tModelTransformer.hpp"
 

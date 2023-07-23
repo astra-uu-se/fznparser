@@ -93,10 +93,10 @@ TEST(generator, annotations) {
   variables.emplace("d", Variable{std::move(d)});
 
   IntVarArray arr("arr");
-  arr.addArgument(std::get<IntVar>(variables.at("b")));
-  arr.addArgument(std::get<IntVar>(variables.at("c")));
-  arr.addArgument(std::get<IntVar>(variables.at("c")));
-  arr.addArgument(std::get<IntVar>(variables.at("d")));
+  arr.append(std::get<IntVar>(variables.at("b")));
+  arr.append(std::get<IntVar>(variables.at("c")));
+  arr.append(std::get<IntVar>(variables.at("c")));
+  arr.append(std::get<IntVar>(variables.at("d")));
   arr.addAnnotation("output_array", {IntSet(1, 2), IntSet(1, 2)});
   variables.emplace("arr", Variable{std::move(arr)});
 
@@ -128,12 +128,12 @@ TEST(generator, constraints) {
   std::vector<Constraint> constraints;
 
   IntVarArray coefs("");
-  coefs.addArgument(1);
-  coefs.addArgument(-1);
+  coefs.append(1);
+  coefs.append(-1);
 
   IntVarArray arr("");
-  arr.addArgument(std::get<IntVar>(variables.at("v1")));
-  arr.addArgument(std::get<IntVar>(variables.at("v2")));
+  arr.append(std::get<IntVar>(variables.at("v1")));
+  arr.append(std::get<IntVar>(variables.at("v2")));
 
   constraints.emplace_back(Constraint(
       "int_lin_eq",
@@ -192,17 +192,16 @@ TEST(generator, variable_arrays) {
   variables.emplace("v3", Variable{BoolVar("v3")});
 
   IntVarArray array1("array1");
-  array1.addArgument(std::get<IntVar>(variables.at("v1")));
-  array1.addArgument(2);
-  array1.addArgument(std::get<IntVar>(variables.at("v2")));
-  array1.addArgument(5);
+  array1.append(std::get<IntVar>(variables.at("v1")));
+  array1.append(2);
+  array1.append(std::get<IntVar>(variables.at("v2")));
+  array1.append(5);
   variables.emplace("array1", Variable{std::move(array1)});
 
   BoolVarArray array2("array2");
-  std::cout << std::get<BoolVar>(variables.at("v3")).toString() << '\n';
-  array2.addArgument(std::get<BoolVar>(variables.at("v3")));
-  array2.addArgument(true);
-  array2.addArgument(false);
+  array2.append(std::get<BoolVar>(variables.at("v3")));
+  array2.append(true);
+  array2.append(false);
   variables.emplace("array2", Variable{std::move(array2)});
 
   test_generator("variable_arrays.fzn",

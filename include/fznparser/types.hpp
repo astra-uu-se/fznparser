@@ -36,6 +36,7 @@ class IntSet {
   IntSet(std::vector<int64_t>&& elems);
 
   bool contains(int64_t) const;
+  size_t size() const;
   int64_t lowerBound() const;
   int64_t upperBound() const;
 
@@ -68,6 +69,7 @@ class FloatSet {
   FloatSet(std::vector<double>&& elems);
 
   bool contains(double) const;
+  size_t size() const;
   double lowerBound() const;
   double upperBound() const;
 

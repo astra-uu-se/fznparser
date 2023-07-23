@@ -6,9 +6,10 @@
 #include <memory>
 #include <string>
 
+#include "fznparser/model.hpp"
+
 namespace fznparser {
-class ModelFactory {
- public:
-  static void parse(const std::filesystem::path &modelPath);
-};
+
+Model parseFznFile(const std::string& fznFilePath);
+
 }  // namespace fznparser

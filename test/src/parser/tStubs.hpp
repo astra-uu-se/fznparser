@@ -13,9 +13,6 @@
 #include <unordered_set>
 #include <vector>
 
-#include "./../testData.hpp"
-#include "expectEq.hpp"
-#include "fznparser/modelFactory.hpp"
 #include "fznparser/parser/grammar.hpp"
 #include "fznparser/parser/grammarDef.hpp"
 
@@ -60,6 +57,9 @@ TEST(stubs, annotations) {
                            Annotations{},
                            std::optional<BasicExpr>{std::nullopt}},
               BasicVarDecl{BasicVarIntTypeUnbounded{}, std::string{"c"},
+                           Annotations{},
+                           std::optional<BasicExpr>{std::nullopt}},
+              BasicVarDecl{BasicVarIntTypeUnbounded{}, std::string{"d"},
                            Annotations{},
                            std::optional<BasicExpr>{std::nullopt}},
               ArrayVarDecl{

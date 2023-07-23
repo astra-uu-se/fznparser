@@ -1,7 +1,5 @@
 #include "fznparser/solveType.hpp"
 
-#include <iostream>
-
 namespace fznparser {
 
 SolveType::SolveType(std::vector<fznparser::Annotation>&& annotations)
@@ -16,8 +14,6 @@ SolveType::SolveType(ProblemType problemType, const Variable& var,
       _objective(var) {}
 
 bool SolveType::operator==(const SolveType& other) const {
-  std::cout << "SolveType: comparing: " << toString() << " and "
-            << other.toString() << '\n';
   if (_annotations.size() != other._annotations.size() ||
       _problemType != other._problemType ||
       _objective.has_value() != other._objective.has_value()) {
@@ -32,8 +28,6 @@ bool SolveType::operator==(const SolveType& other) const {
       return false;
     }
   }
-  std::cout << "SolveType: " << toString() << " == " << other.toString()
-            << '\n';
   return true;
 }
 

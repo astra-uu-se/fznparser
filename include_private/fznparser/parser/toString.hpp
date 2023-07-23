@@ -26,6 +26,7 @@ std::string toString(const BasicVarIntTypeSet&);
 std::string toString(const BasicVarFloatTypeUnbounded&);
 std::string toString(const BasicVarFloatTypeBounded&);
 std::string toString(const BasicVarSetTypeBounded&);
+std::string toString(const BasicVarSetTypeSet&);
 std::string toString(const BasicVarType&);
 std::string toString(const ArrayVarType&);
 std::string toString(const IndexSetUnbounded&);

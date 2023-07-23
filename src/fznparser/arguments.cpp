@@ -1,7 +1,5 @@
 #include "fznparser/arguments.hpp"
 
-#include <iostream>
-
 #include "fznparser/model.hpp"
 
 namespace fznparser {
@@ -28,8 +26,6 @@ const BoolVar& BoolArg::toVar(Model& model) {
 }
 
 bool BoolArg::operator==(const BoolArg& other) const {
-  std::cout << "BoolArg: comparing: " << toString() << " and "
-            << other.toString() << '\n';
   if (isParameter() != other.isParameter()) {
     return false;
   } else if (isParameter() && other.isParameter()) {
@@ -70,8 +66,6 @@ const IntVar& IntArg::toVar(Model& model) {
 }
 
 bool IntArg::operator==(const IntArg& other) const {
-  std::cout << "IntArg: comparing: " << toString() << " and "
-            << other.toString() << '\n';
   if (isParameter() != other.isParameter()) {
     return false;
   } else if (isParameter() && other.isParameter()) {
@@ -112,8 +106,6 @@ const FloatVar& FloatArg::toVar(Model& model) {
 }
 
 bool FloatArg::operator==(const FloatArg& other) const {
-  std::cout << "FloatArg: comparing: " << toString() << " and "
-            << other.toString() << '\n';
   if (isParameter() != other.isParameter()) {
     return false;
   } else if (isParameter() && other.isParameter()) {
@@ -159,8 +151,6 @@ const SetVar& IntSetArg::toVar(Model& model) {
 }
 
 bool IntSetArg::operator==(const IntSetArg& other) const {
-  std::cout << "IntSetArg: comparing: " << toString() << " and "
-            << other.toString() << '\n';
   if (isParameter() != other.isParameter()) {
     return false;
   } else if (isParameter() && other.isParameter()) {
@@ -183,9 +173,6 @@ std::string IntSetArg::toString() const {
 }
 
 bool Arg::operator==(const Arg& other) const {
-  std::cout << "Arg: comparing: " << toString() << " and " << other.toString()
-            << '\n';
-
   if (holds_alternative<BoolArg>(*this) && holds_alternative<BoolArg>(other)) {
     return get<BoolArg>(*this).operator==(get<BoolArg>(other));
   } else if (holds_alternative<IntArg>(*this) &&

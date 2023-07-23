@@ -13,7 +13,6 @@
 
 #include "./../testData.hpp"
 #include "./expectEq.hpp"
-#include "fznparser/modelFactory.hpp"
 #include "fznparser/parser/grammar.hpp"
 #include "fznparser/parser/grammarDef.hpp"
 

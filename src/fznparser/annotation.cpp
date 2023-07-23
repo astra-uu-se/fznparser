@@ -1,7 +1,5 @@
 #include "fznparser/annotation.hpp"
 
-#include <iostream>
-
 namespace fznparser {
 
 using std::get;
@@ -23,26 +21,20 @@ const std::vector<AnnotationExpression>& Annotation::addAnnotationExpression(
 }
 
 bool Annotation::operator==(const Annotation& other) const {
-  std::cout << "Annotation: comparing: " << toString() << " and "
-            << other.toString() << '\n';
   if (_identifier != other._identifier ||
       _expressions.size() != other._expressions.size()) {
     return false;
   }
   for (size_t i = 0; i < _expressions.size(); ++i) {
-    std::cout << "i: " << i << '\n';
     if (_expressions.at(i).size() != other._expressions.at(i).size()) {
       return false;
     }
     for (size_t j = 0; j < _expressions.at(i).size(); j++) {
-      std::cout << "i: " << i << "; j: " << j << '\n';
       if (_expressions.at(i).at(j).operator!=(other._expressions.at(i).at(j))) {
         return false;
       }
     }
   }
-  std::cout << "Annotation: " << toString() << " == " << other.toString()
-            << '\n';
   return true;
 }
 
@@ -73,8 +65,6 @@ std::string Annotation::toString() const {
 }
 
 bool AnnotationExpression::operator==(const AnnotationExpression& other) const {
-  std::cout << "AnnotationExpression: comparing: " << toString() << " and "
-            << other.toString() << '\n';
   if (holds_alternative<bool>(*this) && holds_alternative<bool>(other)) {
     return get<bool>(*this) == get<bool>(other);
   } else if (holds_alternative<int64_t>(*this) &&
@@ -91,8 +81,6 @@ bool AnnotationExpression::operator==(const AnnotationExpression& other) const {
     return get<FloatSet>(*this).operator==(get<FloatSet>(other));
   } else if (holds_alternative<std::string_view>(*this) &&
              holds_alternative<std::string_view>(other)) {
-    std::cout << "expected: string_view " << toString()
-              << "\nActual string_view " << other.toString() << '\n';
     return get<std::string_view>(*this) == get<std::string_view>(other);
   } else if (holds_alternative<Annotation>(*this) &&
              holds_alternative<Annotation>(other)) {
