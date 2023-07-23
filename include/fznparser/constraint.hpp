@@ -17,6 +17,8 @@
 
 namespace fznparser {
 
+class Model;  // forward declaration
+
 class Constraint {
   std::string_view _identifier;
   std::vector<Arg> _arguments;
@@ -28,6 +30,7 @@ class Constraint {
   Constraint(const std::string_view&&, std::vector<Arg>,
              std::vector<Annotation> = {});
 
+  const std::vector<Annotation>& annotations() const;
   const std::string_view& identifier() const;
 
   void addAnnotation(const Annotation&);
@@ -37,7 +40,8 @@ class Constraint {
                      std::vector<AnnotationExpression>&&);
 
   const std::vector<Arg>& arguments() const;
-  const std::vector<Variable&> definedVariable(Model& model) const;
+  std::optional<std::reference_wrapper<const Variable>> definedVariable(
+      const Model& model) const;
 
   bool operator==(const Constraint&) const;
   bool operator!=(const Constraint&) const;

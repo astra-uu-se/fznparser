@@ -1,4 +1,5 @@
 #include "fznparser/constraint.hpp"
+#include "fznparser/model.hpp"
 
 namespace fznparser {
 Constraint::Constraint(const std::string_view&& identifier,
@@ -33,6 +34,9 @@ void Constraint::addAnnotation(const std::string_view& identifier,
           std::move(std::vector<AnnotationExpression>{expression})})));
 }
 
+const std::vector<Annotation>& Constraint::annotations() const {
+  return _annotations;
+}
 const std::vector<Arg>& Constraint::arguments() const { return _arguments; }
 
 std::optional<std::reference_wrapper<const Variable>>
