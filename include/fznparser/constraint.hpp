@@ -36,6 +36,9 @@ class Constraint {
   void addAnnotation(const std::string_view&,
                      std::vector<AnnotationExpression>&&);
 
+  const std::vector<Arg>& arguments() const;
+  const std::vector<Variable&> definedVariable(Model& model) const;
+
   bool operator==(const Constraint&) const;
   bool operator!=(const Constraint&) const;
   std::string toString() const;
