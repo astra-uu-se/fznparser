@@ -39,6 +39,7 @@ class VarBase {
   bool isOutputVar() const;
   bool isDefinedVar() const;
 
+  virtual bool isFixed() const = 0;
   virtual std::string toString() const = 0;
 };
 
@@ -58,6 +59,8 @@ class BoolVar : public VarBase {
 
   bool operator==(const BoolVar&) const;
   bool operator!=(const BoolVar&) const;
+
+  virtual bool isFixed() const override;
   virtual std::string toString() const override;
 };
 
@@ -82,6 +85,8 @@ class IntVar : public VarBase {
 
   bool operator==(const IntVar&) const;
   bool operator!=(const IntVar&) const;
+
+  virtual bool isFixed() const override;
   virtual std::string toString() const override;
 };
 
@@ -107,6 +112,8 @@ class FloatVar : public VarBase {
 
   bool operator==(const FloatVar&) const;
   bool operator!=(const FloatVar&) const;
+
+  virtual bool isFixed() const override;
   virtual std::string toString() const override;
 };
 
@@ -132,6 +139,8 @@ class SetVar : public VarBase {
 
   bool operator==(const SetVar&) const;
   bool operator!=(const SetVar&) const;
+
+  virtual bool isFixed() const override;
   virtual std::string toString() const override;
 };
 
@@ -143,7 +152,7 @@ class VarArrayBase : public VarBase {
   VarArrayBase(VarArrayBase&&) = default;
   VarArrayBase(const std::string_view&, std::vector<Annotation>&&);
   std::vector<IntSet> outputArrayIndexSets() const;
-  std::vector<std::reference_wrapper<const Variable>> definedVariables(
+  std::optional<std::reference_wrapper<const Variable>> definedVariable(
       const fznparser::Model&) const;
 };
 
@@ -166,6 +175,8 @@ class VarArrayTemplate : public VarArrayBase {
       return std::holds_alternative<ParType>(var);
     });
   };
+
+  virtual bool isFixed() const override { return isParArray(); };
 
   std::vector<ParType> toParVector() const {
     std::vector<ParType> parVector;

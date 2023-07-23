@@ -69,7 +69,6 @@ class FloatSet {
   FloatSet(std::vector<double>&& elems);
 
   bool contains(double) const;
-  size_t size() const;
   double lowerBound() const;
   double upperBound() const;
 

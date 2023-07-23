@@ -86,6 +86,8 @@ bool BoolVar::operator!=(const BoolVar& other) const {
   return !operator==(other);
 }
 
+bool BoolVar::isFixed() const { return _domain != 2; }
+
 std::string BoolVar::toString() const {
   std::string s = "var bool: " + std::string(identifier());
   if (_domain == 1) {
@@ -138,6 +140,8 @@ bool IntVar::operator==(const IntVar& other) const {
 bool IntVar::operator!=(const IntVar& other) const {
   return !operator==(other);
 }
+
+bool IntVar::isFixed() const { return _domain.size() == 1; }
 
 std::string IntVar::toString() const {
   std::string s =
@@ -192,6 +196,10 @@ bool FloatVar::operator!=(const FloatVar& other) const {
   return !operator==(other);
 }
 
+bool FloatVar::isFixed() const {
+  return _domain.lowerBound() == _domain.upperBound();
+}
+
 std::string FloatVar::toString() const {
   std::string s =
       "var " + _domain.toString() + ": " + std::string(identifier());
@@ -242,6 +250,8 @@ bool SetVar::operator!=(const SetVar& other) const {
   return !operator==(other);
 }
 
+bool SetVar::isFixed() const { return false; }
+
 std::string SetVar::toString() const {
   std::string s =
       "var " + _domain.toString() + ": " + std::string(identifier());
@@ -274,6 +284,33 @@ std::vector<IntSet> VarArrayBase::outputArrayIndexSets() const {
     }
   }
   return sets;
+}
+
+std::optional<std::reference_wrapper<const Variable>>
+VarArrayBase::definedVariable(const fznparser::Model& model) const {
+  for (const auto& annotation : annotations()) {
+    if (annotation.identifier() != "defines_var") {
+      continue;
+    }
+    if (annotation.expressions().size() != 1 ||
+        annotation.expressions().front().size() != 1) {
+      throw FznException(
+          "defines_var annotation must define exactly one "
+          "variable");
+    }
+    const auto& expression = annotation.expressions().front().front();
+    if (!std::holds_alternative<std::string_view>(expression)) {
+      throw FznException(
+          "defines_var annotation argument must be an identifier");
+    }
+    const std::string_view& identifier = get<std::string_view>(expression);
+    if (!model.hasVariable(identifier)) {
+      throw FznException("Variable " + std::string(identifier) +
+                         " is not defined");
+    }
+    return std::reference_wrapper(model.variable(identifier));
+  }
+  return std::nullopt;
 }
 
 BoolVarArray::BoolVarArray(const std::string_view& identifier,
