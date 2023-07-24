@@ -40,6 +40,8 @@ class IntSet {
   int64_t lowerBound() const;
   int64_t upperBound() const;
 
+  bool isInterval() const;
+
   const std::vector<int64_t>& populateElements();
 
   const std::vector<int64_t>& elements() const;
@@ -72,6 +74,7 @@ class FloatSet {
   double lowerBound() const;
   double upperBound() const;
 
+  bool isInterval() const;
   const std::vector<double>& elements() const;
 
   bool operator==(const FloatSet&) const;

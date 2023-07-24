@@ -54,6 +54,11 @@ int64_t IntSet::upperBound() const {
              : get<std::vector<int64_t>>(_elements).back();
 }
 
+bool IntSet::isInterval() const {
+  return holds_alternative<std::pair<int64_t, int64_t>>(_elements) ||
+         (upperBound() - lowerBound() + 1 == static_cast<int64_t>(size()));
+}
+
 const std::vector<int64_t>& IntSet::populateElements() {
   if (holds_alternative<std::pair<int64_t, int64_t>>(_elements)) {
     std::vector<int64_t> elems(upperBound() - lowerBound() + 1);
@@ -71,21 +76,21 @@ const std::vector<int64_t>& IntSet::elements() const {
 }
 
 bool IntSet::operator==(const IntSet& other) const {
-  if (holds_alternative<std::pair<int64_t, int64_t>>(_elements) &&
-      holds_alternative<std::pair<int64_t, int64_t>>(other._elements)) {
+  if (isInterval() != other.isInterval()) {
+    return false;
+  }
+  if (isInterval() == other.isInterval()) {
     return lowerBound() == other.lowerBound() &&
            upperBound() == other.upperBound();
-  } else if (holds_alternative<std::vector<int64_t>>(_elements) &&
-             holds_alternative<std::vector<int64_t>>(other._elements)) {
-    const std::vector<int64_t>& e1 = get<std::vector<int64_t>>(_elements);
-    const std::vector<int64_t>& e2 = get<std::vector<int64_t>>(other._elements);
-    if (e1.size() != e2.size()) {
+  }
+  const std::vector<int64_t>& e1 = elements();
+  const std::vector<int64_t>& e2 = elements();
+  if (e1.size() != e2.size()) {
+    return false;
+  }
+  for (size_t i = 0; i < e1.size(); ++i) {
+    if (e1[i] != e2[i]) {
       return false;
-    }
-    for (size_t i = 0; i < e1.size(); ++i) {
-      if (e1[i] != e2[i]) {
-        return false;
-      }
     }
   }
   return true;
@@ -141,22 +146,27 @@ double FloatSet::upperBound() const {
              : get<std::vector<double>>(_elements).back();
 }
 
+bool FloatSet::isInterval() const {
+  return holds_alternative<std::pair<double, double>>(_elements) ||
+         (lowerBound() == upperBound());
+}
+
 bool FloatSet::operator==(const FloatSet& other) const {
-  if (holds_alternative<std::pair<double, double>>(_elements) &&
-      holds_alternative<std::pair<double, double>>(other._elements)) {
-    return get<std::pair<double, double>>(_elements) ==
-           get<std::pair<double, double>>(other._elements);
-  } else if (holds_alternative<std::vector<double>>(_elements) &&
-             holds_alternative<std::vector<double>>(other._elements)) {
-    const std::vector<double>& e1 = get<std::vector<double>>(_elements);
-    const std::vector<double>& e2 = get<std::vector<double>>(other._elements);
-    if (e1.size() != e2.size()) {
+  if (isInterval() != other.isInterval()) {
+    return false;
+  }
+  if (isInterval() == other.isInterval()) {
+    return lowerBound() == other.lowerBound() &&
+           upperBound() == other.upperBound();
+  }
+  const std::vector<double>& e1 = elements();
+  const std::vector<double>& e2 = elements();
+  if (e1.size() != e2.size()) {
+    return false;
+  }
+  for (size_t i = 0; i < e1.size(); ++i) {
+    if (e1[i] != e2[i]) {
       return false;
-    }
-    for (size_t i = 0; i < e1.size(); ++i) {
-      if (e1[i] != e2[i]) {
-        return false;
-      }
     }
   }
   return true;
