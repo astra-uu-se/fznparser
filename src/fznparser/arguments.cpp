@@ -11,28 +11,46 @@ bool BoolArg::isParameter() const {
   return std::holds_alternative<bool>(*this);
 }
 
-bool BoolArg::toParameter() const {
+bool BoolArg::isFixed() const { return isParameter() || var().isFixed(); }
+
+bool BoolArg::parameter() const {
   if (isParameter()) {
     return get<bool>(*this);
   }
   throw FznException("Argument is not a parameter");
 }
 
+const BoolVar& BoolArg::var() const {
+  if (!isParameter()) {
+    return get<reference_wrapper<const BoolVar>>(*this).get();
+  }
+  throw FznException("Argument is not a var");
+}
+
+bool BoolArg::toParameter() const {
+  if (isParameter()) {
+    return get<bool>(*this);
+  }
+  if (var().isFixed()) {
+    return var().lowerBound();
+  }
+  throw FznException("Argument is not fixed nor a parameter");
+}
+
 const BoolVar& BoolArg::toVar(Model& model) {
   if (isParameter()) {
     return model.boolVarPar(toParameter());
   }
-  return get<reference_wrapper<const BoolVar>>(*this).get();
+  return var();
 }
 
 bool BoolArg::operator==(const BoolArg& other) const {
   if (isParameter() != other.isParameter()) {
     return false;
   } else if (isParameter() && other.isParameter()) {
-    return toParameter() == other.toParameter();
+    return parameter() == other.parameter();
   }
-  return get<reference_wrapper<const BoolVar>>(*this).get().operator==(
-      get<reference_wrapper<const BoolVar>>(other).get());
+  return var().operator==(other.var());
 }
 
 bool BoolArg::operator!=(const BoolArg& other) const {
@@ -41,38 +59,55 @@ bool BoolArg::operator!=(const BoolArg& other) const {
 
 std::string BoolArg::toString() const {
   if (isParameter()) {
-    return toParameter() ? "true" : "false";
+    return parameter() ? "true" : "false";
   }
-  return std::string(
-      get<reference_wrapper<const BoolVar>>(*this).get().identifier());
+  return std::string(var().identifier());
 }
 
 bool IntArg::isParameter() const {
   return std::holds_alternative<int64_t>(*this);
 }
 
-int64_t IntArg::toParameter() const {
+bool IntArg::isFixed() const { return isParameter() || var().isFixed(); }
+
+int64_t IntArg::parameter() const {
   if (isParameter()) {
     return get<int64_t>(*this);
   }
   throw FznException("Argument is not a parameter");
 }
 
+const IntVar& IntArg::var() const {
+  if (!isParameter()) {
+    return get<reference_wrapper<const IntVar>>(*this).get();
+  }
+  throw FznException("Argument is not a var");
+}
+
+int64_t IntArg::toParameter() const {
+  if (isParameter()) {
+    return get<int64_t>(*this);
+  }
+  if (var().isFixed()) {
+    return var().lowerBound();
+  }
+  throw FznException("Argument is not fixed nor a parameter");
+}
+
 const IntVar& IntArg::toVar(Model& model) {
   if (isParameter()) {
     return model.addIntVarPar(toParameter());
   }
-  return get<reference_wrapper<const IntVar>>(*this).get();
+  return var();
 }
 
 bool IntArg::operator==(const IntArg& other) const {
   if (isParameter() != other.isParameter()) {
     return false;
   } else if (isParameter() && other.isParameter()) {
-    return toParameter() == other.toParameter();
+    return parameter() == other.parameter();
   }
-  return get<reference_wrapper<const IntVar>>(*this).get().operator==(
-      get<reference_wrapper<const IntVar>>(other).get());
+  return var().operator==(other.var());
 }
 
 bool IntArg::operator!=(const IntArg& other) const {
@@ -83,36 +118,53 @@ std::string IntArg::toString() const {
   if (isParameter()) {
     return std::to_string(toParameter());
   }
-  return std::string(
-      get<reference_wrapper<const IntVar>>(*this).get().identifier());
+  return std::string(var().identifier());
 }
 
 bool FloatArg::isParameter() const {
   return std::holds_alternative<double>(*this);
 }
 
-double FloatArg::toParameter() const {
+bool FloatArg::isFixed() const { return isParameter() || var().isFixed(); }
+
+double FloatArg::parameter() const {
   if (isParameter()) {
     return get<double>(*this);
   }
   throw FznException("Argument is not a parameter");
 }
 
+const FloatVar& FloatArg::var() const {
+  if (!isParameter()) {
+    return get<reference_wrapper<const FloatVar>>(*this).get();
+  }
+  throw FznException("Argument is not a var");
+}
+
+double FloatArg::toParameter() const {
+  if (isParameter()) {
+    return get<double>(*this);
+  }
+  if (var().isFixed()) {
+    return var().lowerBound();
+  }
+  throw FznException("Argument is not fixed nor a parameter");
+}
+
 const FloatVar& FloatArg::toVar(Model& model) {
   if (isParameter()) {
     return model.addFloatVarPar(toParameter());
   }
-  return get<reference_wrapper<const FloatVar>>(*this).get();
+  return var();
 }
 
 bool FloatArg::operator==(const FloatArg& other) const {
   if (isParameter() != other.isParameter()) {
     return false;
   } else if (isParameter() && other.isParameter()) {
-    return toParameter() == other.toParameter();
+    return parameter() == other.parameter();
   }
-  return get<reference_wrapper<const FloatVar>>(*this).get().operator==(
-      get<reference_wrapper<const FloatVar>>(other).get());
+  return var().operator==(other.var());
 }
 
 bool FloatArg::operator!=(const FloatArg& other) const {
@@ -123,12 +175,27 @@ std::string FloatArg::toString() const {
   if (isParameter()) {
     return std::to_string(toParameter());
   }
-  return std::string(
-      get<reference_wrapper<const FloatVar>>(*this).get().identifier());
+  return std::string(var().identifier());
 }
 
 bool IntSetArg::isParameter() const {
   return std::holds_alternative<IntSet>(*this);
+}
+
+bool IntSetArg::isFixed() const { return isParameter() || var().isFixed(); }
+
+const IntSet& IntSetArg::parameter() const {
+  if (isParameter()) {
+    return get<IntSet>(*this);
+  }
+  throw FznException("Argument is not a parameter");
+}
+
+const SetVar& IntSetArg::var() const {
+  if (!isParameter()) {
+    return get<reference_wrapper<const SetVar>>(*this).get();
+  }
+  throw FznException("Argument is not a var");
 }
 
 const IntSet& IntSetArg::toParameter() const {
@@ -147,17 +214,16 @@ const SetVar& IntSetArg::toVar(Model& model) {
         reference_wrapper<const SetVar>{model.addSetVarPar(toParameter())};
     return _setVar.value();
   }
-  return get<reference_wrapper<const SetVar>>(*this);
+  return var();
 }
 
 bool IntSetArg::operator==(const IntSetArg& other) const {
   if (isParameter() != other.isParameter()) {
     return false;
   } else if (isParameter() && other.isParameter()) {
-    return toParameter() == other.toParameter();
+    return parameter() == other.parameter();
   }
-  return get<reference_wrapper<const SetVar>>(*this).get().operator==(
-      get<reference_wrapper<const SetVar>>(other).get());
+  return var().operator==(other.var());
 }
 
 bool IntSetArg::operator!=(const IntSetArg& other) const {
@@ -168,8 +234,41 @@ std::string IntSetArg::toString() const {
   if (isParameter()) {
     return toParameter().toString();
   }
-  return std::string(
-      get<reference_wrapper<const SetVar>>(*this).get().identifier());
+  return std::string(var().identifier());
+}
+
+bool Arg::isArray() const {
+  return holds_alternative<BoolVarArray>(*this) ||
+         holds_alternative<IntVarArray>(*this) ||
+         holds_alternative<FloatVarArray>(*this) ||
+         holds_alternative<SetVarArray>(*this) ||
+         holds_alternative<FloatSetArray>(*this);
+}
+
+bool Arg::isParameter() const {
+  if (holds_alternative<BoolArg>(*this)) {
+    return get<BoolArg>(*this).isParameter();
+  } else if (holds_alternative<IntArg>(*this)) {
+    return get<IntArg>(*this).isParameter();
+  } else if (holds_alternative<FloatArg>(*this)) {
+    return get<FloatArg>(*this).isParameter();
+  } else if (holds_alternative<IntSetArg>(*this)) {
+    return get<IntSetArg>(*this).isParameter();
+  }
+  return false;
+}
+
+bool Arg::isFixed() const {
+  if (holds_alternative<BoolArg>(*this)) {
+    return get<BoolArg>(*this).isFixed();
+  } else if (holds_alternative<IntArg>(*this)) {
+    return get<IntArg>(*this).isFixed();
+  } else if (holds_alternative<FloatArg>(*this)) {
+    return get<FloatArg>(*this).isFixed();
+  } else if (holds_alternative<IntSetArg>(*this)) {
+    return get<IntSetArg>(*this).isFixed();
+  }
+  return false;
 }
 
 bool Arg::operator==(const Arg& other) const {
