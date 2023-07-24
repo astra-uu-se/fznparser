@@ -51,6 +51,11 @@ class Model {
   const std::unordered_map<std::string_view, Variable>& variables() const;
   const std::vector<Constraint>& constraints() const;
   const SolveType& solveType() const;
+  const std::optional<Variable> objective() const;
+  bool isSatisfactionProblem() const;
+  bool isOptimizationProblem() const;
+  bool isMaximisationProblem() const;
+  bool isMinimisationProblem() const;
 
   bool operator==(const Model&) const;
   bool operator!=(const Model&) const;

@@ -31,6 +31,13 @@ class SolveType {
   SolveType(std::vector<Annotation>&& = {});
   SolveType(ProblemType, const Variable&, std::vector<Annotation>&& = {});
 
+  const std::optional<Variable> objective() const;
+  bool isSatisfactionProblem() const;
+  bool isOptimizationProblem() const;
+  bool isMaximisationProblem() const;
+  bool isMinimisationProblem() const;
+  const std::vector<Annotation>& annotations() const;
+
   bool operator==(const SolveType&) const;
   bool operator!=(const SolveType&) const;
   std::string toString() const;

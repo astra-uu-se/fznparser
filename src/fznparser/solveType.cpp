@@ -13,6 +13,28 @@ SolveType::SolveType(ProblemType problemType, const Variable& var,
       _problemType(problemType),
       _objective(var) {}
 
+const std::optional<Variable> SolveType::objective() const {
+  if (_objective.has_value()) {
+    return _objective.value().get();
+  }
+  return std::nullopt;
+}
+bool SolveType::isSatisfactionProblem() const {
+  return _problemType == ProblemType::SATISFY;
+}
+bool SolveType::isOptimizationProblem() const {
+  return !isSatisfactionProblem();
+}
+bool SolveType::isMaximisationProblem() const {
+  return _problemType == ProblemType::MAXIMIZE;
+}
+bool SolveType::isMinimisationProblem() const {
+  return _problemType == ProblemType::MINIMIZE;
+}
+const std::vector<Annotation>& SolveType::annotations() const {
+  return _annotations;
+}
+
 bool SolveType::operator==(const SolveType& other) const {
   if (_annotations.size() != other._annotations.size() ||
       _problemType != other._problemType ||

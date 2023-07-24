@@ -49,6 +49,22 @@ const std::vector<Constraint>& Model::constraints() const {
 
 const SolveType& Model::solveType() const { return _solveType; }
 
+const std::optional<Variable> Model::objective() const {
+  return _solveType.objective();
+}
+bool Model::isSatisfactionProblem() const {
+  return _solveType.isSatisfactionProblem();
+}
+bool Model::isOptimizationProblem() const {
+  return _solveType.isOptimizationProblem();
+}
+bool Model::isMaximisationProblem() const {
+  return _solveType.isMaximisationProblem();
+}
+bool Model::isMinimisationProblem() const {
+  return _solveType.isMinimisationProblem();
+}
+
 bool Model::operator==(const Model& other) const {
   if (_variables.size() != other._variables.size() ||
       _constraints.size() != other._constraints.size() ||
