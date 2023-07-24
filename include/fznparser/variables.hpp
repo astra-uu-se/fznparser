@@ -79,6 +79,8 @@ class IntVar : public VarBase {
          std::vector<Annotation>&& annotations = {});
   virtual ~IntVar() = default;
 
+  const IntSet& domain() const;
+
   bool contains(const int64_t& val) const;
   int64_t lowerBound() const;
   int64_t upperBound() const;
@@ -96,6 +98,8 @@ class FloatVar : public VarBase {
  public:
   FloatVar(const FloatVar&) = default;
   FloatVar(FloatVar&&) = default;
+
+  const FloatSet& domain() const;
 
   FloatVar(const std::string_view&, std::vector<Annotation>&& = {});
   FloatVar(double, const std::string_view&, std::vector<Annotation>&& = {});

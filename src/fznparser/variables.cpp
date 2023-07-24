@@ -121,6 +121,12 @@ IntVar::IntVar(std::vector<int64_t>&& vals, const std::string_view& identifier,
                std::vector<Annotation>&& annotations)
     : VarBase(identifier, std::move(annotations)), _domain(std::move(vals)) {}
 
+const IntSet& IntVar::domain() const { return _domain; }
+
+bool IntVar::contains(const int64_t& val) const {
+  return _domain.contains(val);
+}
+
 int64_t IntVar::lowerBound() const { return _domain.lowerBound(); }
 int64_t IntVar::upperBound() const { return _domain.upperBound(); }
 
@@ -173,9 +179,12 @@ FloatVar::FloatVar(std::vector<double>&& vals,
                    std::vector<Annotation>&& annotations)
     : VarBase(identifier, std::move(annotations)), _domain(std::move(vals)) {}
 
+const FloatSet& FloatVar::domain() const { return _domain; }
+
 bool FloatVar::contains(const double& val) const {
   return _domain.contains(val);
 }
+
 double FloatVar::lowerBound() const { return _domain.lowerBound(); }
 double FloatVar::upperBound() const { return _domain.upperBound(); }
 
