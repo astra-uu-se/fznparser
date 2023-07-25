@@ -176,13 +176,14 @@ TEST(generator, minimize_objective) {
 }
 
 TEST(generator, parameters) {
-  test_generator("parameters.fzn",
-                 fznparser::Model({}, {}, std::move(SolveType())));
+  test_generator("parameters.fzn", fznparser::Model(std::vector<Variable>{}, {},
+                                                    std::move(SolveType())));
 }
 
 TEST(generator, satisfy_empty) {
-  test_generator("satisfy_empty.fzn",
-                 fznparser::Model({}, {}, std::move(SolveType())));
+  test_generator(
+      "satisfy_empty.fzn",
+      fznparser::Model(std::vector<Variable>{}, {}, std::move(SolveType())));
 }
 
 TEST(generator, variable_arrays) {

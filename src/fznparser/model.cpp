@@ -2,12 +2,26 @@
 
 namespace fznparser {
 
+std::unordered_map<std::string_view, Variable> varVectorToMap(
+    std::vector<Variable>&& vars) {
+  std::unordered_map<std::string_view, Variable> varMap;
+  for (Variable& var : vars) {
+    varMap.emplace(var.identifier(), std::move(var));
+  }
+  return varMap;
+}
+
 Model::Model(std::unordered_map<std::string_view, Variable>&& variables,
              std::vector<Constraint>&& constraints, SolveType&& solveType)
     : _variables(std::move(variables)),
       _constraints(std::move(constraints)),
       _solveType(std::move(solveType)),
       _boolVarPars{BoolVar(false, ""), BoolVar(true, "")} {}
+
+Model::Model(std::vector<Variable>&& variables,
+             std::vector<Constraint>&& constraints, SolveType&& solveType)
+    : Model(varVectorToMap(std::move(variables)), std::move(constraints),
+            std::move(solveType)) {}
 
 BoolVar& Model::boolVarPar(bool b) { return _boolVarPars.at(b ? 1 : 0); }
 

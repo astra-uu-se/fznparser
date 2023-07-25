@@ -34,6 +34,9 @@ class Model {
   Model(const Model&) = default;
   Model(Model&&) = default;
 
+  Model(std::vector<Variable>&& variables,
+        std::vector<Constraint>&& constraints, SolveType&& solveType);
+
   Model(std::unordered_map<std::string_view, Variable>&& variables,
         std::vector<Constraint>&& constraints, SolveType&& solveType);
 
