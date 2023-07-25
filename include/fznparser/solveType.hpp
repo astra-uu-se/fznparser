@@ -32,6 +32,7 @@ class SolveType {
   SolveType(ProblemType, const Variable&, std::vector<Annotation>&& = {});
 
   const std::optional<Variable> objective() const;
+  ProblemType problemType() const;
   bool isSatisfactionProblem() const;
   bool isOptimizationProblem() const;
   bool isMaximisationProblem() const;

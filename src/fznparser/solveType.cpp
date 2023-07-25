@@ -19,6 +19,7 @@ const std::optional<Variable> SolveType::objective() const {
   }
   return std::nullopt;
 }
+ProblemType SolveType::problemType() const { return _problemType; }
 bool SolveType::isSatisfactionProblem() const {
   return _problemType == ProblemType::SATISFY;
 }
