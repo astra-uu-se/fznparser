@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "fznparser/constraint.hpp"
 #include "fznparser/model.hpp"
 
@@ -7,7 +9,8 @@ Constraint::Constraint(const std::string_view&& identifier,
                        std::vector<Annotation> annotations)
     : _identifier(identifier),
       _arguments(std::move(arguments)),
-      _annotations(std::move(annotations)) {}
+      _annotations(std::move(annotations)),
+      _definedVariable(std::nullopt) {}
 
 const std::string_view& Constraint::identifier() const { return _identifier; }
 
@@ -37,33 +40,42 @@ void Constraint::addAnnotation(const std::string_view& identifier,
 const std::vector<Annotation>& Constraint::annotations() const {
   return _annotations;
 }
+
+void Constraint::interpretAnnotations(
+    const std::unordered_map<std::string_view, Variable>& variableMapping) {
+  for (const Annotation& annotation : _annotations) {
+    if (annotation.identifier() == "defines_var") {
+      if (annotation.expressions().size() != 1 ||
+          annotation.expressions().front().size() != 1) {
+        throw FznException(
+            "defines_var annotation must define exactly one "
+            "variable");
+      }
+      const auto& expression = annotation.expressions().front().front();
+      // we can't really tell the difference between identifiers and annotations
+
+      if (!std::holds_alternative<Annotation>(expression)) {
+        throw FznException(
+            "defines_var annotation argument must be an identifier");
+      }
+      const std::string_view varIdentifier =
+          get<Annotation>(expression).identifier();
+
+      if (!variableMapping.contains(varIdentifier)) {
+        throw FznException("Variable with identifier " +
+                           std::string(varIdentifier) + " is not defined");
+      }
+      _definedVariable =
+          std::reference_wrapper(variableMapping.at(varIdentifier));
+    }
+  }
+}
+
 const std::vector<Arg>& Constraint::arguments() const { return _arguments; }
 
 std::optional<std::reference_wrapper<const Variable>>
-Constraint::definedVariable(const fznparser::Model& model) const {
-  for (const auto& annotation : annotations()) {
-    if (annotation.identifier() != "defines_var") {
-      continue;
-    }
-    if (annotation.expressions().size() != 1 ||
-        annotation.expressions().front().size() != 1) {
-      throw FznException(
-          "defines_var annotation must define exactly one "
-          "variable");
-    }
-    const auto& expression = annotation.expressions().front().front();
-    if (!std::holds_alternative<std::string_view>(expression)) {
-      throw FznException(
-          "defines_var annotation argument must be an identifier");
-    }
-    const std::string_view& identifier = get<std::string_view>(expression);
-    if (!model.hasVariable(identifier)) {
-      throw FznException("Variable " + std::string(identifier) +
-                         " is not defined");
-    }
-    return std::reference_wrapper(model.variable(identifier));
-  }
-  return std::nullopt;
+Constraint::definedVariable() const {
+  return _definedVariable;
 }
 
 bool Constraint::operator==(const Constraint& other) const {

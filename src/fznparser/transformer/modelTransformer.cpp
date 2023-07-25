@@ -973,11 +973,13 @@ fznparser::Model ModelTransformer::generateModel() {
     Variable var = transform(vars, varDeclItem);
     vars.emplace(std::make_pair<std::string_view, Variable>(
         std::move(std::string_view(var.identifier())), std::move(var)));
+    vars.at(var.identifier()).interpretAnnotations(vars);
   }
   std::vector<Constraint> constraints;
   constraints.clear();
   for (const ConstraintItem& constraintItem : _model.constraintItems) {
     constraints.push_back(transform(vars, constraintItem));
+    constraints.back().interpretAnnotations(vars);
   }
 
   return fznparser::Model(std::move(vars), std::move(constraints),

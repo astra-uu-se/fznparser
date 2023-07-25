@@ -31,11 +31,9 @@ TEST(parser, car_sequencing) {
   EXPECT_EQ(resModel.numConstraints(), 88);
   EXPECT_TRUE(resModel.hasVariable("Sequence"));
   IntVarArray sequence = std::get<IntVarArray>(resModel.variable("Sequence"));
-  std::vector<IntSet> outputArrayIndexSets = sequence.outputArrayIndexSets();
-  EXPECT_EQ(outputArrayIndexSets.size(), 1);
-  EXPECT_EQ(outputArrayIndexSets.front().size(), 10);
-  EXPECT_EQ(outputArrayIndexSets.front().lowerBound(), 1);
-  EXPECT_EQ(outputArrayIndexSets.front().upperBound(), 10);
+  std::vector<int64_t> outputIndexSetSizes = sequence.outputIndexSetSizes();
+  EXPECT_EQ(outputIndexSetSizes.size(), 1);
+  EXPECT_EQ(outputIndexSetSizes.front(), 10);
 }
 
 TEST(parser, magic_square) {
@@ -45,14 +43,10 @@ TEST(parser, magic_square) {
   EXPECT_EQ(resModel.numConstraints(), 9);
   EXPECT_TRUE(resModel.hasVariable("Magic"));
   IntVarArray magic = std::get<IntVarArray>(resModel.variable("Magic"));
-  std::vector<IntSet> outputArrayIndexSets = magic.outputArrayIndexSets();
-  EXPECT_EQ(outputArrayIndexSets.size(), 2);
-  EXPECT_EQ(outputArrayIndexSets.at(0).size(), 3);
-  EXPECT_EQ(outputArrayIndexSets.at(0).lowerBound(), 1);
-  EXPECT_EQ(outputArrayIndexSets.at(0).upperBound(), 3);
-  EXPECT_EQ(outputArrayIndexSets.at(1).size(), 3);
-  EXPECT_EQ(outputArrayIndexSets.at(1).lowerBound(), 1);
-  EXPECT_EQ(outputArrayIndexSets.at(1).upperBound(), 3);
+  std::vector<int64_t> outputIndexSetSizes = magic.outputIndexSetSizes();
+  EXPECT_EQ(outputIndexSetSizes.size(), 2);
+  EXPECT_EQ(outputIndexSetSizes.at(0), 3);
+  EXPECT_EQ(outputIndexSetSizes.at(1), 3);
 }
 
 TEST(parser, n_queens) {
@@ -61,11 +55,9 @@ TEST(parser, n_queens) {
   EXPECT_EQ(resModel.numVariables(), 99);
   EXPECT_EQ(resModel.numConstraints(), 67);
   IntVarArray q = std::get<IntVarArray>(resModel.variable("q"));
-  std::vector<IntSet> outputArrayIndexSets = q.outputArrayIndexSets();
-  EXPECT_EQ(outputArrayIndexSets.size(), 1);
-  EXPECT_EQ(outputArrayIndexSets.at(0).size(), 32);
-  EXPECT_EQ(outputArrayIndexSets.at(0).lowerBound(), 1);
-  EXPECT_EQ(outputArrayIndexSets.at(0).upperBound(), 32);
+  std::vector<int64_t> outputIndexSetSizes = q.outputIndexSetSizes();
+  EXPECT_EQ(outputIndexSetSizes.size(), 1);
+  EXPECT_EQ(outputIndexSetSizes.at(0), 32);
 }
 
 TEST(parser, tsp_alldiff) {
@@ -74,11 +66,9 @@ TEST(parser, tsp_alldiff) {
   EXPECT_EQ(resModel.numVariables(), 37);
   EXPECT_EQ(resModel.numConstraints(), 19);
   IntVarArray sequence = std::get<IntVarArray>(resModel.variable("Sequence"));
-  std::vector<IntSet> outputArrayIndexSets = sequence.outputArrayIndexSets();
-  EXPECT_EQ(outputArrayIndexSets.size(), 1);
-  EXPECT_EQ(outputArrayIndexSets.at(0).size(), 17);
-  EXPECT_EQ(outputArrayIndexSets.at(0).lowerBound(), 1);
-  EXPECT_EQ(outputArrayIndexSets.at(0).upperBound(), 17);
+  std::vector<int64_t> outputIndexSetSizes = sequence.outputIndexSetSizes();
+  EXPECT_EQ(outputIndexSetSizes.size(), 1);
+  EXPECT_EQ(outputIndexSetSizes.at(0), 17);
 }
 
 }  // namespace fznparser::testing

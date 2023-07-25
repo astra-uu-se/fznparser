@@ -6,6 +6,7 @@
 #include <optional>
 #include <stdexcept>
 #include <string_view>
+#include <unordered_map>
 #include <variant>
 #include <vector>
 
@@ -16,6 +17,7 @@
 namespace fznparser {
 
 class Model;  // forward declaration
+class Variable;
 
 class VarBase {
   std::string_view _identifier;
@@ -23,11 +25,16 @@ class VarBase {
 
  protected:
   VarBase(const std::string_view&, std::vector<Annotation>&&);
+  bool _isOutput = false;
+  bool _isDefinedVar = false;
 
  public:
   VarBase(const VarBase&) = default;
   VarBase(VarBase&&) = default;
   virtual ~VarBase() = default;
+
+  virtual void interpretAnnotations(
+      const std::unordered_map<std::string_view, Variable>&);
 
   const std::string_view& identifier() const;
   const std::vector<Annotation>& annotations() const;
@@ -151,11 +158,18 @@ class SetVar : public VarBase {
 class Variable;  // forward declaration
 
 class VarArrayBase : public VarBase {
+ private:
+  std::vector<int64_t> _outputIndexSetSizes{};
+
  public:
   VarArrayBase(const VarArrayBase&) = default;
   VarArrayBase(VarArrayBase&&) = default;
   VarArrayBase(const std::string_view&, std::vector<Annotation>&&);
-  std::vector<IntSet> outputArrayIndexSets() const;
+
+  virtual void interpretAnnotations(
+      const std::unordered_map<std::string_view, Variable>&);
+
+  const std::vector<int64_t>& outputIndexSetSizes() const;
   std::optional<std::reference_wrapper<const Variable>> definedVariable(
       const fznparser::Model&) const;
 };
@@ -282,6 +296,8 @@ class Variable
                      IntVarArray, FloatVarArray, SetVarArray>::variant;
 
   const std::string_view& identifier() const;
+  void interpretAnnotations(
+      const std::unordered_map<std::string_view, Variable>&);
   bool isArray() const;
   bool operator==(const Variable&) const;
   bool operator!=(const Variable&) const;

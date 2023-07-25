@@ -1,5 +1,7 @@
 #include "fznparser/variables.hpp"
 
+#include <iostream>
+
 #include "fznparser/model.hpp"
 
 namespace fznparser {
@@ -11,11 +13,22 @@ VarBase::VarBase(const std::string_view& identifier,
                  std::vector<Annotation>&& annotations)
     : _identifier(identifier), _annotations(std::move(annotations)) {}
 
+const std::string_view& VarBase::identifier() const { return _identifier; }
+
 const std::vector<Annotation>& VarBase::annotations() const {
   return _annotations;
 }
 
-const std::string_view& VarBase::identifier() const { return _identifier; }
+void VarBase::interpretAnnotations(
+    const std::unordered_map<std::string_view, Variable>&) {
+  for (const Annotation& annotation : _annotations) {
+    if (annotation.identifier() == "output_var") {
+      _isOutput = true;
+    } else if (annotation.identifier() == "is_defined_var") {
+      _isDefinedVar = true;
+    }
+  }
+}
 
 void VarBase::addAnnotation(const std::string_view& identifier) {
   _annotations.push_back(Annotation(identifier));
@@ -40,19 +53,8 @@ void VarBase::addAnnotation(const std::string_view& identifier,
           std::move(std::vector<AnnotationExpression>{expression})})));
 }
 
-bool VarBase::isOutputVar() const {
-  return std::any_of(_annotations.begin(), _annotations.end(),
-                     [](const auto& annotation) {
-                       return annotation.identifier() == "output_var";
-                     });
-}
-
-bool VarBase::isDefinedVar() const {
-  return std::any_of(_annotations.begin(), _annotations.end(),
-                     [](const auto& annotation) {
-                       return annotation.identifier() == "is_defined_var";
-                     });
-}
+bool VarBase::isOutputVar() const { return _isOutput; }
+bool VarBase::isDefinedVar() const { return _isDefinedVar; }
 
 BoolVar::BoolVar(const std::string_view& identifier,
                  std::vector<Annotation>&& annotations)
@@ -276,50 +278,33 @@ VarArrayBase::VarArrayBase(const std::string_view& identifier,
                            std::vector<Annotation>&& annotations)
     : VarBase(identifier, std::move(annotations)) {}
 
-std::vector<IntSet> VarArrayBase::outputArrayIndexSets() const {
-  std::vector<IntSet> sets;
-  for (int64_t i = annotations().size() - 1; i >= 0; --i) {
-    if (annotations().at(i).identifier() != "output_array") {
-      continue;
-    }
-    if (annotations().at(i).expressions().size() != 1) {
-      continue;
-    }
-    const auto& expressions = annotations().at(i).expressions().front();
-    for (const auto& element : expressions) {
-      if (std::holds_alternative<IntSet>(element)) {
-        sets.emplace_back(get<IntSet>(element));
+void VarArrayBase::interpretAnnotations(
+    const std::unordered_map<std::string_view, Variable>&) {
+  for (const Annotation& annotation : annotations()) {
+    if (annotation.identifier() == "output_array") {
+      if (annotation.expressions().size() != 1) {
+        throw FznException(
+            "output_array annotation must define exactly one "
+            "variable");
+      }
+      const auto& expressions = annotation.expressions().front();
+      for (const auto& element : expressions) {
+        if (!std::holds_alternative<IntSet>(element)) {
+          throw FznException(
+              "output_array annotation argument must be an array of int sets");
+        }
+        const IntSet& set = get<IntSet>(element);
+        if (!set.isInterval() || set.lowerBound() != 1) {
+          throw FznException("integer set must be an interval starting at 1");
+        }
+        _outputIndexSetSizes.emplace_back(set.upperBound());
       }
     }
   }
-  return sets;
 }
 
-std::optional<std::reference_wrapper<const Variable>>
-VarArrayBase::definedVariable(const fznparser::Model& model) const {
-  for (const auto& annotation : annotations()) {
-    if (annotation.identifier() != "defines_var") {
-      continue;
-    }
-    if (annotation.expressions().size() != 1 ||
-        annotation.expressions().front().size() != 1) {
-      throw FznException(
-          "defines_var annotation must define exactly one "
-          "variable");
-    }
-    const auto& expression = annotation.expressions().front().front();
-    if (!std::holds_alternative<std::string_view>(expression)) {
-      throw FznException(
-          "defines_var annotation argument must be an identifier");
-    }
-    const std::string_view& identifier = get<std::string_view>(expression);
-    if (!model.hasVariable(identifier)) {
-      throw FznException("Variable " + std::string(identifier) +
-                         " is not defined");
-    }
-    return std::reference_wrapper(model.variable(identifier));
-  }
-  return std::nullopt;
+const std::vector<int64_t>& VarArrayBase::outputIndexSetSizes() const {
+  return _outputIndexSetSizes;
 }
 
 BoolVarArray::BoolVarArray(const std::string_view& identifier,
@@ -706,6 +691,27 @@ std::string Variable::toString() const {
     return get<SetVarArray>(*this).toString();
   }
   return "";
+}
+
+void Variable::interpretAnnotations(
+    const std::unordered_map<std::string_view, Variable>& variableMapping) {
+  if (std::holds_alternative<BoolVar>(*this)) {
+    get<BoolVar>(*this).interpretAnnotations(variableMapping);
+  } else if (std::holds_alternative<IntVar>(*this)) {
+    get<IntVar>(*this).interpretAnnotations(variableMapping);
+  } else if (std::holds_alternative<FloatVar>(*this)) {
+    get<FloatVar>(*this).interpretAnnotations(variableMapping);
+  } else if (std::holds_alternative<SetVar>(*this)) {
+    get<SetVar>(*this).interpretAnnotations(variableMapping);
+  } else if (std::holds_alternative<BoolVarArray>(*this)) {
+    get<BoolVarArray>(*this).interpretAnnotations(variableMapping);
+  } else if (std::holds_alternative<IntVarArray>(*this)) {
+    get<IntVarArray>(*this).interpretAnnotations(variableMapping);
+  } else if (std::holds_alternative<FloatVarArray>(*this)) {
+    get<FloatVarArray>(*this).interpretAnnotations(variableMapping);
+  } else if (std::holds_alternative<SetVarArray>(*this)) {
+    get<SetVarArray>(*this).interpretAnnotations(variableMapping);
+  }
 }
 
 }  // namespace fznparser
