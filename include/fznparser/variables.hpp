@@ -295,6 +295,7 @@ class Variable
   using std::variant<BoolVar, IntVar, FloatVar, SetVar, BoolVarArray,
                      IntVarArray, FloatVarArray, SetVarArray>::variant;
 
+  bool isOutput() const;
   const std::string_view& identifier() const;
   void interpretAnnotations(
       const std::unordered_map<std::string_view, Variable>&);

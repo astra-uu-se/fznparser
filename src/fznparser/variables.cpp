@@ -53,7 +53,7 @@ void VarBase::addAnnotation(const std::string_view& identifier,
           std::move(std::vector<AnnotationExpression>{expression})})));
 }
 
-bool VarBase::isOutputVar() const { return _isOutput; }
+bool VarBase::isOutput() const { return _isOutput; }
 bool VarBase::isDefinedVar() const { return _isDefinedVar; }
 
 BoolVar::BoolVar(const std::string_view& identifier,
@@ -712,6 +712,27 @@ void Variable::interpretAnnotations(
   } else if (std::holds_alternative<SetVarArray>(*this)) {
     get<SetVarArray>(*this).interpretAnnotations(variableMapping);
   }
+}
+
+bool Variable::isOutput() {
+  if (std::holds_alternative<BoolVar>(*this)) {
+    get<BoolVar>(*this).isOutput();
+  } else if (std::holds_alternative<IntVar>(*this)) {
+    get<IntVar>(*this).isOutput();
+  } else if (std::holds_alternative<FloatVar>(*this)) {
+    get<FloatVar>(*this).isOutput();
+  } else if (std::holds_alternative<SetVar>(*this)) {
+    get<SetVar>(*this).isOutput();
+  } else if (std::holds_alternative<BoolVarArray>(*this)) {
+    get<BoolVarArray>(*this).isOutput();
+  } else if (std::holds_alternative<IntVarArray>(*this)) {
+    get<IntVarArray>(*this).isOutput();
+  } else if (std::holds_alternative<FloatVarArray>(*this)) {
+    get<FloatVarArray>(*this).isOutput();
+  } else if (std::holds_alternative<SetVarArray>(*this)) {
+    get<SetVarArray>(*this).isOutput();
+  }
+  return false;
 }
 
 }  // namespace fznparser
