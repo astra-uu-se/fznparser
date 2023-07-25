@@ -43,7 +43,7 @@ class VarBase {
   void addAnnotation(const std::string_view&, AnnotationExpression&&);
   void addAnnotation(const std::string_view&,
                      std::vector<AnnotationExpression>&&);
-  bool isOutputVar() const;
+  bool isOutput() const;
   bool isDefinedVar() const;
 
   virtual bool isFixed() const = 0;

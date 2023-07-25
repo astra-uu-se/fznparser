@@ -1,7 +1,5 @@
 #include "fznparser/variables.hpp"
 
-#include <iostream>
-
 #include "fznparser/model.hpp"
 
 namespace fznparser {
@@ -299,6 +297,8 @@ void VarArrayBase::interpretAnnotations(
         }
         _outputIndexSetSizes.emplace_back(set.upperBound());
       }
+      _isOutput = true;
+      break;
     }
   }
 }
@@ -714,7 +714,7 @@ void Variable::interpretAnnotations(
   }
 }
 
-bool Variable::isOutput() {
+bool Variable::isOutput() const {
   if (std::holds_alternative<BoolVar>(*this)) {
     get<BoolVar>(*this).isOutput();
   } else if (std::holds_alternative<IntVar>(*this)) {
