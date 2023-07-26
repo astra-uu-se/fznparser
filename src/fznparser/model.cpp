@@ -69,17 +69,22 @@ SetVar& Model::addSetVarPar(const IntSet& is) {
   return _setVarPars.emplace_back(SetVar(is, ""));
 }
 
-const Variable& Model::addVariable(Variable&& var) {
-  if (_variables.contains(var.identifier())) {
+const Variable& Model::addVariable(Variable&& variable) {
+  if (_variables.contains(variable.identifier())) {
     throw FznException("Variable with identifier \"" +
-                       std::string(var.identifier()) + "\" already exists");
+                       std::string(variable.identifier()) +
+                       "\" already exists");
   }
-  _variables.emplace(var.identifier(), std::move(var));
-  return _variables.at(var.identifier());
+  Variable& var = _variables.emplace(variable.identifier(), std::move(variable))
+                      .first->second;
+  var.interpretAnnotations(_variables);
+  return var;
 }
 
 const Constraint& Model::addConstraint(Constraint&& constraint) {
-  return _constraints.emplace_back(std::move(constraint));
+  Constraint& con = _constraints.emplace_back(std::move(constraint));
+  con.interpretAnnotations(_variables);
+  return con;
 }
 
 size_t Model::numVariables() const { return _variables.size(); }
