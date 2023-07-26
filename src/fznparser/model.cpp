@@ -2,6 +2,12 @@
 
 namespace fznparser {
 
+std::unordered_map<std::string_view, Variable> varToMap(Variable&& var) {
+  std::unordered_map<std::string_view, Variable> varMap;
+  varMap.emplace(var.identifier(), std::move(var));
+  return varMap;
+}
+
 std::unordered_map<std::string_view, Variable> varVectorToMap(
     std::vector<Variable>&& vars) {
   std::unordered_map<std::string_view, Variable> varMap;
@@ -11,12 +17,32 @@ std::unordered_map<std::string_view, Variable> varVectorToMap(
   return varMap;
 }
 
+const Variable& varInMap(
+    const std::unordered_map<std::string_view, Variable>& vars) {
+  if (vars.size() != 1) {
+    throw FznException("Invalid initialization: expected exactly one variable");
+  }
+  for (const auto& [identifier, var] : vars) {
+    return var;
+  }
+  throw FznException("Invalid initialization: expected exactly one variable");
+}
+
+Model::Model(Variable&& objective, ProblemType problemType)
+    : _variables(varToMap(std::move(objective))),
+      _constraints(),
+      _solveType(problemType, varInMap(_variables)),
+      _boolVarPars{BoolVar(false, ""), BoolVar(true, "")} {}
+
 Model::Model(std::unordered_map<std::string_view, Variable>&& variables,
              std::vector<Constraint>&& constraints, SolveType&& solveType)
     : _variables(std::move(variables)),
       _constraints(std::move(constraints)),
       _solveType(std::move(solveType)),
       _boolVarPars{BoolVar(false, ""), BoolVar(true, "")} {}
+
+Model::Model()
+    : Model(std::vector<Variable>{}, std::vector<Constraint>{}, SolveType()) {}
 
 Model::Model(std::vector<Variable>&& variables,
              std::vector<Constraint>&& constraints, SolveType&& solveType)
@@ -39,8 +65,21 @@ FloatVar& Model::addFloatVarPar(double f) {
   return _floatVarPars.at(f);
 }
 
-const SetVar& Model::addSetVarPar(const IntSet& is) {
+SetVar& Model::addSetVarPar(const IntSet& is) {
   return _setVarPars.emplace_back(SetVar(is, ""));
+}
+
+const Variable& Model::addVariable(Variable&& var) {
+  if (_variables.contains(var.identifier())) {
+    throw FznException("Variable with identifier \"" +
+                       std::string(var.identifier()) + "\" already exists");
+  }
+  _variables.emplace(var.identifier(), std::move(var));
+  return _variables.at(var.identifier());
+}
+
+const Constraint& Model::addConstraint(Constraint&& constraint) {
+  return _constraints.emplace_back(std::move(constraint));
 }
 
 size_t Model::numVariables() const { return _variables.size(); }

@@ -34,16 +34,20 @@ class Model {
   Model(const Model&) = default;
   Model(Model&&) = default;
 
+  Model();
   Model(std::vector<Variable>&& variables,
         std::vector<Constraint>&& constraints, SolveType&& solveType);
-
   Model(std::unordered_map<std::string_view, Variable>&& variables,
         std::vector<Constraint>&& constraints, SolveType&& solveType);
+  Model(Variable&& objective, ProblemType);
 
   BoolVar& boolVarPar(bool);
   IntVar& addIntVarPar(int64_t);
   FloatVar& addFloatVarPar(double);
-  const SetVar& addSetVarPar(const IntSet&);
+  SetVar& addSetVarPar(const IntSet&);
+
+  const Variable& addVariable(Variable&& variable);
+  const Constraint& addConstraint(Constraint&& constraint);
 
   size_t numVariables() const;
   size_t numConstraints() const;
