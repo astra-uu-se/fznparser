@@ -4,17 +4,17 @@
 #include "fznparser/model.hpp"
 
 namespace fznparser {
-Constraint::Constraint(const std::string_view&& identifier,
-                       std::vector<Arg> arguments,
-                       std::vector<Annotation> annotations)
+Constraint::Constraint(const std::string& identifier,
+                       std::vector<Arg>&& arguments,
+                       std::vector<Annotation>&& annotations)
     : _identifier(identifier),
       _arguments(std::move(arguments)),
       _annotations(std::move(annotations)),
       _definedVariable(std::nullopt) {}
 
-const std::string_view& Constraint::identifier() const { return _identifier; }
+const std::string& Constraint::identifier() const { return _identifier; }
 
-void Constraint::addAnnotation(const std::string_view& identifier) {
+void Constraint::addAnnotation(const std::string& identifier) {
   _annotations.push_back(Annotation(identifier));
 }
 
@@ -22,14 +22,14 @@ void Constraint::addAnnotation(const Annotation& annotation) {
   _annotations.push_back(annotation);
 }
 
-void Constraint::addAnnotation(const std::string_view& identifier,
+void Constraint::addAnnotation(const std::string& identifier,
                                std::vector<AnnotationExpression>&& expression) {
   _annotations.push_back(Annotation(
       identifier, std::move(std::vector<std::vector<AnnotationExpression>>{
                       std::move(expression)})));
 }
 
-void Constraint::addAnnotation(const std::string_view& identifier,
+void Constraint::addAnnotation(const std::string& identifier,
                                AnnotationExpression&& expression) {
   _annotations.push_back(Annotation(
       identifier,
@@ -42,7 +42,7 @@ const std::vector<Annotation>& Constraint::annotations() const {
 }
 
 void Constraint::interpretAnnotations(
-    const std::unordered_map<std::string_view, Variable>& variableMapping) {
+    const std::unordered_map<std::string, Variable>& variableMapping) {
   for (const Annotation& annotation : _annotations) {
     if (annotation.identifier() == "defines_var") {
       if (annotation.expressions().size() != 1 ||
@@ -58,12 +58,12 @@ void Constraint::interpretAnnotations(
         throw FznException(
             "defines_var annotation argument must be an identifier");
       }
-      const std::string_view varIdentifier =
+      const std::string& varIdentifier =
           get<Annotation>(expression).identifier();
 
       if (!variableMapping.contains(varIdentifier)) {
-        throw FznException("Variable with identifier " +
-                           std::string(varIdentifier) + " is not defined");
+        throw FznException("Variable with identifier " + varIdentifier +
+                           " is not defined");
       }
       _definedVariable =
           std::reference_wrapper(variableMapping.at(varIdentifier));
@@ -102,7 +102,7 @@ bool Constraint::operator!=(const Constraint& other) const {
 }
 
 std::string Constraint::toString() const {
-  std::string s = std::string(_identifier) + "(";
+  std::string s = _identifier + "(";
   for (size_t i = 0; i < _arguments.size(); ++i) {
     if (i != 0) {
       s += ", ";

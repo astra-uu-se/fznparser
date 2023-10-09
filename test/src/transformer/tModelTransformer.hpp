@@ -86,17 +86,21 @@ TEST(generator, annotations) {
   IntVar b("b");
   IntVar c("c");
   IntVar d("d");
-  std::unordered_map<std::string_view, Variable> variables;
+  std::unordered_map<std::string, Variable> variables;
   variables.emplace("a", Variable{std::move(a)});
   variables.emplace("b", Variable{std::move(b)});
   variables.emplace("c", Variable{std::move(c)});
   variables.emplace("d", Variable{std::move(d)});
 
   IntVarArray arr("arr");
+  for (const auto& identifier : std::vector<std::string>{"a", "b", "c", "d"}) {
+    EXPECT_TRUE(variables.contains(identifier));
+  }
   arr.append(std::get<IntVar>(variables.at("b")));
   arr.append(std::get<IntVar>(variables.at("c")));
   arr.append(std::get<IntVar>(variables.at("c")));
   arr.append(std::get<IntVar>(variables.at("d")));
+
   arr.addAnnotation("output_array", {IntSet(1, 2), IntSet(1, 2)});
   variables.emplace("arr", Variable{std::move(arr)});
 
@@ -121,7 +125,7 @@ TEST(generator, annotations) {
 TEST(generator, constraints) {
   IntVar v1("v1");
   IntVar v2("v2");
-  std::unordered_map<std::string_view, Variable> variables;
+  std::unordered_map<std::string, Variable> variables;
   variables.emplace("v1", Variable{std::move(v1)});
   variables.emplace("v2", Variable{std::move(v2)});
 
@@ -153,7 +157,7 @@ TEST(generator, constraints) {
 
 TEST(generator, maximize_objective) {
   IntVar a("a");
-  std::unordered_map<std::string_view, Variable> variables;
+  std::unordered_map<std::string, Variable> variables;
   variables.emplace("a", Variable{std::move(a)});
 
   SolveType solveType(ProblemType::MAXIMIZE, variables.at("a"));
@@ -165,7 +169,7 @@ TEST(generator, maximize_objective) {
 
 TEST(generator, minimize_objective) {
   IntVar a("a");
-  std::unordered_map<std::string_view, Variable> variables;
+  std::unordered_map<std::string, Variable> variables;
   variables.emplace("a", Variable{std::move(a)});
 
   SolveType solveType(ProblemType::MINIMIZE, variables.at("a"));
@@ -187,7 +191,7 @@ TEST(generator, satisfy_empty) {
 }
 
 TEST(generator, variable_arrays) {
-  std::unordered_map<std::string_view, Variable> variables;
+  std::unordered_map<std::string, Variable> variables;
   variables.emplace("v1", Variable{IntVar("v1")});
   variables.emplace("v2", Variable{IntVar("v2")});
   variables.emplace("v3", Variable{BoolVar("v3")});
@@ -211,7 +215,7 @@ TEST(generator, variable_arrays) {
 }
 
 TEST(generator, variables) {
-  std::unordered_map<std::string_view, Variable> variables;
+  std::unordered_map<std::string, Variable> variables;
   variables.emplace("v1", Variable{BoolVar("v1")});
   variables.emplace("v2", Variable{IntVar(0, 5, "v2")});
   variables.emplace("v3",

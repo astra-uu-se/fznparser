@@ -2,15 +2,15 @@
 
 namespace fznparser {
 
-std::unordered_map<std::string_view, Variable> varToMap(Variable&& var) {
-  std::unordered_map<std::string_view, Variable> varMap;
+std::unordered_map<std::string, Variable> varToMap(Variable&& var) {
+  std::unordered_map<std::string, Variable> varMap;
   varMap.emplace(var.identifier(), std::move(var));
   return varMap;
 }
 
-std::unordered_map<std::string_view, Variable> varVectorToMap(
+std::unordered_map<std::string, Variable> varVectorToMap(
     std::vector<Variable>&& vars) {
-  std::unordered_map<std::string_view, Variable> varMap;
+  std::unordered_map<std::string, Variable> varMap;
   for (Variable& var : vars) {
     varMap.emplace(var.identifier(), std::move(var));
   }
@@ -18,7 +18,7 @@ std::unordered_map<std::string_view, Variable> varVectorToMap(
 }
 
 const Variable& varInMap(
-    const std::unordered_map<std::string_view, Variable>& vars) {
+    const std::unordered_map<std::string, Variable>& vars) {
   if (vars.size() != 1) {
     throw FznException("Invalid initialization: expected exactly one variable");
   }
@@ -34,7 +34,7 @@ Model::Model(Variable&& objective, ProblemType problemType)
       _solveType(problemType, varInMap(_variables)),
       _boolVarPars{BoolVar(false, ""), BoolVar(true, "")} {}
 
-Model::Model(std::unordered_map<std::string_view, Variable>&& variables,
+Model::Model(std::unordered_map<std::string, Variable>&& variables,
              std::vector<Constraint>&& constraints, SolveType&& solveType)
     : _variables(std::move(variables)),
       _constraints(std::move(constraints)),
@@ -71,8 +71,7 @@ SetVar& Model::addSetVarPar(const IntSet& is) {
 
 const Variable& Model::addVariable(Variable&& variable) {
   if (_variables.contains(variable.identifier())) {
-    throw FznException("Variable with identifier \"" +
-                       std::string(variable.identifier()) +
+    throw FznException("Variable with identifier \"" + variable.identifier() +
                        "\" already exists");
   }
   Variable& var = _variables.emplace(variable.identifier(), std::move(variable))
@@ -89,15 +88,15 @@ const Constraint& Model::addConstraint(Constraint&& constraint) {
 
 size_t Model::numVariables() const { return _variables.size(); }
 size_t Model::numConstraints() const { return _constraints.size(); }
-const Variable& Model::variable(std::string_view identifier) const {
+const Variable& Model::variable(std::string identifier) const {
   return _variables.at(identifier);
 }
 
-bool Model::hasVariable(std::string_view identifier) const {
+bool Model::hasVariable(std::string identifier) const {
   return _variables.find(identifier) != _variables.end();
 }
 
-const std::unordered_map<std::string_view, Variable>& Model::variables() const {
+const std::unordered_map<std::string, Variable>& Model::variables() const {
   return _variables;
 }
 

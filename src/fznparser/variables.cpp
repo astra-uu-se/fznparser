@@ -7,18 +7,18 @@ namespace fznparser {
 using std::get;
 using std::reference_wrapper;
 
-VarBase::VarBase(const std::string_view& identifier,
+VarBase::VarBase(const std::string& identifier,
                  std::vector<Annotation>&& annotations)
     : _identifier(identifier), _annotations(std::move(annotations)) {}
 
-const std::string_view& VarBase::identifier() const { return _identifier; }
+const std::string& VarBase::identifier() const { return _identifier; }
 
 const std::vector<Annotation>& VarBase::annotations() const {
   return _annotations;
 }
 
 void VarBase::interpretAnnotations(
-    const std::unordered_map<std::string_view, Variable>&) {
+    const std::unordered_map<std::string, Variable>&) {
   for (const Annotation& annotation : _annotations) {
     if (annotation.identifier() == "output_var") {
       _isOutput = true;
@@ -28,7 +28,7 @@ void VarBase::interpretAnnotations(
   }
 }
 
-void VarBase::addAnnotation(const std::string_view& identifier) {
+void VarBase::addAnnotation(const std::string& identifier) {
   _annotations.push_back(Annotation(identifier));
 }
 
@@ -36,14 +36,14 @@ void VarBase::addAnnotation(const Annotation& annotation) {
   _annotations.push_back(annotation);
 }
 
-void VarBase::addAnnotation(const std::string_view& identifier,
+void VarBase::addAnnotation(const std::string& identifier,
                             std::vector<AnnotationExpression>&& expression) {
   _annotations.push_back(Annotation(
       identifier, std::move(std::vector<std::vector<AnnotationExpression>>{
                       std::move(expression)})));
 }
 
-void VarBase::addAnnotation(const std::string_view& identifier,
+void VarBase::addAnnotation(const std::string& identifier,
                             AnnotationExpression&& expression) {
   _annotations.push_back(Annotation(
       identifier,
@@ -54,11 +54,11 @@ void VarBase::addAnnotation(const std::string_view& identifier,
 bool VarBase::isOutput() const { return _isOutput; }
 bool VarBase::isDefinedVar() const { return _isDefinedVar; }
 
-BoolVar::BoolVar(const std::string_view& identifier,
+BoolVar::BoolVar(const std::string& identifier,
                  std::vector<Annotation>&& annotations)
     : VarBase(identifier, std::move(annotations)), _domain(2) {}
 
-BoolVar::BoolVar(bool b, const std::string_view& identifier,
+BoolVar::BoolVar(bool b, const std::string& identifier,
                  std::vector<Annotation>&& annotations)
     : VarBase(identifier, std::move(annotations)),
       _domain(static_cast<signed char>(b)) {}
@@ -89,7 +89,7 @@ bool BoolVar::operator!=(const BoolVar& other) const {
 bool BoolVar::isFixed() const { return _domain != 2; }
 
 std::string BoolVar::toString() const {
-  std::string s = "var bool: " + std::string(identifier());
+  std::string s = "var bool: " + identifier();
   if (_domain == 1) {
     s += " = true";
   } else if (_domain == 0) {
@@ -103,21 +103,21 @@ std::string BoolVar::toString() const {
   return s;
 }
 
-IntVar::IntVar(const std::string_view& identifier,
+IntVar::IntVar(const std::string& identifier,
                std::vector<Annotation>&& annotations)
     : VarBase(identifier, std::move(annotations)),
       _domain(IntSet(std::numeric_limits<int64_t>::min(),
                      std::numeric_limits<int64_t>::max())) {}
 
-IntVar::IntVar(int64_t val, const std::string_view& identifier,
+IntVar::IntVar(int64_t val, const std::string& identifier,
                std::vector<Annotation>&& annotations)
     : VarBase(identifier, std::move(annotations)), _domain(val) {}
 
-IntVar::IntVar(int64_t lb, int64_t ub, const std::string_view& identifier,
+IntVar::IntVar(int64_t lb, int64_t ub, const std::string& identifier,
                std::vector<Annotation>&& annotations)
     : VarBase(identifier, std::move(annotations)), _domain(lb, ub) {}
 
-IntVar::IntVar(std::vector<int64_t>&& vals, const std::string_view& identifier,
+IntVar::IntVar(std::vector<int64_t>&& vals, const std::string& identifier,
                std::vector<Annotation>&& annotations)
     : VarBase(identifier, std::move(annotations)), _domain(std::move(vals)) {}
 
@@ -150,8 +150,7 @@ bool IntVar::operator!=(const IntVar& other) const {
 bool IntVar::isFixed() const { return _domain.size() == 1; }
 
 std::string IntVar::toString() const {
-  std::string s =
-      "var " + _domain.toString() + ": " + std::string(identifier());
+  std::string s = "var " + _domain.toString() + ": " + identifier();
   if (!annotations().empty()) {
     for (const auto& annotation : annotations()) {
       s += " :: " + annotation.toString();
@@ -160,22 +159,21 @@ std::string IntVar::toString() const {
   return s;
 }
 
-FloatVar::FloatVar(const std::string_view& identifier,
+FloatVar::FloatVar(const std::string& identifier,
                    std::vector<Annotation>&& annotations)
     : VarBase(identifier, std::move(annotations)),
       _domain(FloatSet(std::numeric_limits<double>::min(),
                        std::numeric_limits<double>::max())) {}
 
-FloatVar::FloatVar(double val, const std::string_view& identifier,
+FloatVar::FloatVar(double val, const std::string& identifier,
                    std::vector<Annotation>&& annotations)
     : VarBase(identifier, std::move(annotations)), _domain(val) {}
 
-FloatVar::FloatVar(double lb, double ub, const std::string_view& identifier,
+FloatVar::FloatVar(double lb, double ub, const std::string& identifier,
                    std::vector<Annotation>&& annotations)
     : VarBase(identifier, std::move(annotations)), _domain(lb, ub) {}
 
-FloatVar::FloatVar(std::vector<double>&& vals,
-                   const std::string_view& identifier,
+FloatVar::FloatVar(std::vector<double>&& vals, const std::string& identifier,
                    std::vector<Annotation>&& annotations)
     : VarBase(identifier, std::move(annotations)), _domain(std::move(vals)) {}
 
@@ -210,8 +208,7 @@ bool FloatVar::isFixed() const {
 }
 
 std::string FloatVar::toString() const {
-  std::string s =
-      "var " + _domain.toString() + ": " + std::string(identifier());
+  std::string s = "var " + _domain.toString() + ": " + identifier();
   if (!annotations().empty()) {
     for (const auto& annotation : annotations()) {
       s += " :: " + annotation.toString();
@@ -220,19 +217,19 @@ std::string FloatVar::toString() const {
   return s;
 }
 
-SetVar::SetVar(int64_t lb, int64_t ub, const std::string_view& identifier,
+SetVar::SetVar(int64_t lb, int64_t ub, const std::string& identifier,
                std::vector<Annotation>&& annotations)
     : VarBase(identifier, std::move(annotations)), _domain(lb, ub) {}
 
-SetVar::SetVar(std::vector<int64_t>&& vals, const std::string_view& identifier,
+SetVar::SetVar(std::vector<int64_t>&& vals, const std::string& identifier,
                std::vector<Annotation>&& annotations)
     : VarBase(identifier, std::move(annotations)), _domain(std::move(vals)) {}
 
-SetVar::SetVar(IntSet&& domain, const std::string_view& identifier,
+SetVar::SetVar(IntSet&& domain, const std::string& identifier,
                std::vector<Annotation>&& annotations)
     : VarBase(identifier, std::move(annotations)), _domain(std::move(domain)) {}
 
-SetVar::SetVar(const IntSet& domain, const std::string_view& identifier,
+SetVar::SetVar(const IntSet& domain, const std::string& identifier,
                std::vector<Annotation>&& annotations)
     : VarBase(identifier, std::move(annotations)), _domain(domain) {}
 
@@ -262,8 +259,7 @@ bool SetVar::operator!=(const SetVar& other) const {
 bool SetVar::isFixed() const { return false; }
 
 std::string SetVar::toString() const {
-  std::string s =
-      "var " + _domain.toString() + ": " + std::string(identifier());
+  std::string s = "var " + _domain.toString() + ": " + identifier();
   if (!annotations().empty()) {
     for (const auto& annotation : annotations()) {
       s += " :: " + annotation.toString();
@@ -272,12 +268,12 @@ std::string SetVar::toString() const {
   return s;
 }
 
-VarArrayBase::VarArrayBase(const std::string_view& identifier,
+VarArrayBase::VarArrayBase(const std::string& identifier,
                            std::vector<Annotation>&& annotations)
     : VarBase(identifier, std::move(annotations)) {}
 
 void VarArrayBase::interpretAnnotations(
-    const std::unordered_map<std::string_view, Variable>&) {
+    const std::unordered_map<std::string, Variable>&) {
   for (const Annotation& annotation : annotations()) {
     if (annotation.identifier() == "output_array") {
       if (annotation.expressions().size() != 1) {
@@ -307,7 +303,7 @@ const std::vector<int64_t>& VarArrayBase::outputIndexSetSizes() const {
   return _outputIndexSetSizes;
 }
 
-BoolVarArray::BoolVarArray(const std::string_view& identifier,
+BoolVarArray::BoolVarArray(const std::string& identifier,
                            std::vector<Annotation>&& annotations)
     : VarArrayTemplate<bool, BoolVar>(identifier, std::move(annotations)) {}
 
@@ -359,11 +355,11 @@ bool BoolVarArray::operator!=(const BoolVarArray& other) const {
 }
 
 std::string BoolVarArray::toString() const {
-  std::string s = identifier().empty()
-                      ? "["
-                      : ("array[1.." + std::to_string(size()) + "] of" +
-                         (isParArray() ? "" : " var") +
-                         " bool: " + std::string(identifier()) + " = [");
+  std::string s =
+      identifier().empty()
+          ? "["
+          : ("array[1.." + std::to_string(size()) + "] of" +
+             (isParArray() ? "" : " var") + " bool: " + identifier() + " = [");
   for (size_t i = 0; i < size(); ++i) {
     if (i != 0) {
       s += ", ";
@@ -383,7 +379,7 @@ std::string BoolVarArray::toString() const {
   return s;
 }
 
-IntVarArray::IntVarArray(const std::string_view& identifier,
+IntVarArray::IntVarArray(const std::string& identifier,
                          std::vector<Annotation>&& annotations)
     : VarArrayTemplate<int64_t, IntVar>(identifier, std::move(annotations)) {}
 
@@ -435,11 +431,11 @@ bool IntVarArray::operator!=(const IntVarArray& other) const {
 }
 
 std::string IntVarArray::toString() const {
-  std::string s = identifier().empty()
-                      ? "["
-                      : ("array[1.." + std::to_string(size()) + "] of" +
-                         (isParArray() ? "" : " var") +
-                         " int: " + std::string(identifier()) + " = [");
+  std::string s =
+      identifier().empty()
+          ? "["
+          : ("array[1.." + std::to_string(size()) + "] of" +
+             (isParArray() ? "" : " var") + " int: " + identifier() + " = [");
   for (size_t i = 0; i < size(); ++i) {
     if (i != 0) {
       s += ", ";
@@ -459,7 +455,7 @@ std::string IntVarArray::toString() const {
   return s;
 }
 
-FloatVarArray::FloatVarArray(const std::string_view& identifier,
+FloatVarArray::FloatVarArray(const std::string& identifier,
                              std::vector<Annotation>&& annotations)
     : VarArrayTemplate<double, FloatVar>(identifier, std::move(annotations)) {}
 
@@ -511,11 +507,11 @@ bool FloatVarArray::operator!=(const FloatVarArray& other) const {
 }
 
 std::string FloatVarArray::toString() const {
-  std::string s = identifier().empty()
-                      ? "["
-                      : ("array[1.." + std::to_string(size()) + "] of" +
-                         (isParArray() ? "" : " var") +
-                         " float: " + std::string(identifier()) + " = [");
+  std::string s =
+      identifier().empty()
+          ? "["
+          : ("array[1.." + std::to_string(size()) + "] of" +
+             (isParArray() ? "" : " var") + " float: " + identifier() + " = [");
   for (size_t i = 0; i < size(); ++i) {
     if (i != 0) {
       s += ", ";
@@ -535,7 +531,7 @@ std::string FloatVarArray::toString() const {
   return s;
 }
 
-SetVarArray::SetVarArray(const std::string_view& identifier,
+SetVarArray::SetVarArray(const std::string& identifier,
                          std::vector<Annotation>&& annotations)
     : VarArrayTemplate<IntSet, SetVar>(identifier, std::move(annotations)) {}
 
@@ -591,7 +587,7 @@ std::string SetVarArray::toString() const {
                       ? "["
                       : ("array[1.." + std::to_string(size()) + "] of" +
                          (isParArray() ? " int set" : " var set") + ": " +
-                         std::string(identifier()) + " = [");
+                         identifier() + " = [");
   for (size_t i = 0; i < size(); ++i) {
     if (i != 0) {
       s += ", ";
@@ -611,7 +607,7 @@ std::string SetVarArray::toString() const {
   return s;
 }
 
-const std::string_view& Variable::identifier() const {
+const std::string& Variable::identifier() const {
   if (std::holds_alternative<BoolVar>(*this)) {
     return get<BoolVar>(*this).identifier();
   } else if (std::holds_alternative<IntVar>(*this)) {
@@ -694,7 +690,7 @@ std::string Variable::toString() const {
 }
 
 void Variable::interpretAnnotations(
-    const std::unordered_map<std::string_view, Variable>& variableMapping) {
+    const std::unordered_map<std::string, Variable>& variableMapping) {
   if (std::holds_alternative<BoolVar>(*this)) {
     get<BoolVar>(*this).interpretAnnotations(variableMapping);
   } else if (std::holds_alternative<IntVar>(*this)) {

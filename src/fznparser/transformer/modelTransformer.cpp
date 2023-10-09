@@ -584,8 +584,7 @@ fznparser::Annotation transformAnnotation(
 }
 
 Variable ModelTransformer::transformVar(
-    const std::unordered_map<std::string_view, Variable>&,
-    const BasicVarDecl& var) {
+    const std::unordered_map<std::string, Variable>&, const BasicVarDecl& var) {
   std::vector<fznparser::Annotation> annotations;
   annotations.reserve(var.annotations.size());
   for (const parser::Annotation& ann : var.annotations) {
@@ -620,7 +619,7 @@ Variable ModelTransformer::transformVar(
 
 template <class ArrayType, class VarType, typename ParType>
 ArrayType generateVarArray(
-    const std::unordered_map<std::string_view, Variable>& vars,
+    const std::unordered_map<std::string, Variable>& vars,
     const ArrayVarDecl& arrayVarDecl) {
   std::vector<fznparser::Annotation> annotations;
   annotations.reserve(arrayVarDecl.annotations.size());
@@ -655,7 +654,7 @@ ArrayType generateVarArray(
 }
 
 SetVarArray generateSetVarArray(
-    const std::unordered_map<std::string_view, Variable>& vars,
+    const std::unordered_map<std::string, Variable>& vars,
     const ArrayVarDecl& arrayVarDecl) {
   std::vector<fznparser::Annotation> annotations;
   annotations.reserve(arrayVarDecl.annotations.size());
@@ -688,7 +687,7 @@ SetVarArray generateSetVarArray(
 
 template <class ArrayType, class VarType, typename ParType>
 ArrayType generateArgArray(
-    const std::unordered_map<std::string_view, Variable>& vars,
+    const std::unordered_map<std::string, Variable>& vars,
     const ArrayLiteral& arrayLiteral) {
   ArrayType res("");
   for (const BasicExpr& basicExpr : arrayLiteral) {
@@ -719,7 +718,7 @@ ArrayType generateArgArray(
 }
 
 SetVarArray generateSetVarArray(
-    const std::unordered_map<std::string_view, Variable>& vars,
+    const std::unordered_map<std::string, Variable>& vars,
     const ArrayLiteral& arrayLiteral) {
   SetVarArray res("");
   for (const BasicExpr& basicExpr : arrayLiteral) {
@@ -750,7 +749,7 @@ SetVarArray generateSetVarArray(
 }
 
 const std::type_info& ModelTransformer::arrayType(
-    const std::unordered_map<std::string_view, Variable>&,
+    const std::unordered_map<std::string, Variable>&,
     const ArrayLiteral& array) const {
   bool onlyEmptySets = true;
   for (const BasicExpr& expr : array) {
@@ -793,7 +792,7 @@ const std::type_info& ModelTransformer::arrayType(
 }
 
 Arg ModelTransformer::transformArgArray(
-    const std::unordered_map<std::string_view, Variable>& vars,
+    const std::unordered_map<std::string, Variable>& vars,
     const ArrayLiteral& array) {
   const auto& t = arrayType(vars, array);
   if (t == typeid(std::string)) {
@@ -835,7 +834,7 @@ ArgArrayType translateVariableArray(const VarArrayType& varArray) {
 }
 
 Variable ModelTransformer::transformVarArray(
-    const std::unordered_map<std::string_view, Variable>& vars,
+    const std::unordered_map<std::string, Variable>& vars,
     const ArrayVarDecl& arrayVarDecl) {
   if (isBoolVar(arrayVarDecl)) {
     return Variable{
@@ -853,7 +852,7 @@ Variable ModelTransformer::transformVarArray(
 }
 
 Variable ModelTransformer::transform(
-    const std::unordered_map<std::string_view, fznparser::Variable>& vars,
+    const std::unordered_map<std::string, fznparser::Variable>& vars,
     const VarDeclItem& varDeclItem) {
   return varDeclItem.type() == typeid(BasicVarDecl)
              ? transformVar(vars, get<BasicVarDecl>(varDeclItem))
@@ -861,7 +860,7 @@ Variable ModelTransformer::transform(
 }
 
 SolveType ModelTransformer::transform(
-    const std::unordered_map<std::string_view, Variable>& vars,
+    const std::unordered_map<std::string, Variable>& vars,
     const parser::SolveItem& solveItem) {
   const std::vector<parser::Annotation> parserAnns =
       solveItem.type() == typeid(SolveSatisfy)
@@ -904,7 +903,7 @@ SolveType ModelTransformer::transform(
 }
 
 Arg ModelTransformer::transformArgument(
-    const std::unordered_map<std::string_view, Variable>& vars,
+    const std::unordered_map<std::string, Variable>& vars,
     const parser::Expr& expr) {
   if (expr.type() == typeid(bool)) {
     return Arg{BoolArg{get<bool>(expr)}};
@@ -949,7 +948,7 @@ Arg ModelTransformer::transformArgument(
 }
 
 Constraint ModelTransformer::transform(
-    const std::unordered_map<std::string_view, Variable>& vars,
+    const std::unordered_map<std::string, Variable>& vars,
     const parser::ConstraintItem& constraintItem) {
   std::vector<fznparser::Annotation> annotations;
   annotations.reserve(constraintItem.annotations.size());
@@ -963,17 +962,18 @@ Constraint ModelTransformer::transform(
     arguments.push_back(std::move(transformArgument(vars, expr)));
   }
 
-  return Constraint(constraintItem.identifier, std::move(arguments),
+  return Constraint(std::move(constraintItem.identifier), std::move(arguments),
                     std::move(annotations));
 }
 
 fznparser::Model ModelTransformer::generateModel() {
-  std::unordered_map<std::string_view, Variable> vars;
+  std::unordered_map<std::string, Variable> vars;
   for (const VarDeclItem& varDeclItem : _model.varDeclItems) {
     Variable var = transform(vars, varDeclItem);
-    vars.emplace(std::make_pair<std::string_view, Variable>(
-        std::move(std::string_view(var.identifier())), std::move(var)));
-    vars.at(var.identifier()).interpretAnnotations(vars);
+    std::string identifier(var.identifier());
+    vars.emplace(std::make_pair<std::string, Variable>(std::move(identifier),
+                                                       std::move(var)))
+        .first->second.interpretAnnotations(vars);
   }
   std::vector<Constraint> constraints;
   constraints.clear();

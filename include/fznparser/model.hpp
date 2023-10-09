@@ -5,7 +5,7 @@
 #include <numeric>
 #include <optional>
 #include <stdexcept>
-#include <string_view>
+#include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <variant>
@@ -21,7 +21,7 @@ namespace fznparser {
 
 class Model {
  private:
-  std::unordered_map<std::string_view, Variable> _variables;
+  std::unordered_map<std::string, Variable> _variables;
   std::vector<Constraint> _constraints;
   SolveType _solveType;
 
@@ -37,7 +37,7 @@ class Model {
   Model();
   Model(std::vector<Variable>&& variables,
         std::vector<Constraint>&& constraints, SolveType&& solveType);
-  Model(std::unordered_map<std::string_view, Variable>&& variables,
+  Model(std::unordered_map<std::string, Variable>&& variables,
         std::vector<Constraint>&& constraints, SolveType&& solveType);
   Model(Variable&& objective, ProblemType);
 
@@ -52,10 +52,10 @@ class Model {
   size_t numVariables() const;
   size_t numConstraints() const;
 
-  bool hasVariable(std::string_view variable) const;
-  const Variable& variable(std::string_view identifier) const;
+  bool hasVariable(std::string variable) const;
+  const Variable& variable(std::string identifier) const;
 
-  const std::unordered_map<std::string_view, Variable>& variables() const;
+  const std::unordered_map<std::string, Variable>& variables() const;
   const std::vector<Constraint>& constraints() const;
   const SolveType& solveType() const;
   const std::optional<Variable> objective() const;

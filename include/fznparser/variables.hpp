@@ -5,7 +5,7 @@
 #include <numeric>
 #include <optional>
 #include <stdexcept>
-#include <string_view>
+#include <string>
 #include <unordered_map>
 #include <variant>
 #include <vector>
@@ -20,11 +20,11 @@ class Model;  // forward declaration
 class Variable;
 
 class VarBase {
-  std::string_view _identifier;
+  std::string _identifier;
   std::vector<Annotation> _annotations;
 
  protected:
-  VarBase(const std::string_view&, std::vector<Annotation>&&);
+  VarBase(const std::string&, std::vector<Annotation>&&);
   bool _isOutput = false;
   bool _isDefinedVar = false;
 
@@ -34,15 +34,14 @@ class VarBase {
   virtual ~VarBase() = default;
 
   virtual void interpretAnnotations(
-      const std::unordered_map<std::string_view, Variable>&);
+      const std::unordered_map<std::string, Variable>&);
 
-  const std::string_view& identifier() const;
+  const std::string& identifier() const;
   const std::vector<Annotation>& annotations() const;
   void addAnnotation(const Annotation&);
-  void addAnnotation(const std::string_view&);
-  void addAnnotation(const std::string_view&, AnnotationExpression&&);
-  void addAnnotation(const std::string_view&,
-                     std::vector<AnnotationExpression>&&);
+  void addAnnotation(const std::string&);
+  void addAnnotation(const std::string&, AnnotationExpression&&);
+  void addAnnotation(const std::string&, std::vector<AnnotationExpression>&&);
   bool isOutput() const;
   bool isDefinedVar() const;
 
@@ -56,8 +55,8 @@ class BoolVar : public VarBase {
  public:
   BoolVar(const BoolVar&) = default;
   BoolVar(BoolVar&&) = default;
-  BoolVar(const std::string_view&, std::vector<Annotation>&& = {});
-  BoolVar(bool, const std::string_view&, std::vector<Annotation>&& = {});
+  BoolVar(const std::string&, std::vector<Annotation>&& = {});
+  BoolVar(bool, const std::string&, std::vector<Annotation>&& = {});
   virtual ~BoolVar() = default;
 
   bool contains(const bool& val) const;
@@ -77,12 +76,12 @@ class IntVar : public VarBase {
  public:
   IntVar(const IntVar&) = default;
   IntVar(IntVar&&) = default;
-  IntVar(const std::string_view&, std::vector<Annotation>&& annotations = {});
-  IntVar(int64_t, const std::string_view&,
+  IntVar(const std::string&, std::vector<Annotation>&& annotations = {});
+  IntVar(int64_t, const std::string&,
          std::vector<Annotation>&& annotations = {});
-  IntVar(int64_t lb, int64_t ub, const std::string_view&,
+  IntVar(int64_t lb, int64_t ub, const std::string&,
          std::vector<Annotation>&& annotations = {});
-  IntVar(std::vector<int64_t>&&, const std::string_view&,
+  IntVar(std::vector<int64_t>&&, const std::string&,
          std::vector<Annotation>&& annotations = {});
   virtual ~IntVar() = default;
 
@@ -108,11 +107,11 @@ class FloatVar : public VarBase {
 
   const FloatSet& domain() const;
 
-  FloatVar(const std::string_view&, std::vector<Annotation>&& = {});
-  FloatVar(double, const std::string_view&, std::vector<Annotation>&& = {});
-  FloatVar(double lb, double ub, const std::string_view&,
+  FloatVar(const std::string&, std::vector<Annotation>&& = {});
+  FloatVar(double, const std::string&, std::vector<Annotation>&& = {});
+  FloatVar(double lb, double ub, const std::string&,
            std::vector<Annotation>&& = {});
-  FloatVar(std::vector<double>&&, const std::string_view&,
+  FloatVar(std::vector<double>&&, const std::string&,
            std::vector<Annotation>&& = {});
 
   virtual ~FloatVar() = default;
@@ -136,13 +135,12 @@ class SetVar : public VarBase {
   SetVar(SetVar&&) = default;
   virtual ~SetVar() = default;
 
-  SetVar(int64_t lb, int64_t ub, const std::string_view&,
+  SetVar(int64_t lb, int64_t ub, const std::string&,
          std::vector<Annotation>&& = {});
-  SetVar(std::vector<int64_t>&&, const std::string_view&,
+  SetVar(std::vector<int64_t>&&, const std::string&,
          std::vector<Annotation>&& = {});
-  SetVar(IntSet&&, const std::string_view&, std::vector<Annotation>&& = {});
-  SetVar(const IntSet&, const std::string_view&,
-         std::vector<Annotation>&& = {});
+  SetVar(IntSet&&, const std::string&, std::vector<Annotation>&& = {});
+  SetVar(const IntSet&, const std::string&, std::vector<Annotation>&& = {});
 
   bool contains(const IntSet& val) const;
   IntSet lowerBound() const;
@@ -164,10 +162,10 @@ class VarArrayBase : public VarBase {
  public:
   VarArrayBase(const VarArrayBase&) = default;
   VarArrayBase(VarArrayBase&&) = default;
-  VarArrayBase(const std::string_view&, std::vector<Annotation>&&);
+  VarArrayBase(const std::string&, std::vector<Annotation>&&);
 
   virtual void interpretAnnotations(
-      const std::unordered_map<std::string_view, Variable>&);
+      const std::unordered_map<std::string, Variable>&);
 
   const std::vector<int64_t>& outputIndexSetSizes() const;
   std::optional<std::reference_wrapper<const Variable>> definedVariable(
@@ -179,7 +177,7 @@ class VarArrayTemplate : public VarArrayBase {
  protected:
   std::vector<std::variant<ParType, std::reference_wrapper<const VarType>>>
       _vars;
-  VarArrayTemplate(const std::string_view& identifier,
+  VarArrayTemplate(const std::string& identifier,
                    std::vector<Annotation>&& annotations)
       : VarArrayBase(identifier, std::move(annotations)){};
   virtual ~VarArrayTemplate() = default;
@@ -231,7 +229,7 @@ class BoolVarArray : public VarArrayTemplate<bool, BoolVar> {
  public:
   BoolVarArray(const BoolVarArray&) = default;
   BoolVarArray(BoolVarArray&&) = default;
-  BoolVarArray(const std::string_view&, std::vector<Annotation>&& = {});
+  BoolVarArray(const std::string&, std::vector<Annotation>&& = {});
   virtual ~BoolVarArray() = default;
 
   virtual std::vector<std::reference_wrapper<const BoolVar>> toVarVector(
@@ -246,7 +244,7 @@ class IntVarArray : public VarArrayTemplate<int64_t, IntVar> {
  public:
   IntVarArray(const IntVarArray&) = default;
   IntVarArray(IntVarArray&&) = default;
-  IntVarArray(const std::string_view&, std::vector<Annotation>&& = {});
+  IntVarArray(const std::string&, std::vector<Annotation>&& = {});
   virtual ~IntVarArray() = default;
 
   virtual std::vector<std::reference_wrapper<const IntVar>> toVarVector(
@@ -261,8 +259,7 @@ class FloatVarArray : public VarArrayTemplate<double, FloatVar> {
  public:
   FloatVarArray(const FloatVarArray&) = default;
   FloatVarArray(FloatVarArray&&) = default;
-  FloatVarArray(const std::string_view& identifier,
-                std::vector<Annotation>&& = {});
+  FloatVarArray(const std::string& identifier, std::vector<Annotation>&& = {});
   virtual ~FloatVarArray() = default;
 
   virtual std::vector<std::reference_wrapper<const FloatVar>> toVarVector(
@@ -277,7 +274,7 @@ class SetVarArray : public VarArrayTemplate<IntSet, SetVar> {
  public:
   SetVarArray(const SetVarArray&) = default;
   SetVarArray(SetVarArray&&) = default;
-  SetVarArray(const std::string_view&, std::vector<Annotation>&& = {});
+  SetVarArray(const std::string&, std::vector<Annotation>&& = {});
   virtual ~SetVarArray() = default;
 
   virtual std::vector<std::reference_wrapper<const SetVar>> toVarVector(
@@ -296,9 +293,8 @@ class Variable
                      IntVarArray, FloatVarArray, SetVarArray>::variant;
 
   bool isOutput() const;
-  const std::string_view& identifier() const;
-  void interpretAnnotations(
-      const std::unordered_map<std::string_view, Variable>&);
+  const std::string& identifier() const;
+  void interpretAnnotations(const std::unordered_map<std::string, Variable>&);
   bool isArray() const;
   bool operator==(const Variable&) const;
   bool operator!=(const Variable&) const;

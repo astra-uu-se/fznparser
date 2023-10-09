@@ -5,7 +5,7 @@ namespace fznparser {
 using std::get;
 
 Annotation::Annotation(
-    const std::string_view& identifier,
+    const std::string& identifier,
     std::vector<std::vector<AnnotationExpression>>&& expressions)
     : _identifier(identifier), _expressions(std::move(expressions)) {}
 
@@ -43,7 +43,7 @@ bool Annotation::operator!=(const Annotation& other) const {
 }
 
 std::string Annotation::toString() const {
-  std::string s = std::string(_identifier);
+  std::string s(_identifier);
   if (!_expressions.empty()) {
     s += "(";
     for (size_t i = 0; i < _expressions.size(); ++i) {
@@ -79,9 +79,9 @@ bool AnnotationExpression::operator==(const AnnotationExpression& other) const {
   } else if (holds_alternative<FloatSet>(*this) &&
              holds_alternative<FloatSet>(other)) {
     return get<FloatSet>(*this).operator==(get<FloatSet>(other));
-  } else if (holds_alternative<std::string_view>(*this) &&
-             holds_alternative<std::string_view>(other)) {
-    return get<std::string_view>(*this) == get<std::string_view>(other);
+  } else if (holds_alternative<std::string>(*this) &&
+             holds_alternative<std::string>(other)) {
+    return get<std::string>(*this) == get<std::string>(other);
   } else if (holds_alternative<Annotation>(*this) &&
              holds_alternative<Annotation>(other)) {
     return get<Annotation>(*this).operator==(get<Annotation>(other));
@@ -104,8 +104,8 @@ std::string AnnotationExpression::toString() const {
     return get<IntSet>(*this).toString();
   } else if (holds_alternative<FloatSet>(*this)) {
     return get<FloatSet>(*this).toString();
-  } else if (holds_alternative<std::string_view>(*this)) {
-    return std::string(get<std::string_view>(*this));
+  } else if (holds_alternative<std::string>(*this)) {
+    return std::string(get<std::string>(*this));
   } else if (holds_alternative<Annotation>(*this)) {
     return get<Annotation>(*this).toString();
   }

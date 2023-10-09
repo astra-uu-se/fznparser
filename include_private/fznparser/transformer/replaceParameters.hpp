@@ -14,8 +14,8 @@ using boost::get;
 using namespace fznparser::parser;
 
 void replaceParameter(
-    const std::unordered_set<std::string_view>& identifiers,
-    const std::unordered_map<std::string_view, ParExpr>& parameters,
+    const std::unordered_set<std::string>& identifiers,
+    const std::unordered_map<std::string, ParExpr>& parameters,
     BasicExpr* basicExpr) {
   if (basicExpr->type() != typeid(std::string)) {
     return;
@@ -54,8 +54,8 @@ void replaceParameters(Model& model) {
   // find all identifiers
   for (const ParDeclItem& par : model.parameters()) {
     if (identifiers.find(par.identifier) != identifiers.end()) {
-      throw FznException("A parameter with identifier \"" +
-                         std::string(par.identifier) + "\" already declared");
+      throw FznException("A parameter with identifier \"" + par.identifier +
+                         "\" already declared");
     }
     identifiers.emplace(parDecl.identifier);
     parameters.emplace(parDecl.identifier, parDecl.expr);

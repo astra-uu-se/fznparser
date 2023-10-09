@@ -61,7 +61,7 @@ std::string BoolArg::toString() const {
   if (isParameter()) {
     return parameter() ? "true" : "false";
   }
-  return std::string(var().identifier());
+  return var().identifier();
 }
 
 bool IntArg::isParameter() const {
@@ -118,7 +118,7 @@ std::string IntArg::toString() const {
   if (isParameter()) {
     return std::to_string(toParameter());
   }
-  return std::string(var().identifier());
+  return var().identifier();
 }
 
 bool FloatArg::isParameter() const {
@@ -175,7 +175,7 @@ std::string FloatArg::toString() const {
   if (isParameter()) {
     return std::to_string(toParameter());
   }
-  return std::string(var().identifier());
+  return var().identifier();
 }
 
 bool IntSetArg::isParameter() const {
@@ -234,7 +234,7 @@ std::string IntSetArg::toString() const {
   if (isParameter()) {
     return toParameter().toString();
   }
-  return std::string(var().identifier());
+  return var().identifier();
 }
 
 bool Arg::isArray() const {
