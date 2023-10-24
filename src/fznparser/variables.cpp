@@ -18,7 +18,7 @@ const std::vector<Annotation>& VarBase::annotations() const {
 }
 
 void VarBase::interpretAnnotations(
-    const std::unordered_map<std::string, Variable>&) {
+    const std::unordered_map<std::string, Var>&) {
   for (const Annotation& annotation : _annotations) {
     if (annotation.identifier() == "output_var") {
       _isOutput = true;
@@ -273,7 +273,7 @@ VarArrayBase::VarArrayBase(const std::string& identifier,
     : VarBase(identifier, std::move(annotations)) {}
 
 void VarArrayBase::interpretAnnotations(
-    const std::unordered_map<std::string, Variable>&) {
+    const std::unordered_map<std::string, Var>&) {
   for (const Annotation& annotation : annotations()) {
     if (annotation.identifier() == "output_array") {
       if (annotation.expressions().size() != 1) {
@@ -607,7 +607,7 @@ std::string SetVarArray::toString() const {
   return s;
 }
 
-const std::string& Variable::identifier() const {
+const std::string& Var::identifier() const {
   if (std::holds_alternative<BoolVar>(*this)) {
     return get<BoolVar>(*this).identifier();
   } else if (std::holds_alternative<IntVar>(*this)) {
@@ -628,14 +628,14 @@ const std::string& Variable::identifier() const {
   throw std::runtime_error("Unknown variable type");
 }
 
-bool Variable::isArray() const {
+bool Var::isArray() const {
   return std::holds_alternative<BoolVarArray>(*this) ||
          std::holds_alternative<IntVarArray>(*this) ||
          std::holds_alternative<FloatVarArray>(*this) ||
          std::holds_alternative<SetVarArray>(*this);
 }
 
-bool Variable::operator==(const Variable& other) const {
+bool Var::operator==(const Var& other) const {
   if (std::holds_alternative<BoolVar>(*this) &&
       std::holds_alternative<BoolVar>(other)) {
     return get<BoolVar>(*this).operator==(get<BoolVar>(other));
@@ -664,11 +664,9 @@ bool Variable::operator==(const Variable& other) const {
   return false;
 }
 
-bool Variable::operator!=(const Variable& other) const {
-  return !operator==(other);
-}
+bool Var::operator!=(const Var& other) const { return !operator==(other); }
 
-std::string Variable::toString() const {
+std::string Var::toString() const {
   if (std::holds_alternative<BoolVar>(*this)) {
     return get<BoolVar>(*this).toString();
   } else if (std::holds_alternative<IntVar>(*this)) {
@@ -689,28 +687,28 @@ std::string Variable::toString() const {
   return "";
 }
 
-void Variable::interpretAnnotations(
-    const std::unordered_map<std::string, Variable>& variableMapping) {
+void Var::interpretAnnotations(
+    const std::unordered_map<std::string, Var>& varMapping) {
   if (std::holds_alternative<BoolVar>(*this)) {
-    get<BoolVar>(*this).interpretAnnotations(variableMapping);
+    get<BoolVar>(*this).interpretAnnotations(varMapping);
   } else if (std::holds_alternative<IntVar>(*this)) {
-    get<IntVar>(*this).interpretAnnotations(variableMapping);
+    get<IntVar>(*this).interpretAnnotations(varMapping);
   } else if (std::holds_alternative<FloatVar>(*this)) {
-    get<FloatVar>(*this).interpretAnnotations(variableMapping);
+    get<FloatVar>(*this).interpretAnnotations(varMapping);
   } else if (std::holds_alternative<SetVar>(*this)) {
-    get<SetVar>(*this).interpretAnnotations(variableMapping);
+    get<SetVar>(*this).interpretAnnotations(varMapping);
   } else if (std::holds_alternative<BoolVarArray>(*this)) {
-    get<BoolVarArray>(*this).interpretAnnotations(variableMapping);
+    get<BoolVarArray>(*this).interpretAnnotations(varMapping);
   } else if (std::holds_alternative<IntVarArray>(*this)) {
-    get<IntVarArray>(*this).interpretAnnotations(variableMapping);
+    get<IntVarArray>(*this).interpretAnnotations(varMapping);
   } else if (std::holds_alternative<FloatVarArray>(*this)) {
-    get<FloatVarArray>(*this).interpretAnnotations(variableMapping);
+    get<FloatVarArray>(*this).interpretAnnotations(varMapping);
   } else if (std::holds_alternative<SetVarArray>(*this)) {
-    get<SetVarArray>(*this).interpretAnnotations(variableMapping);
+    get<SetVarArray>(*this).interpretAnnotations(varMapping);
   }
 }
 
-bool Variable::isOutput() const {
+bool Var::isOutput() const {
   if (std::holds_alternative<BoolVar>(*this)) {
     get<BoolVar>(*this).isOutput();
   } else if (std::holds_alternative<IntVar>(*this)) {

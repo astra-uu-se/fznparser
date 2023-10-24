@@ -23,7 +23,7 @@ class Constraint {
   std::string _identifier;
   std::vector<Arg> _arguments;
   std::vector<Annotation> _annotations;
-  std::optional<std::reference_wrapper<const Variable>> _definedVariable;
+  std::optional<std::reference_wrapper<const Var>> _definedVar;
 
  public:
   Constraint(const Constraint&) = default;
@@ -39,10 +39,10 @@ class Constraint {
   void addAnnotation(const std::string&, AnnotationExpression&&);
   void addAnnotation(const std::string&, std::vector<AnnotationExpression>&&);
 
-  void interpretAnnotations(const std::unordered_map<std::string, Variable>&);
+  void interpretAnnotations(const std::unordered_map<std::string, Var>&);
 
   const std::vector<Arg>& arguments() const;
-  std::optional<std::reference_wrapper<const Variable>> definedVariable() const;
+  std::optional<std::reference_wrapper<const Var>> definedVar() const;
 
   bool operator==(const Constraint&) const;
   bool operator!=(const Constraint&) const;

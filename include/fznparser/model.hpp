@@ -21,7 +21,7 @@ namespace fznparser {
 
 class Model {
  private:
-  std::unordered_map<std::string, Variable> _variables;
+  std::unordered_map<std::string, Var> _vars;
   std::vector<Constraint> _constraints;
   SolveType _solveType;
 
@@ -35,30 +35,30 @@ class Model {
   Model(Model&&) = default;
 
   Model();
-  Model(std::vector<Variable>&& variables,
+  Model(std::vector<Var>&& vars, std::vector<Constraint>&& constraints,
+        SolveType&& solveType);
+  Model(std::unordered_map<std::string, Var>&& vars,
         std::vector<Constraint>&& constraints, SolveType&& solveType);
-  Model(std::unordered_map<std::string, Variable>&& variables,
-        std::vector<Constraint>&& constraints, SolveType&& solveType);
-  Model(Variable&& objective, ProblemType);
+  Model(Var&& objective, ProblemType);
 
   BoolVar& boolVarPar(bool);
   IntVar& addIntVarPar(int64_t);
   FloatVar& addFloatVarPar(double);
   SetVar& addSetVarPar(const IntSet&);
 
-  const Variable& addVariable(Variable&& variable);
+  const Var& addVar(Var&& var);
   const Constraint& addConstraint(Constraint&& constraint);
 
-  size_t numVariables() const;
+  size_t numVars() const;
   size_t numConstraints() const;
 
-  bool hasVariable(std::string variable) const;
-  const Variable& variable(std::string identifier) const;
+  bool hasVar(std::string var) const;
+  const Var& var(std::string identifier) const;
 
-  const std::unordered_map<std::string, Variable>& variables() const;
+  const std::unordered_map<std::string, Var>& vars() const;
   const std::vector<Constraint>& constraints() const;
   const SolveType& solveType() const;
-  const std::optional<Variable> objective() const;
+  const std::optional<Var> objective() const;
   bool isSatisfactionProblem() const;
   bool isOptimizationProblem() const;
   bool isMaximisationProblem() const;

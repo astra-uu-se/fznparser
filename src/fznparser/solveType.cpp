@@ -7,13 +7,13 @@ SolveType::SolveType(std::vector<fznparser::Annotation>&& annotations)
       _problemType(ProblemType::SATISFY),
       _objective({}) {}
 
-SolveType::SolveType(ProblemType problemType, const Variable& var,
+SolveType::SolveType(ProblemType problemType, const Var& var,
                      std::vector<fznparser::Annotation>&& annotations)
     : _annotations(std::move(annotations)),
       _problemType(problemType),
       _objective(var) {}
 
-const std::optional<Variable> SolveType::objective() const {
+const std::optional<Var> SolveType::objective() const {
   if (_objective.has_value()) {
     return _objective.value().get();
   }

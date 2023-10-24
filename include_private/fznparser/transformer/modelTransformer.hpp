@@ -41,22 +41,22 @@ class ModelTransformer {
   void validate(const parser::Annotation&) const;
 
   const std::type_info& arrayType(
-      const std::unordered_map<std::string, Variable>& vars,
+      const std::unordered_map<std::string, Var>& vars,
       const parser::ArrayLiteral&) const;
 
-  Variable transform(const std::unordered_map<std::string, Variable>&,
+  Var transform(const std::unordered_map<std::string, Var>&,
                      const parser::VarDeclItem&);
-  Variable transformVar(const std::unordered_map<std::string, Variable>&,
+  Var transformVar(const std::unordered_map<std::string, Var>&,
                         const parser::BasicVarDecl&);
-  Variable transformVarArray(const std::unordered_map<std::string, Variable>&,
+  Var transformVarArray(const std::unordered_map<std::string, Var>&,
                              const parser::ArrayVarDecl&);
-  Arg transformArgument(const std::unordered_map<std::string, Variable>&,
+  Arg transformArgument(const std::unordered_map<std::string, Var>&,
                         const parser::Expr&);
-  Arg transformArgArray(const std::unordered_map<std::string, Variable>&,
+  Arg transformArgArray(const std::unordered_map<std::string, Var>&,
                         const parser::ArrayLiteral&);
-  Constraint transform(const std::unordered_map<std::string, Variable>&,
+  Constraint transform(const std::unordered_map<std::string, Var>&,
                        const parser::ConstraintItem&);
-  SolveType transform(const std::unordered_map<std::string, Variable>&,
+  SolveType transform(const std::unordered_map<std::string, Var>&,
                       const parser::SolveItem&);
 
  public:

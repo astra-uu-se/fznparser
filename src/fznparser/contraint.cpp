@@ -10,7 +10,7 @@ Constraint::Constraint(const std::string& identifier,
     : _identifier(identifier),
       _arguments(std::move(arguments)),
       _annotations(std::move(annotations)),
-      _definedVariable(std::nullopt) {}
+      _definedVar(std::nullopt) {}
 
 const std::string& Constraint::identifier() const { return _identifier; }
 
@@ -42,7 +42,7 @@ const std::vector<Annotation>& Constraint::annotations() const {
 }
 
 void Constraint::interpretAnnotations(
-    const std::unordered_map<std::string, Variable>& variableMapping) {
+    const std::unordered_map<std::string, Var>& varMapping) {
   for (const Annotation& annotation : _annotations) {
     if (annotation.identifier() == "defines_var") {
       if (annotation.expressions().size() != 1 ||
@@ -61,21 +61,20 @@ void Constraint::interpretAnnotations(
       const std::string& varIdentifier =
           get<Annotation>(expression).identifier();
 
-      if (!variableMapping.contains(varIdentifier)) {
-        throw FznException("Variable with identifier " + varIdentifier +
+      if (!varMapping.contains(varIdentifier)) {
+        throw FznException("Var with identifier " + varIdentifier +
                            " is not defined");
       }
-      _definedVariable =
-          std::reference_wrapper(variableMapping.at(varIdentifier));
+      _definedVar = std::reference_wrapper(varMapping.at(varIdentifier));
     }
   }
 }
 
 const std::vector<Arg>& Constraint::arguments() const { return _arguments; }
 
-std::optional<std::reference_wrapper<const Variable>>
-Constraint::definedVariable() const {
-  return _definedVariable;
+std::optional<std::reference_wrapper<const Var>> Constraint::definedVar()
+    const {
+  return _definedVar;
 }
 
 bool Constraint::operator==(const Constraint& other) const {

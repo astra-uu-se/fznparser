@@ -86,29 +86,28 @@ TEST(generator, annotations) {
   IntVar b("b");
   IntVar c("c");
   IntVar d("d");
-  std::unordered_map<std::string, Variable> variables;
-  variables.emplace("a", Variable{std::move(a)});
-  variables.emplace("b", Variable{std::move(b)});
-  variables.emplace("c", Variable{std::move(c)});
-  variables.emplace("d", Variable{std::move(d)});
+  std::unordered_map<std::string, Var> vars;
+  vars.emplace("a", Var{std::move(a)});
+  vars.emplace("b", Var{std::move(b)});
+  vars.emplace("c", Var{std::move(c)});
+  vars.emplace("d", Var{std::move(d)});
 
   IntVarArray arr("arr");
   for (const auto& identifier : std::vector<std::string>{"a", "b", "c", "d"}) {
-    EXPECT_TRUE(variables.contains(identifier));
+    EXPECT_TRUE(vars.contains(identifier));
   }
-  arr.append(std::get<IntVar>(variables.at("b")));
-  arr.append(std::get<IntVar>(variables.at("c")));
-  arr.append(std::get<IntVar>(variables.at("c")));
-  arr.append(std::get<IntVar>(variables.at("d")));
+  arr.append(std::get<IntVar>(vars.at("b")));
+  arr.append(std::get<IntVar>(vars.at("c")));
+  arr.append(std::get<IntVar>(vars.at("c")));
+  arr.append(std::get<IntVar>(vars.at("d")));
 
   arr.addAnnotation("output_array", {IntSet(1, 2), IntSet(1, 2)});
-  variables.emplace("arr", Variable{std::move(arr)});
+  vars.emplace("arr", Var{std::move(arr)});
 
-  Constraint int_plus(
-      "int_plus",
-      std::vector<Arg>{IntArg{std::get<IntVar>(variables.at("a"))},
-                       IntArg{std::get<IntVar>(variables.at("b"))},
-                       IntArg{std::get<IntVar>(variables.at("c"))}});
+  Constraint int_plus("int_plus",
+                      std::vector<Arg>{IntArg{std::get<IntVar>(vars.at("a"))},
+                                       IntArg{std::get<IntVar>(vars.at("b"))},
+                                       IntArg{std::get<IntVar>(vars.at("c"))}});
 
   int_plus.addAnnotation("defines_var",
                          AnnotationExpression{fznparser::Annotation("c")});
@@ -116,18 +115,17 @@ TEST(generator, annotations) {
   std::vector<Constraint> constraints;
   constraints.emplace_back(std::move(int_plus));
 
-  test_generator(
-      "annotations.fzn",
-      std::move(fznparser::Model(std::move(variables), std::move(constraints),
-                                 std::move(SolveType()))));
+  test_generator("annotations.fzn", std::move(fznparser::Model(
+                                        std::move(vars), std::move(constraints),
+                                        std::move(SolveType()))));
 }
 
 TEST(generator, constraints) {
   IntVar v1("v1");
   IntVar v2("v2");
-  std::unordered_map<std::string, Variable> variables;
-  variables.emplace("v1", Variable{std::move(v1)});
-  variables.emplace("v2", Variable{std::move(v2)});
+  std::unordered_map<std::string, Var> vars;
+  vars.emplace("v1", Var{std::move(v1)});
+  vars.emplace("v2", Var{std::move(v2)});
 
   std::vector<Constraint> constraints;
 
@@ -136,8 +134,8 @@ TEST(generator, constraints) {
   coefs.append(-1);
 
   IntVarArray arr("");
-  arr.append(std::get<IntVar>(variables.at("v1")));
-  arr.append(std::get<IntVar>(variables.at("v2")));
+  arr.append(std::get<IntVar>(vars.at("v1")));
+  arr.append(std::get<IntVar>(vars.at("v2")));
 
   constraints.emplace_back(Constraint(
       "int_lin_eq",
@@ -146,87 +144,84 @@ TEST(generator, constraints) {
   constraints.emplace_back(Constraint(
       "set_in",
       std::vector<Arg>{IntArg{std::reference_wrapper<const IntVar>(
-                           std::get<IntVar>(variables.at("v1")))},
+                           std::get<IntVar>(vars.at("v1")))},
                        IntSetArg{IntSet(std::vector<int64_t>{1, 4})}}));
 
-  test_generator(
-      "constraints.fzn",
-      std::move(fznparser::Model(std::move(variables), std::move(constraints),
-                                 std::move(SolveType()))));
+  test_generator("constraints.fzn", std::move(fznparser::Model(
+                                        std::move(vars), std::move(constraints),
+                                        std::move(SolveType()))));
 }
 
 TEST(generator, maximize_objective) {
   IntVar a("a");
-  std::unordered_map<std::string, Variable> variables;
-  variables.emplace("a", Variable{std::move(a)});
+  std::unordered_map<std::string, Var> vars;
+  vars.emplace("a", Var{std::move(a)});
 
-  SolveType solveType(ProblemType::MAXIMIZE, variables.at("a"));
+  SolveType solveType(ProblemType::MAXIMIZE, vars.at("a"));
 
-  test_generator("maximize_objective.fzn",
-                 std::move(fznparser::Model(std::move(variables), {},
-                                            std::move(solveType))));
+  test_generator(
+      "maximize_objective.fzn",
+      std::move(fznparser::Model(std::move(vars), {}, std::move(solveType))));
 }
 
 TEST(generator, minimize_objective) {
   IntVar a("a");
-  std::unordered_map<std::string, Variable> variables;
-  variables.emplace("a", Variable{std::move(a)});
+  std::unordered_map<std::string, Var> vars;
+  vars.emplace("a", Var{std::move(a)});
 
-  SolveType solveType(ProblemType::MINIMIZE, variables.at("a"));
+  SolveType solveType(ProblemType::MINIMIZE, vars.at("a"));
 
-  test_generator("minimize_objective.fzn",
-                 std::move(fznparser::Model(std::move(variables), {},
-                                            std::move(solveType))));
+  test_generator(
+      "minimize_objective.fzn",
+      std::move(fznparser::Model(std::move(vars), {}, std::move(solveType))));
 }
 
 TEST(generator, parameters) {
-  test_generator("parameters.fzn", fznparser::Model(std::vector<Variable>{}, {},
+  test_generator("parameters.fzn", fznparser::Model(std::vector<Var>{}, {},
                                                     std::move(SolveType())));
 }
 
 TEST(generator, satisfy_empty) {
-  test_generator(
-      "satisfy_empty.fzn",
-      fznparser::Model(std::vector<Variable>{}, {}, std::move(SolveType())));
+  test_generator("satisfy_empty.fzn", fznparser::Model(std::vector<Var>{}, {},
+                                                       std::move(SolveType())));
 }
 
 TEST(generator, variable_arrays) {
-  std::unordered_map<std::string, Variable> variables;
-  variables.emplace("v1", Variable{IntVar("v1")});
-  variables.emplace("v2", Variable{IntVar("v2")});
-  variables.emplace("v3", Variable{BoolVar("v3")});
+  std::unordered_map<std::string, Var> vars;
+  vars.emplace("v1", Var{IntVar("v1")});
+  vars.emplace("v2", Var{IntVar("v2")});
+  vars.emplace("v3", Var{BoolVar("v3")});
 
   IntVarArray array1("array1");
-  array1.append(std::get<IntVar>(variables.at("v1")));
+  array1.append(std::get<IntVar>(vars.at("v1")));
   array1.append(2);
-  array1.append(std::get<IntVar>(variables.at("v2")));
+  array1.append(std::get<IntVar>(vars.at("v2")));
   array1.append(5);
-  variables.emplace("array1", Variable{std::move(array1)});
+  vars.emplace("array1", Var{std::move(array1)});
 
   BoolVarArray array2("array2");
-  array2.append(std::get<BoolVar>(variables.at("v3")));
+  array2.append(std::get<BoolVar>(vars.at("v3")));
   array2.append(true);
   array2.append(false);
-  variables.emplace("array2", Variable{std::move(array2)});
+  vars.emplace("array2", Var{std::move(array2)});
 
-  test_generator("variable_arrays.fzn",
-                 std::move(fznparser::Model(std::move(variables), {},
-                                            std::move(SolveType()))));
+  test_generator(
+      "variable_arrays.fzn",
+      std::move(fznparser::Model(std::move(vars), {}, std::move(SolveType()))));
 }
 
-TEST(generator, variables) {
-  std::unordered_map<std::string, Variable> variables;
-  variables.emplace("v1", Variable{BoolVar("v1")});
-  variables.emplace("v2", Variable{IntVar(0, 5, "v2")});
-  variables.emplace("v3",
-                    Variable{IntVar(std::vector<int64_t>{3, 5, 10}, "v3")});
-  variables.emplace("v4", Variable{IntVar(5, "v4")});
-  variables.emplace("v5", Variable{IntVar(3, "v5")});
-  variables.emplace("v6", Variable{IntVar("v6")});
+TEST(generator, vars) {
+  std::unordered_map<std::string, Var> vars;
+  vars.emplace("v1", Var{BoolVar("v1")});
+  vars.emplace("v2", Var{IntVar(0, 5, "v2")});
+  vars.emplace("v3", Var{IntVar(std::vector<int64_t>{3, 5, 10}, "v3")});
+  vars.emplace("v4", Var{IntVar(5, "v4")});
+  vars.emplace("v5", Var{IntVar(3, "v5")});
+  vars.emplace("v6", Var{IntVar("v6")});
 
-  test_generator("variables.fzn",
-                 std::move(fznparser::Model(std::move(variables), {},
-                                            std::move(SolveType()))));
+  test_generator(
+      "variables.fzn",
+      std::move(fznparser::Model(std::move(vars), {}, std::move(SolveType()))));
 }
 
 }  // namespace fznparser::testing

@@ -17,7 +17,7 @@
 namespace fznparser {
 
 class Model;  // forward declaration
-class Variable;
+class Var;
 
 class VarBase {
   std::string _identifier;
@@ -34,7 +34,7 @@ class VarBase {
   virtual ~VarBase() = default;
 
   virtual void interpretAnnotations(
-      const std::unordered_map<std::string, Variable>&);
+      const std::unordered_map<std::string, Var>&);
 
   const std::string& identifier() const;
   const std::vector<Annotation>& annotations() const;
@@ -153,7 +153,7 @@ class SetVar : public VarBase {
   virtual std::string toString() const override;
 };
 
-class Variable;  // forward declaration
+class Var;  // forward declaration
 
 class VarArrayBase : public VarBase {
  private:
@@ -165,10 +165,10 @@ class VarArrayBase : public VarBase {
   VarArrayBase(const std::string&, std::vector<Annotation>&&);
 
   virtual void interpretAnnotations(
-      const std::unordered_map<std::string, Variable>&);
+      const std::unordered_map<std::string, Var>&);
 
   const std::vector<int64_t>& outputIndexSetSizes() const;
-  std::optional<std::reference_wrapper<const Variable>> definedVariable(
+  std::optional<std::reference_wrapper<const Var>> definedVar(
       const fznparser::Model&) const;
 };
 
@@ -285,19 +285,18 @@ class SetVarArray : public VarArrayTemplate<IntSet, SetVar> {
   virtual std::string toString() const override;
 };
 
-class Variable
-    : public std::variant<BoolVar, IntVar, FloatVar, SetVar, BoolVarArray,
-                          IntVarArray, FloatVarArray, SetVarArray> {
+class Var : public std::variant<BoolVar, IntVar, FloatVar, SetVar, BoolVarArray,
+                                IntVarArray, FloatVarArray, SetVarArray> {
  public:
   using std::variant<BoolVar, IntVar, FloatVar, SetVar, BoolVarArray,
                      IntVarArray, FloatVarArray, SetVarArray>::variant;
 
   bool isOutput() const;
   const std::string& identifier() const;
-  void interpretAnnotations(const std::unordered_map<std::string, Variable>&);
+  void interpretAnnotations(const std::unordered_map<std::string, Var>&);
   bool isArray() const;
-  bool operator==(const Variable&) const;
-  bool operator!=(const Variable&) const;
+  bool operator==(const Var&) const;
+  bool operator!=(const Var&) const;
   std::string toString() const;
 };
 

@@ -2,23 +2,21 @@
 
 namespace fznparser {
 
-std::unordered_map<std::string, Variable> varToMap(Variable&& var) {
-  std::unordered_map<std::string, Variable> varMap;
+std::unordered_map<std::string, Var> varToMap(Var&& var) {
+  std::unordered_map<std::string, Var> varMap;
   varMap.emplace(var.identifier(), std::move(var));
   return varMap;
 }
 
-std::unordered_map<std::string, Variable> varVectorToMap(
-    std::vector<Variable>&& vars) {
-  std::unordered_map<std::string, Variable> varMap;
-  for (Variable& var : vars) {
+std::unordered_map<std::string, Var> varVectorToMap(std::vector<Var>&& vars) {
+  std::unordered_map<std::string, Var> varMap;
+  for (Var& var : vars) {
     varMap.emplace(var.identifier(), std::move(var));
   }
   return varMap;
 }
 
-const Variable& varInMap(
-    const std::unordered_map<std::string, Variable>& vars) {
+const Var& varInMap(const std::unordered_map<std::string, Var>& vars) {
   if (vars.size() != 1) {
     throw FznException("Invalid initialization: expected exactly one variable");
   }
@@ -28,25 +26,25 @@ const Variable& varInMap(
   throw FznException("Invalid initialization: expected exactly one variable");
 }
 
-Model::Model(Variable&& objective, ProblemType problemType)
-    : _variables(varToMap(std::move(objective))),
+Model::Model(Var&& objective, ProblemType problemType)
+    : _vars(varToMap(std::move(objective))),
       _constraints(),
-      _solveType(problemType, varInMap(_variables)),
+      _solveType(problemType, varInMap(_vars)),
       _boolVarPars{BoolVar(false, ""), BoolVar(true, "")} {}
 
-Model::Model(std::unordered_map<std::string, Variable>&& variables,
+Model::Model(std::unordered_map<std::string, Var>&& vars,
              std::vector<Constraint>&& constraints, SolveType&& solveType)
-    : _variables(std::move(variables)),
+    : _vars(std::move(vars)),
       _constraints(std::move(constraints)),
       _solveType(std::move(solveType)),
       _boolVarPars{BoolVar(false, ""), BoolVar(true, "")} {}
 
 Model::Model()
-    : Model(std::vector<Variable>{}, std::vector<Constraint>{}, SolveType()) {}
+    : Model(std::vector<Var>{}, std::vector<Constraint>{}, SolveType()) {}
 
-Model::Model(std::vector<Variable>&& variables,
-             std::vector<Constraint>&& constraints, SolveType&& solveType)
-    : Model(varVectorToMap(std::move(variables)), std::move(constraints),
+Model::Model(std::vector<Var>&& vars, std::vector<Constraint>&& constraints,
+             SolveType&& solveType)
+    : Model(varVectorToMap(std::move(vars)), std::move(constraints),
             std::move(solveType)) {}
 
 BoolVar& Model::boolVarPar(bool b) { return _boolVarPars.at(b ? 1 : 0); }
@@ -69,35 +67,34 @@ SetVar& Model::addSetVarPar(const IntSet& is) {
   return _setVarPars.emplace_back(SetVar(is, ""));
 }
 
-const Variable& Model::addVariable(Variable&& variable) {
-  if (_variables.contains(variable.identifier())) {
-    throw FznException("Variable with identifier \"" + variable.identifier() +
+const Var& Model::addVar(Var&& var) {
+  if (_vars.contains(var.identifier())) {
+    throw FznException("Variable with identifier \"" + var.identifier() +
                        "\" already exists");
   }
-  Variable& var = _variables.emplace(variable.identifier(), std::move(variable))
-                      .first->second;
-  var.interpretAnnotations(_variables);
-  return var;
+  Var& addedVar = _vars.emplace(var.identifier(), std::move(var)).first->second;
+  addedVar.interpretAnnotations(_vars);
+  return addedVar;
 }
 
 const Constraint& Model::addConstraint(Constraint&& constraint) {
   Constraint& con = _constraints.emplace_back(std::move(constraint));
-  con.interpretAnnotations(_variables);
+  con.interpretAnnotations(_vars);
   return con;
 }
 
-size_t Model::numVariables() const { return _variables.size(); }
+size_t Model::numVars() const { return _vars.size(); }
 size_t Model::numConstraints() const { return _constraints.size(); }
-const Variable& Model::variable(std::string identifier) const {
-  return _variables.at(identifier);
+const Var& Model::var(std::string identifier) const {
+  return _vars.at(identifier);
 }
 
-bool Model::hasVariable(std::string identifier) const {
-  return _variables.find(identifier) != _variables.end();
+bool Model::hasVar(std::string identifier) const {
+  return _vars.find(identifier) != _vars.end();
 }
 
-const std::unordered_map<std::string, Variable>& Model::variables() const {
-  return _variables;
+const std::unordered_map<std::string, Var>& Model::vars() const {
+  return _vars;
 }
 
 const std::vector<Constraint>& Model::constraints() const {
@@ -106,7 +103,7 @@ const std::vector<Constraint>& Model::constraints() const {
 
 const SolveType& Model::solveType() const { return _solveType; }
 
-const std::optional<Variable> Model::objective() const {
+const std::optional<Var> Model::objective() const {
   return _solveType.objective();
 }
 bool Model::isSatisfactionProblem() const {
@@ -123,14 +120,14 @@ bool Model::isMinimisationProblem() const {
 }
 
 bool Model::operator==(const Model& other) const {
-  if (_variables.size() != other._variables.size() ||
+  if (_vars.size() != other._vars.size() ||
       _constraints.size() != other._constraints.size() ||
       _solveType != other._solveType) {
     return false;
   }
-  for (const auto& [identifier, var] : _variables) {
-    if (other._variables.find(identifier) == other._variables.end() ||
-        var.operator!=(other._variables.at(identifier))) {
+  for (const auto& [identifier, var] : _vars) {
+    if (other._vars.find(identifier) == other._vars.end() ||
+        var.operator!=(other._vars.at(identifier))) {
       return false;
     }
   }
@@ -156,7 +153,7 @@ bool Model::operator!=(const Model& other) const { return !operator==(other); }
 
 std::string Model::toString() const {
   std::string s = "";
-  for (const auto& [identifier, var] : _variables) {
+  for (const auto& [identifier, var] : _vars) {
     s += var.toString() + ";\n";
   }
   for (const Constraint& con : _constraints) {
