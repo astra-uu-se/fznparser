@@ -58,7 +58,9 @@ class Model {
   const std::unordered_map<std::string, Var>& vars() const;
   const std::vector<Constraint>& constraints() const;
   const SolveType& solveType() const;
-  const std::optional<Var> objective() const;
+
+  bool hasObjective() const noexcept;
+  const Var& objective() const;
   bool isSatisfactionProblem() const;
   bool isOptimizationProblem() const;
   bool isMaximisationProblem() const;

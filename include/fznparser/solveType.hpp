@@ -22,7 +22,7 @@ enum class ProblemType : unsigned char { SATISFY, MINIMIZE, MAXIMIZE };
 class SolveType {
   std::vector<Annotation> _annotations;
   ProblemType _problemType;
-  std::optional<std::reference_wrapper<const Var>> _objective;
+  Var const* _objective;
 
  public:
   SolveType(const SolveType&) = default;
@@ -31,7 +31,9 @@ class SolveType {
   SolveType(std::vector<Annotation>&& = {});
   SolveType(ProblemType, const Var&, std::vector<Annotation>&& = {});
 
-  const std::optional<Var> objective() const;
+  bool hasObjective() const noexcept;
+  const Var& objective() const;
+
   ProblemType problemType() const;
   bool isSatisfactionProblem() const;
   bool isOptimizationProblem() const;

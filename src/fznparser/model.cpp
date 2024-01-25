@@ -103,9 +103,9 @@ const std::vector<Constraint>& Model::constraints() const {
 
 const SolveType& Model::solveType() const { return _solveType; }
 
-const std::optional<Var> Model::objective() const {
-  return _solveType.objective();
-}
+bool Model::hasObjective() const noexcept { return _solveType.hasObjective(); }
+const Var& Model::objective() const { return _solveType.objective(); }
+
 bool Model::isSatisfactionProblem() const {
   return _solveType.isSatisfactionProblem();
 }

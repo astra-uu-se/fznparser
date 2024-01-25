@@ -5,20 +5,23 @@ namespace fznparser {
 SolveType::SolveType(std::vector<fznparser::Annotation>&& annotations)
     : _annotations(std::move(annotations)),
       _problemType(ProblemType::SATISFY),
-      _objective({}) {}
+      _objective(nullptr) {}
 
 SolveType::SolveType(ProblemType problemType, const Var& var,
                      std::vector<fznparser::Annotation>&& annotations)
     : _annotations(std::move(annotations)),
       _problemType(problemType),
-      _objective(var) {}
+      _objective(&var) {}
 
-const std::optional<Var> SolveType::objective() const {
-  if (_objective.has_value()) {
-    return _objective.value().get();
+bool SolveType::hasObjective() const noexcept { return _objective != nullptr; }
+
+const Var& SolveType::objective() const {
+  if (!hasObjective()) {
+    throw FznException("No objective defined");
   }
-  return std::nullopt;
+  return *_objective;
 }
+
 ProblemType SolveType::problemType() const { return _problemType; }
 bool SolveType::isSatisfactionProblem() const {
   return _problemType == ProblemType::SATISFY;
@@ -39,12 +42,11 @@ const std::vector<Annotation>& SolveType::annotations() const {
 bool SolveType::operator==(const SolveType& other) const {
   if (_annotations.size() != other._annotations.size() ||
       _problemType != other._problemType ||
-      _objective.has_value() != other._objective.has_value()) {
+      hasObjective() != other.hasObjective()) {
     return false;
   }
-  if (_objective.has_value()) {
-    return other._objective.has_value() &&
-           _objective.value().get().operator==(other._objective.value().get());
+  if (hasObjective()) {
+    return other.hasObjective() && objective().operator==(other.objective());
   }
   for (size_t i = 0; i < _annotations.size(); ++i) {
     if (_annotations[i].operator!=(other._annotations[i])) {
@@ -64,8 +66,8 @@ std::string SolveType::toString() const {
     s += "satisfy";
   } else {
     s += (_problemType == ProblemType::MINIMIZE ? "minimize" : "maximize");
-    if (_objective.has_value()) {
-      s += std::string(_objective.value().get().identifier());
+    if (hasObjective()) {
+      s += std::string(objective().identifier());
     }
   }
   if (!_annotations.empty()) {
