@@ -25,8 +25,9 @@ class Annotation {
   Annotation(const Annotation&) = default;
   Annotation(Annotation&&) = default;
 
+  Annotation(const std::string&);
   Annotation(const std::string&,
-             std::vector<std::vector<AnnotationExpression>>&& = {});
+             std::vector<std::vector<AnnotationExpression>>&&);
   const std::string& identifier() const { return _identifier; }
   const std::vector<std::vector<AnnotationExpression>>& expressions() const {
     return _expressions;

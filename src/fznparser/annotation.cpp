@@ -4,6 +4,9 @@ namespace fznparser {
 
 using std::get;
 
+Annotation::Annotation(const std::string& identifier)
+    : _identifier(identifier), _expressions() {}
+
 Annotation::Annotation(
     const std::string& identifier,
     std::vector<std::vector<AnnotationExpression>>&& expressions)
