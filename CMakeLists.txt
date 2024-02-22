@@ -26,6 +26,7 @@ include(cmake/CPM.cmake)
 
 # PackageProject.cmake will be used to make our target installable
 option(BUILD_SHARED_LIBS "Build shared libraries" NO)
+add_compile_definitions(BOOST_NO_CXX98_FUNCTION_BASE=TRUE)
 CPMAddPackage(
   NAME boost-cmake
   GITHUB_REPOSITORY "ClausKlein/boost-cmake"
