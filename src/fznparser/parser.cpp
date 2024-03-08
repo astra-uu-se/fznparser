@@ -4,21 +4,17 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/spirit/home/x3.hpp>
 #include <boost/spirit/include/support_istream_iterator.hpp>
+#include <istream>
 
+#include "fznparser/except.hpp"
 #include "fznparser/parser/grammarDef.hpp"
 #include "fznparser/transformer/modelTransformer.hpp"
 
 namespace fznparser {
 namespace x3 = ::boost::spirit::x3;
 
-Model parseFznFile(const std::string &fznFilePath) {
-  std::ifstream fznFile(fznFilePath);
-
-  if (!fznFile) {
-    throw FznException("Could not open file: " + fznFilePath);
-  }
-
-  boost::spirit::istream_iterator fileIterator(fznFile >> std::noskipws), eof;
+Model parseFznIstream(std::istream& fznStream) {
+  boost::spirit::istream_iterator fileIterator(fznStream >> std::noskipws), eof;
 
   parser::Model parserModel;
 
@@ -26,12 +22,31 @@ Model parseFznFile(const std::string &fznFilePath) {
                    parserModel);
 
   if (fileIterator != eof) {
-    throw FznException("Could not parse file: " + fznFilePath);
+    throw FznException("Could not parse FlatZinc");
   }
 
   ModelTransformer modelTransformer(std::move(parserModel));
 
   return modelTransformer.generateModel();
+}
+
+Model parseFznFile(const std::string& fznFilePath) {
+  std::ifstream fznFile(fznFilePath);
+
+  if (!fznFile) {
+    throw FznException("Could not open file: " + fznFilePath);
+  }
+
+  return parseFznIstream(fznFile);
+}
+
+Model parseFznString(const std::string& fznContent) {
+  std::stringstream ss(fznContent);
+  return parseFznIstream(ss);
+}
+Model parseFznString(std::string&& fznContent) {
+  std::stringstream ss(fznContent);
+  return parseFznIstream(ss);
 }
 
 }  // namespace fznparser
