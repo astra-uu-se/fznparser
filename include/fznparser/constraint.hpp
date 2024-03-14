@@ -1,15 +1,8 @@
 #pragma once
 
-#include <array>
-#include <functional>
-#include <numeric>
-#include <optional>
-#include <stdexcept>
-#include <string>
-#include <unordered_map>
-#include <unordered_set>
-#include <variant>
 #include <vector>
+#include <memory>
+#include <unordered_map>
 
 #include "fznparser/annotation.hpp"
 #include "fznparser/arguments.hpp"
@@ -23,7 +16,7 @@ class Constraint {
   std::string _identifier;
   std::vector<Arg> _arguments;
   std::vector<Annotation> _annotations;
-  std::optional<std::reference_wrapper<const Var>> _definedVar;
+  std::optional<Var> _definedVar;
 
  public:
   Constraint(const Constraint&) = default;
@@ -42,7 +35,7 @@ class Constraint {
   void interpretAnnotations(const std::unordered_map<std::string, Var>&);
 
   const std::vector<Arg>& arguments() const;
-  std::optional<std::reference_wrapper<const Var>> definedVar() const;
+  std::optional<const Var> definedVar() const;
 
   bool operator==(const Constraint&) const;
   bool operator!=(const Constraint&) const;

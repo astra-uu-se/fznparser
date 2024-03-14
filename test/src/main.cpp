@@ -4,6 +4,7 @@
 #include "parser/tStubs.hpp"
 #include "tModels.hpp"
 #include "tParser.hpp"
+#include "tMznChallenge.hpp"
 
 #include "transformer/tModelTransformer.hpp"
 

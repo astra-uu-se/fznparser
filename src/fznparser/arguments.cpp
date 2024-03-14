@@ -1,17 +1,23 @@
 #include "fznparser/arguments.hpp"
-
+#include <array>
+#include <functional>
+#include <numeric>
+#include <stdexcept>
+#include <unordered_map>
+#include <unordered_set>
 #include "fznparser/model.hpp"
 
 namespace fznparser {
 
 using std::get;
-using std::reference_wrapper;
+using std::holds_alternative;
+using std::shared_ptr;
 
 bool BoolArg::isParameter() const {
-  return std::holds_alternative<bool>(*this);
+  return holds_alternative<bool>(*this);
 }
 
-bool BoolArg::isFixed() const { return isParameter() || var().isFixed(); }
+bool BoolArg::isFixed() const { return isParameter() || var()->isFixed(); }
 
 bool BoolArg::parameter() const {
   if (isParameter()) {
@@ -20,9 +26,9 @@ bool BoolArg::parameter() const {
   throw FznException("Argument is not a parameter");
 }
 
-const BoolVar& BoolArg::var() const {
+shared_ptr<const BoolVar> BoolArg::var() const {
   if (!isParameter()) {
-    return get<reference_wrapper<const BoolVar>>(*this).get();
+    return get<shared_ptr<const BoolVar>>(*this);
   }
   throw FznException("Argument is not a var");
 }
@@ -31,13 +37,13 @@ bool BoolArg::toParameter() const {
   if (isParameter()) {
     return get<bool>(*this);
   }
-  if (var().isFixed()) {
-    return var().lowerBound();
+  if (var()->isFixed()) {
+    return var()->lowerBound();
   }
   throw FznException("Argument is not fixed nor a parameter");
 }
 
-const BoolVar& BoolArg::toVar(Model& model) {
+shared_ptr<const BoolVar> BoolArg::toVar(Model& model) {
   if (isParameter()) {
     return model.boolVarPar(toParameter());
   }
@@ -50,7 +56,7 @@ bool BoolArg::operator==(const BoolArg& other) const {
   } else if (isParameter() && other.isParameter()) {
     return parameter() == other.parameter();
   }
-  return var().operator==(other.var());
+  return var()->operator==(*(other.var()));
 }
 
 bool BoolArg::operator!=(const BoolArg& other) const {
@@ -61,14 +67,14 @@ std::string BoolArg::toString() const {
   if (isParameter()) {
     return parameter() ? "true" : "false";
   }
-  return var().identifier();
+  return var()->identifier();
 }
 
 bool IntArg::isParameter() const {
-  return std::holds_alternative<int64_t>(*this);
+  return holds_alternative<int64_t>(*this);
 }
 
-bool IntArg::isFixed() const { return isParameter() || var().isFixed(); }
+bool IntArg::isFixed() const { return isParameter() || var()->isFixed(); }
 
 int64_t IntArg::parameter() const {
   if (isParameter()) {
@@ -77,9 +83,9 @@ int64_t IntArg::parameter() const {
   throw FznException("Argument is not a parameter");
 }
 
-const IntVar& IntArg::var() const {
+shared_ptr<const IntVar> IntArg::var() const {
   if (!isParameter()) {
-    return get<reference_wrapper<const IntVar>>(*this).get();
+    return get<shared_ptr<const IntVar>>(*this);
   }
   throw FznException("Argument is not a var");
 }
@@ -88,17 +94,14 @@ int64_t IntArg::toParameter() const {
   if (isParameter()) {
     return get<int64_t>(*this);
   }
-  if (var().isFixed()) {
-    return var().lowerBound();
+  if (var()->isFixed()) {
+    return var()->lowerBound();
   }
   throw FznException("Argument is not fixed nor a parameter");
 }
 
-const IntVar& IntArg::toVar(Model& model) {
-  if (isParameter()) {
-    return model.addIntVarPar(toParameter());
-  }
-  return var();
+shared_ptr<const IntVar> IntArg::toVar(Model& model) {
+  return isParameter() ? model.addIntVarPar(toParameter()) : var();
 }
 
 bool IntArg::operator==(const IntArg& other) const {
@@ -107,7 +110,7 @@ bool IntArg::operator==(const IntArg& other) const {
   } else if (isParameter() && other.isParameter()) {
     return parameter() == other.parameter();
   }
-  return var().operator==(other.var());
+  return var()->operator==(*(other.var()));
 }
 
 bool IntArg::operator!=(const IntArg& other) const {
@@ -118,14 +121,14 @@ std::string IntArg::toString() const {
   if (isParameter()) {
     return std::to_string(toParameter());
   }
-  return var().identifier();
+  return var()->identifier();
 }
 
 bool FloatArg::isParameter() const {
-  return std::holds_alternative<double>(*this);
+  return holds_alternative<double>(*this);
 }
 
-bool FloatArg::isFixed() const { return isParameter() || var().isFixed(); }
+bool FloatArg::isFixed() const { return isParameter() || var()->isFixed(); }
 
 double FloatArg::parameter() const {
   if (isParameter()) {
@@ -134,9 +137,9 @@ double FloatArg::parameter() const {
   throw FznException("Argument is not a parameter");
 }
 
-const FloatVar& FloatArg::var() const {
+shared_ptr<const FloatVar> FloatArg::var() const {
   if (!isParameter()) {
-    return get<reference_wrapper<const FloatVar>>(*this).get();
+    return get<shared_ptr<const FloatVar>>(*this);
   }
   throw FznException("Argument is not a var");
 }
@@ -145,13 +148,13 @@ double FloatArg::toParameter() const {
   if (isParameter()) {
     return get<double>(*this);
   }
-  if (var().isFixed()) {
-    return var().lowerBound();
+  if (var()->isFixed()) {
+    return var()->lowerBound();
   }
   throw FznException("Argument is not fixed nor a parameter");
 }
 
-const FloatVar& FloatArg::toVar(Model& model) {
+shared_ptr<const FloatVar> FloatArg::toVar(Model& model) {
   if (isParameter()) {
     return model.addFloatVarPar(toParameter());
   }
@@ -164,7 +167,7 @@ bool FloatArg::operator==(const FloatArg& other) const {
   } else if (isParameter() && other.isParameter()) {
     return parameter() == other.parameter();
   }
-  return var().operator==(other.var());
+  return var()->operator==(*(other.var()));
 }
 
 bool FloatArg::operator!=(const FloatArg& other) const {
@@ -175,14 +178,14 @@ std::string FloatArg::toString() const {
   if (isParameter()) {
     return std::to_string(toParameter());
   }
-  return var().identifier();
+  return var()->identifier();
 }
 
 bool IntSetArg::isParameter() const {
-  return std::holds_alternative<IntSet>(*this);
+  return holds_alternative<IntSet>(*this);
 }
 
-bool IntSetArg::isFixed() const { return isParameter() || var().isFixed(); }
+bool IntSetArg::isFixed() const { return isParameter() || var()->isFixed(); }
 
 const IntSet& IntSetArg::parameter() const {
   if (isParameter()) {
@@ -191,9 +194,9 @@ const IntSet& IntSetArg::parameter() const {
   throw FznException("Argument is not a parameter");
 }
 
-const SetVar& IntSetArg::var() const {
+shared_ptr<const SetVar> IntSetArg::var() const {
   if (!isParameter()) {
-    return get<reference_wrapper<const SetVar>>(*this).get();
+    return get<shared_ptr<const SetVar>>(*this);
   }
   throw FznException("Argument is not a var");
 }
@@ -205,14 +208,13 @@ const IntSet& IntSetArg::toParameter() const {
   throw FznException("Argument is not a parameter");
 }
 
-const SetVar& IntSetArg::toVar(Model& model) {
-  if (_setVar.has_value()) {
-    return _setVar.value();
+shared_ptr<const SetVar> IntSetArg::toVar(Model& model) {
+  if (_setVar != nullptr) {
+    return _setVar;
   }
   if (isParameter()) {
-    _setVar =
-        reference_wrapper<const SetVar>{model.addSetVarPar(toParameter())};
-    return _setVar.value();
+    _setVar = model.addSetVarPar(toParameter());
+    return _setVar;
   }
   return var();
 }
@@ -223,7 +225,7 @@ bool IntSetArg::operator==(const IntSetArg& other) const {
   } else if (isParameter() && other.isParameter()) {
     return parameter() == other.parameter();
   }
-  return var().operator==(other.var());
+  return var()->operator==(*(other.var()));
 }
 
 bool IntSetArg::operator!=(const IntSetArg& other) const {
@@ -234,15 +236,15 @@ std::string IntSetArg::toString() const {
   if (isParameter()) {
     return toParameter().toString();
   }
-  return var().identifier();
+  return var()->identifier();
 }
 
 bool Arg::isArray() const {
-  return holds_alternative<BoolVarArray>(*this) ||
-         holds_alternative<IntVarArray>(*this) ||
-         holds_alternative<FloatVarArray>(*this) ||
-         holds_alternative<SetVarArray>(*this) ||
-         holds_alternative<FloatSetArray>(*this);
+  return holds_alternative<std::shared_ptr<BoolVarArray>>(*this) ||
+         holds_alternative<std::shared_ptr<IntVarArray>>(*this) ||
+         holds_alternative<std::shared_ptr<FloatVarArray>>(*this) ||
+         holds_alternative<std::shared_ptr<SetVarArray>>(*this) ||
+         holds_alternative<std::shared_ptr<FloatSetArray>>(*this);
 }
 
 bool Arg::isParameter() const {
@@ -286,21 +288,21 @@ bool Arg::operator==(const Arg& other) const {
   } else if (holds_alternative<FloatSet>(*this) &&
              holds_alternative<FloatSet>(other)) {
     return get<FloatSet>(*this).operator==(get<FloatSet>(other));
-  } else if (holds_alternative<BoolVarArray>(*this) &&
-             holds_alternative<BoolVarArray>(other)) {
-    return get<BoolVarArray>(*this).operator==(get<BoolVarArray>(other));
-  } else if (holds_alternative<IntVarArray>(*this) &&
-             holds_alternative<IntVarArray>(other)) {
-    return get<IntVarArray>(*this).operator==(get<IntVarArray>(other));
-  } else if (holds_alternative<FloatVarArray>(*this) &&
-             holds_alternative<FloatVarArray>(other)) {
-    return get<FloatVarArray>(*this).operator==(get<FloatVarArray>(other));
-  } else if (holds_alternative<SetVarArray>(*this) &&
-             holds_alternative<SetVarArray>(other)) {
-    return get<SetVarArray>(*this).operator==(get<SetVarArray>(other));
-  } else if (holds_alternative<FloatSetArray>(*this) &&
-             holds_alternative<FloatSetArray>(other)) {
-    return get<FloatSetArray>(*this).operator==(get<FloatSetArray>(other));
+  } else if (holds_alternative<std::shared_ptr<BoolVarArray>>(*this) &&
+             holds_alternative<std::shared_ptr<BoolVarArray>>(other)) {
+    return get<std::shared_ptr<BoolVarArray>>(*this)->operator==(*get<std::shared_ptr<BoolVarArray>>(other));
+  } else if (holds_alternative<std::shared_ptr<IntVarArray>>(*this) &&
+             holds_alternative<std::shared_ptr<IntVarArray>>(other)) {
+    return get<std::shared_ptr<IntVarArray>>(*this)->operator==(*get<std::shared_ptr<IntVarArray>>(other));
+  } else if (holds_alternative<std::shared_ptr<FloatVarArray>>(*this) &&
+             holds_alternative<std::shared_ptr<FloatVarArray>>(other)) {
+    return get<std::shared_ptr<FloatVarArray>>(*this)->operator==(*get<std::shared_ptr<FloatVarArray>>(other));
+  } else if (holds_alternative<std::shared_ptr<SetVarArray>>(*this) &&
+             holds_alternative<std::shared_ptr<SetVarArray>>(other)) {
+    return get<std::shared_ptr<SetVarArray>>(*this)->operator==(*get<std::shared_ptr<SetVarArray>>(other));
+  } else if (holds_alternative<std::shared_ptr<FloatSetArray>>(*this) &&
+             holds_alternative<std::shared_ptr<FloatSetArray>>(other)) {
+    return get<std::shared_ptr<FloatSetArray>>(*this)->operator==(*get<std::shared_ptr<FloatSetArray>>(other));
   }
   return false;
 }
@@ -318,16 +320,16 @@ std::string Arg::toString() const {
     return get<IntSetArg>(*this).toString();
   } else if (holds_alternative<FloatSet>(*this)) {
     return get<FloatSet>(*this).toString();
-  } else if (std::holds_alternative<BoolVarArray>(*this)) {
-    return get<BoolVarArray>(*this).toString();
-  } else if (std::holds_alternative<IntVarArray>(*this)) {
-    return get<IntVarArray>(*this).toString();
-  } else if (std::holds_alternative<FloatVarArray>(*this)) {
-    return get<FloatVarArray>(*this).toString();
-  } else if (std::holds_alternative<SetVarArray>(*this)) {
-    return get<SetVarArray>(*this).toString();
-  } else if (std::holds_alternative<FloatSetArray>(*this)) {
-    return get<FloatSetArray>(*this).toString();
+  } else if (holds_alternative<std::shared_ptr<BoolVarArray>>(*this)) {
+    return get<std::shared_ptr<BoolVarArray>>(*this)->toString();
+  } else if (holds_alternative<std::shared_ptr<IntVarArray>>(*this)) {
+    return get<std::shared_ptr<IntVarArray>>(*this)->toString();
+  } else if (holds_alternative<std::shared_ptr<FloatVarArray>>(*this)) {
+    return get<std::shared_ptr<FloatVarArray>>(*this)->toString();
+  } else if (holds_alternative<std::shared_ptr<SetVarArray>>(*this)) {
+    return get<std::shared_ptr<SetVarArray>>(*this)->toString();
+  } else if (holds_alternative<std::shared_ptr<FloatSetArray>>(*this)) {
+    return get<std::shared_ptr<FloatSetArray>>(*this)->toString();
   }
   return "";
 }

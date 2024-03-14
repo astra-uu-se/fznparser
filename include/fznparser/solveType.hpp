@@ -1,15 +1,8 @@
 #pragma once
 
-#include <array>
-#include <functional>
-#include <numeric>
-#include <optional>
-#include <stdexcept>
 #include <string>
-#include <unordered_map>
-#include <unordered_set>
-#include <variant>
 #include <vector>
+#include <memory>
 
 #include "fznparser/annotation.hpp"
 #include "fznparser/except.hpp"
@@ -22,17 +15,17 @@ enum class ProblemType : unsigned char { SATISFY, MINIMIZE, MAXIMIZE };
 class SolveType {
   std::vector<Annotation> _annotations;
   ProblemType _problemType;
-  Var const* _objective;
+  std::optional<Var> _objective;
 
  public:
   SolveType(const SolveType&) = default;
   SolveType(SolveType&&) = default;
 
   SolveType(std::vector<Annotation>&& = {});
-  SolveType(ProblemType, const Var&, std::vector<Annotation>&& = {});
+  SolveType(ProblemType, const Var, std::vector<Annotation>&& = {});
 
   bool hasObjective() const noexcept;
-  const Var& objective() const;
+  const Var objective() const;
 
   ProblemType problemType() const;
   bool isSatisfactionProblem() const;

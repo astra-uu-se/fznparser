@@ -1,4 +1,13 @@
 #include <iostream>
+#include <array>
+#include <functional>
+
+#include <numeric>
+#include <stdexcept>
+#include <string>
+
+#include <unordered_set>
+#include <variant>
 
 #include "fznparser/constraint.hpp"
 #include "fznparser/model.hpp"
@@ -59,20 +68,20 @@ void Constraint::interpretAnnotations(
             "defines_var annotation argument must be an identifier");
       }
       const std::string& varIdentifier =
-          get<Annotation>(expression).identifier();
+          std::get<Annotation>(expression).identifier();
 
       if (!varMapping.contains(varIdentifier)) {
         throw FznException("Var with identifier " + varIdentifier +
                            " is not defined");
       }
-      _definedVar = std::reference_wrapper(varMapping.at(varIdentifier));
+      _definedVar = varMapping.at(varIdentifier);
     }
   }
 }
 
 const std::vector<Arg>& Constraint::arguments() const { return _arguments; }
 
-std::optional<std::reference_wrapper<const Var>> Constraint::definedVar()
+std::optional<const Var> Constraint::definedVar()
     const {
   return _definedVar;
 }

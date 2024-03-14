@@ -8,6 +8,9 @@ FZN_MODEL_DIR=${MKFILE_PATH}fzn-models
 MINIZINC=$(shell which minizinc)
 C_COMPILER=$(shell which gcc-11)
 CXX_COMPILER=$(shell which g++-11)
+GIT=$(shell which git)
+MZN_CHALLENGE_REPO="git@github.com:MiniZinc/mzn-challenge.git"
+MZN_CHALLENGE_DIR=${MKFILE_PATH}test/mzn-challenge
 
 .PHONY: fzn-sanity
 fzn-sanity:
@@ -31,27 +34,32 @@ test: build
 	CTEST_OUTPUT_ON_FAILURE=1;
 	exec ${BUILD_DIR}/fznparserTests
 
+.PHONY: mzn-challenge
+mzn-challenge:
+	mkdir -p ${MZN_CHALLENGE_DIR}
+	${GIT} clone ${MZN_CHALLENGE_REPO} ${MZN_CHALLENGE_DIR}
+
 .PHONY: fzn
 fzn: fzn-sanity
 	${MINIZINC} -c \
 					    ${MZN_MODEL_DIR}/car_sequencing.mzn \
 					    ${MZN_MODEL_DIR}/car_sequencing.dzn \
-					    --fzn ${FZN_MODEL_DIR}/car_sequencing.fzn
-	rm -f ${MZN_MODEL_DIR}/car_sequencing.ozn
+					    --fzn ${FZN_MODEL_DIR}/car_sequencing.fzn \
+						--no-output-ozn
 	${MINIZINC} -c \
 					    ${MZN_MODEL_DIR}/magic_square.mzn \
 					    -D n=3 \
-					    --fzn ${FZN_MODEL_DIR}/magic_square.fzn
-	rm -f ${MZN_MODEL_DIR}/magic_square.ozn
+					    --fzn ${FZN_MODEL_DIR}/magic_square.fzn \
+						--no-output-ozn
 	${MINIZINC} -c \
 					    ${MZN_MODEL_DIR}/tsp_alldiff.mzn \
 					    ${MZN_MODEL_DIR}/tsp_17.dzn \
-					    --fzn ${FZN_MODEL_DIR}/tsp_alldiff.fzn
-	rm -f ${MZN_MODEL_DIR}/tsp_alldiff.ozn
+					    --fzn ${FZN_MODEL_DIR}/tsp_alldiff.fzn \
+						--no-output-ozn
 	${MINIZINC} -c \
 					    ${MZN_MODEL_DIR}/n_queens.mzn \
 					    -D n=32 \
-					    --fzn ${FZN_MODEL_DIR}/n_queens.fzn
-	rm -f ${MZN_MODEL_DIR}/n_queens.ozn
+					    --fzn ${FZN_MODEL_DIR}/n_queens.fzn \
+						--no-output-ozn
 	
 	

@@ -1,25 +1,35 @@
 #include "fznparser/solveType.hpp"
 
+#include <variant>
+#include <array>
+#include <unordered_map>
+#include <unordered_set>
+
+#include <functional>
+#include <numeric>
+#include <optional>
+#include <stdexcept>
+
 namespace fznparser {
 
 SolveType::SolveType(std::vector<fznparser::Annotation>&& annotations)
     : _annotations(std::move(annotations)),
       _problemType(ProblemType::SATISFY),
-      _objective(nullptr) {}
+      _objective(std::nullopt) {}
 
-SolveType::SolveType(ProblemType problemType, const Var& var,
+SolveType::SolveType(ProblemType problemType, const Var var,
                      std::vector<fznparser::Annotation>&& annotations)
     : _annotations(std::move(annotations)),
       _problemType(problemType),
-      _objective(&var) {}
+      _objective(var) {}
 
-bool SolveType::hasObjective() const noexcept { return _objective != nullptr; }
+bool SolveType::hasObjective() const noexcept { return _objective.has_value(); }
 
-const Var& SolveType::objective() const {
+const Var SolveType::objective() const {
   if (!hasObjective()) {
     throw FznException("No objective defined");
   }
-  return *_objective;
+  return _objective.value();
 }
 
 ProblemType SolveType::problemType() const { return _problemType; }
