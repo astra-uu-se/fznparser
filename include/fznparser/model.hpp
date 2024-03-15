@@ -1,11 +1,10 @@
 #pragma once
 
 #include <array>
-#include <variant>
+#include <unordered_map>
 #include <vector>
 
 #include "fznparser/constraint.hpp"
-#include "fznparser/except.hpp"
 #include "fznparser/solveType.hpp"
 #include "fznparser/types.hpp"
 #include "fznparser/variables.hpp"
@@ -45,15 +44,17 @@ class Model {
   size_t numVars() const;
   size_t numConstraints() const;
 
-  bool hasVar(std::string var) const;
-  const Var var(std::string identifier) const;
+  bool hasIdentifier(const std::string& var) const;
+
+  bool hasVar(const std::string& var) const;
+  Var var(const std::string& identifier) const;
 
   const std::unordered_map<std::string, Var>& vars() const;
   const std::vector<Constraint>& constraints() const;
   const SolveType& solveType() const;
 
   bool hasObjective() const noexcept;
-  const Var objective() const;
+  Var objective() const;
   bool isSatisfactionProblem() const;
   bool isOptimizationProblem() const;
   bool isMaximisationProblem() const;

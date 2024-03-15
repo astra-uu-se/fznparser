@@ -1,14 +1,10 @@
 #include "fznparser/solveType.hpp"
 
-#include <variant>
-#include <array>
-#include <unordered_map>
-#include <unordered_set>
-
 #include <functional>
 #include <numeric>
-#include <optional>
 #include <stdexcept>
+
+#include "fznparser/except.hpp"
 
 namespace fznparser {
 
@@ -17,7 +13,7 @@ SolveType::SolveType(std::vector<fznparser::Annotation>&& annotations)
       _problemType(ProblemType::SATISFY),
       _objective(std::nullopt) {}
 
-SolveType::SolveType(ProblemType problemType, const Var var,
+SolveType::SolveType(ProblemType problemType, const Var& var,
                      std::vector<fznparser::Annotation>&& annotations)
     : _annotations(std::move(annotations)),
       _problemType(problemType),
@@ -25,7 +21,7 @@ SolveType::SolveType(ProblemType problemType, const Var var,
 
 bool SolveType::hasObjective() const noexcept { return _objective.has_value(); }
 
-const Var SolveType::objective() const {
+Var SolveType::objective() const {
   if (!hasObjective()) {
     throw FznException("No objective defined");
   }

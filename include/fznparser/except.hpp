@@ -4,5 +4,5 @@
 
 class FznException : public std::runtime_error {
  public:
-  FznException(const std::string& msg) : std::runtime_error(msg) {}
+  explicit FznException(const std::string& msg) : std::runtime_error(msg) {}
 };

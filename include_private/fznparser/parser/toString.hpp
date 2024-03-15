@@ -1,17 +1,10 @@
 #pragma once
 
-#include <algorithm>
-#include <boost/spirit/home/x3.hpp>
-#include <boost/spirit/home/x3/support/ast/variant.hpp>
-#include <optional>
 #include <string>
-#include <vector>
 
-#include "fznparser/except.hpp"
-#include "fznparser/parser/grammarAst.hpp"
+#include "grammarAst.hpp"
 
 namespace fznparser::parser {
-namespace x3 = ::boost::spirit::x3;
 
 std::string toString(const IntRange&);
 std::string toString(const FloatRange&);

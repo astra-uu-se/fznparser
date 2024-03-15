@@ -1,10 +1,9 @@
 #include "fznparser/arguments.hpp"
+
 #include <array>
-#include <functional>
-#include <numeric>
 #include <stdexcept>
-#include <unordered_map>
 #include <unordered_set>
+
 #include "fznparser/model.hpp"
 
 namespace fznparser {
@@ -13,9 +12,7 @@ using std::get;
 using std::holds_alternative;
 using std::shared_ptr;
 
-bool BoolArg::isParameter() const {
-  return holds_alternative<bool>(*this);
-}
+bool BoolArg::isParameter() const { return holds_alternative<bool>(*this); }
 
 bool BoolArg::isFixed() const { return isParameter() || var()->isFixed(); }
 
@@ -43,7 +40,7 @@ bool BoolArg::toParameter() const {
   throw FznException("Argument is not fixed nor a parameter");
 }
 
-shared_ptr<const BoolVar> BoolArg::toVar(Model& model) {
+shared_ptr<const BoolVar> BoolArg::toVar(Model& model) const {
   if (isParameter()) {
     return model.boolVarPar(toParameter());
   }
@@ -70,9 +67,7 @@ std::string BoolArg::toString() const {
   return var()->identifier();
 }
 
-bool IntArg::isParameter() const {
-  return holds_alternative<int64_t>(*this);
-}
+bool IntArg::isParameter() const { return holds_alternative<int64_t>(*this); }
 
 bool IntArg::isFixed() const { return isParameter() || var()->isFixed(); }
 
@@ -100,7 +95,7 @@ int64_t IntArg::toParameter() const {
   throw FznException("Argument is not fixed nor a parameter");
 }
 
-shared_ptr<const IntVar> IntArg::toVar(Model& model) {
+shared_ptr<const IntVar> IntArg::toVar(Model& model) const {
   return isParameter() ? model.addIntVarPar(toParameter()) : var();
 }
 
@@ -124,9 +119,7 @@ std::string IntArg::toString() const {
   return var()->identifier();
 }
 
-bool FloatArg::isParameter() const {
-  return holds_alternative<double>(*this);
-}
+bool FloatArg::isParameter() const { return holds_alternative<double>(*this); }
 
 bool FloatArg::isFixed() const { return isParameter() || var()->isFixed(); }
 
@@ -154,7 +147,7 @@ double FloatArg::toParameter() const {
   throw FznException("Argument is not fixed nor a parameter");
 }
 
-shared_ptr<const FloatVar> FloatArg::toVar(Model& model) {
+shared_ptr<const FloatVar> FloatArg::toVar(Model& model) const {
   if (isParameter()) {
     return model.addFloatVarPar(toParameter());
   }
@@ -181,9 +174,7 @@ std::string FloatArg::toString() const {
   return var()->identifier();
 }
 
-bool IntSetArg::isParameter() const {
-  return holds_alternative<IntSet>(*this);
-}
+bool IntSetArg::isParameter() const { return holds_alternative<IntSet>(*this); }
 
 bool IntSetArg::isFixed() const { return isParameter() || var()->isFixed(); }
 
@@ -290,19 +281,24 @@ bool Arg::operator==(const Arg& other) const {
     return get<FloatSet>(*this).operator==(get<FloatSet>(other));
   } else if (holds_alternative<std::shared_ptr<BoolVarArray>>(*this) &&
              holds_alternative<std::shared_ptr<BoolVarArray>>(other)) {
-    return get<std::shared_ptr<BoolVarArray>>(*this)->operator==(*get<std::shared_ptr<BoolVarArray>>(other));
+    return get<std::shared_ptr<BoolVarArray>>(*this)->operator==(
+        *get<std::shared_ptr<BoolVarArray>>(other));
   } else if (holds_alternative<std::shared_ptr<IntVarArray>>(*this) &&
              holds_alternative<std::shared_ptr<IntVarArray>>(other)) {
-    return get<std::shared_ptr<IntVarArray>>(*this)->operator==(*get<std::shared_ptr<IntVarArray>>(other));
+    return get<std::shared_ptr<IntVarArray>>(*this)->operator==(
+        *get<std::shared_ptr<IntVarArray>>(other));
   } else if (holds_alternative<std::shared_ptr<FloatVarArray>>(*this) &&
              holds_alternative<std::shared_ptr<FloatVarArray>>(other)) {
-    return get<std::shared_ptr<FloatVarArray>>(*this)->operator==(*get<std::shared_ptr<FloatVarArray>>(other));
+    return get<std::shared_ptr<FloatVarArray>>(*this)->operator==(
+        *get<std::shared_ptr<FloatVarArray>>(other));
   } else if (holds_alternative<std::shared_ptr<SetVarArray>>(*this) &&
              holds_alternative<std::shared_ptr<SetVarArray>>(other)) {
-    return get<std::shared_ptr<SetVarArray>>(*this)->operator==(*get<std::shared_ptr<SetVarArray>>(other));
+    return get<std::shared_ptr<SetVarArray>>(*this)->operator==(
+        *get<std::shared_ptr<SetVarArray>>(other));
   } else if (holds_alternative<std::shared_ptr<FloatSetArray>>(*this) &&
              holds_alternative<std::shared_ptr<FloatSetArray>>(other)) {
-    return get<std::shared_ptr<FloatSetArray>>(*this)->operator==(*get<std::shared_ptr<FloatSetArray>>(other));
+    return get<std::shared_ptr<FloatSetArray>>(*this)->operator==(
+        *get<std::shared_ptr<FloatSetArray>>(other));
   }
   return false;
 }

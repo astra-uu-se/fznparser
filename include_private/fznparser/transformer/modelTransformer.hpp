@@ -1,23 +1,15 @@
 #pragma once
 
-#include <algorithm>
-#include <boost/spirit/home/x3.hpp>
-#include <boost/spirit/home/x3/support/ast/variant.hpp>
-#include <boost/variant/apply_visitor.hpp>
 #include <optional>
 #include <stdexcept>
 #include <string>
-#include <vector>
 
 #include "fznparser/annotation.hpp"
 #include "fznparser/arguments.hpp"
 #include "fznparser/constraint.hpp"
-#include "fznparser/except.hpp"
 #include "fznparser/model.hpp"
 #include "fznparser/parser/grammarAst.hpp"
-#include "fznparser/parser/toString.hpp"
 #include "fznparser/solveType.hpp"
-#include "fznparser/types.hpp"
 #include "fznparser/variables.hpp"
 
 namespace fznparser {
@@ -44,12 +36,12 @@ class ModelTransformer {
       const std::unordered_map<std::string, Var>& vars,
       const parser::ArrayLiteral&) const;
 
-  Var transform(const std::unordered_map<std::string, Var>&,
-                     const parser::VarDeclItem&);
-  Var transformVar(const std::unordered_map<std::string, Var>&,
-                        const parser::BasicVarDecl&);
-  Var transformVarArray(const std::unordered_map<std::string, Var>&,
-                             const parser::ArrayVarDecl&);
+  static Var transform(const std::unordered_map<std::string, Var>&,
+                const parser::VarDeclItem&);
+  static Var transformVar(const std::unordered_map<std::string, Var>&,
+                          const parser::BasicVarDecl&);
+  static Var transformVarArray(const std::unordered_map<std::string, Var>&,
+                               const parser::ArrayVarDecl&);
   Arg transformArgument(const std::unordered_map<std::string, Var>&,
                         const parser::Expr&);
   Arg transformArgArray(const std::unordered_map<std::string, Var>&,
@@ -63,7 +55,7 @@ class ModelTransformer {
   ModelTransformer(const ModelTransformer&) = delete;
   ModelTransformer& operator=(const ModelTransformer&) = delete;
   ModelTransformer(ModelTransformer&&) = delete;
-  ModelTransformer(parser::Model&& model);
+  explicit ModelTransformer(parser::Model&& model);
 
   fznparser::Model generateModel();
 };

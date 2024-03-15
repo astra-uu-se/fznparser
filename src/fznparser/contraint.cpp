@@ -1,22 +1,17 @@
-#include <iostream>
-#include <array>
 #include <functional>
-
 #include <numeric>
-#include <stdexcept>
 #include <string>
-
 #include <unordered_set>
+#include <utility>
 #include <variant>
 
 #include "fznparser/constraint.hpp"
 #include "fznparser/model.hpp"
 
 namespace fznparser {
-Constraint::Constraint(const std::string& identifier,
-                       std::vector<Arg>&& arguments,
+Constraint::Constraint(std::string identifier, std::vector<Arg>&& arguments,
                        std::vector<Annotation>&& annotations)
-    : _identifier(identifier),
+    : _identifier(std::move(identifier)),
       _arguments(std::move(arguments)),
       _annotations(std::move(annotations)),
       _definedVar(std::nullopt) {}
@@ -24,7 +19,7 @@ Constraint::Constraint(const std::string& identifier,
 const std::string& Constraint::identifier() const { return _identifier; }
 
 void Constraint::addAnnotation(const std::string& identifier) {
-  _annotations.push_back(Annotation(identifier));
+  _annotations.emplace_back(identifier);
 }
 
 void Constraint::addAnnotation(const Annotation& annotation) {
@@ -33,17 +28,16 @@ void Constraint::addAnnotation(const Annotation& annotation) {
 
 void Constraint::addAnnotation(const std::string& identifier,
                                std::vector<AnnotationExpression>&& expression) {
-  _annotations.push_back(Annotation(
-      identifier, std::move(std::vector<std::vector<AnnotationExpression>>{
-                      std::move(expression)})));
+  _annotations.emplace_back(
+      identifier,
+      std::vector<std::vector<AnnotationExpression>>{std::move(expression)});
 }
 
 void Constraint::addAnnotation(const std::string& identifier,
                                AnnotationExpression&& expression) {
-  _annotations.push_back(Annotation(
-      identifier,
-      std::move(std::vector<std::vector<AnnotationExpression>>{
-          std::move(std::vector<AnnotationExpression>{expression})})));
+  _annotations.emplace_back(identifier,
+                            std::vector<std::vector<AnnotationExpression>>{
+                                std::vector<AnnotationExpression>{expression}});
 }
 
 const std::vector<Annotation>& Constraint::annotations() const {
@@ -81,10 +75,7 @@ void Constraint::interpretAnnotations(
 
 const std::vector<Arg>& Constraint::arguments() const { return _arguments; }
 
-std::optional<const Var> Constraint::definedVar()
-    const {
-  return _definedVar;
-}
+std::optional<const Var> Constraint::definedVar() const { return _definedVar; }
 
 bool Constraint::operator==(const Constraint& other) const {
   if (_identifier != other._identifier ||

@@ -1,5 +1,13 @@
 #include "fznparser/transformer/modelTransformer.hpp"
+
+#include <algorithm>
+#include <boost/spirit/home/x3.hpp>
+#include <boost/spirit/home/x3/support/ast/variant.hpp>
 #include <variant>
+#include <vector>
+
+#include "fznparser/except.hpp"
+#include "fznparser/parser/toString.hpp"
 
 namespace fznparser {
 
@@ -88,7 +96,7 @@ SetVar toSetVar(const BasicVarDecl& var,
 }
 
 // NOTE: that these functions return true if a variable can be assigned to the
-// value. A int var can be assigned to a set of integers.
+// value. An int var can be assigned to a set of integers.
 
 bool isBool(BasicParType t) { return t == BasicParType::BOOL; }
 bool isBool(const std::type_info& t) { return t == typeid(bool); }
@@ -261,7 +269,8 @@ void ModelTransformer::replaceParameters(VarDeclItem& varDeclItem) {
   } else if (varDeclItem.type() == typeid(ArrayVarDecl)) {
     replaceParameters(get<ArrayVarDecl>(varDeclItem));
   } else {
-    throw std::runtime_error("replaceParameter(): invalid variant type: " + toString(varDeclItem));
+    throw std::runtime_error("replaceParameter(): invalid variant type: " +
+                             toString(varDeclItem));
   }
 }
 
@@ -435,8 +444,7 @@ void ModelTransformer::validate(const parser::BasicVarDecl& var) const {
 void ModelTransformer::validate(const ArrayVarDecl& arrayVarDecl) const {
   if (arrayVarDecl.type.indexSet.size() !=
       static_cast<int64_t>(arrayVarDecl.literals.size())) {
-    throw FznException(
-        "Var literal array size does not match index set size");
+    throw FznException("Var literal array size does not match index set size");
   }
   for (size_t i = 0; i < arrayVarDecl.literals.size(); ++i) {
     if (arrayVarDecl.literals.at(i).type() != typeid(std::string)) {
@@ -500,9 +508,9 @@ void replaceEmptySets(ParDeclItem& parDeclItem) {
 }
 
 void replaceEmptySets(ArrayVarDecl& arrayVarDecl) {
-  for (size_t i = 0; i < arrayVarDecl.literals.size(); ++i) {
-    if (arrayVarDecl.literals.at(i).type() == typeid(SetLiteralEmpty)) {
-      arrayVarDecl.literals.at(i) = IntSetLiteralSet{};
+  for (auto& literal : arrayVarDecl.literals) {
+    if (literal.type() == typeid(SetLiteralEmpty)) {
+      literal = IntSetLiteralSet{};
     }
   }
 }
@@ -520,7 +528,8 @@ void replaceEmptySets(VarDeclItem& var) {
   } else if (var.type() == typeid(ArrayVarDecl)) {
     replaceEmptySets(get<ArrayVarDecl>(var));
   } else {
-    throw std::runtime_error("replaceEmptySets(): Invalid variant type: " + toString(var));
+    throw std::runtime_error("replaceEmptySets(): Invalid variant type: " +
+                             toString(var));
   }
 }
 
@@ -574,39 +583,50 @@ fznparser::Annotation transformAnnotation(
     const parser::Annotation& annotation) {
   std::vector<std::vector<AnnotationExpression>> expressions;
   for (const parser::AnnExpr& annExpr : annotation.expressions) {
-    expressions.emplace_back(std::vector<AnnotationExpression>{});
+    expressions.emplace_back();
     for (const parser::BasicAnnExpr& basicAnnExpr : annExpr) {
       expressions.back().emplace_back(
           transformAnnotationExpression(basicAnnExpr));
     }
   }
-  return fznparser::Annotation(annotation.identifier, std::move(expressions));
+  return {annotation.identifier, std::move(expressions)};
 }
 
-Var ModelTransformer::transformVar(
-    const std::unordered_map<std::string, Var>&, const BasicVarDecl& var) {
+Var ModelTransformer::transformVar(const std::unordered_map<std::string, Var>& vars,
+                                   const BasicVarDecl& var) {
   std::vector<fznparser::Annotation> annotations;
   annotations.reserve(var.annotations.size());
   for (const parser::Annotation& ann : var.annotations) {
-    annotations.push_back(std::move(transformAnnotation(ann)));
+    annotations.push_back(transformAnnotation(ann));
   }
   if (var.expr.has_value()) {
     const BasicExpr expr = var.expr.value();
     if (expr.type() == typeid(bool)) {
-      return Var{std::make_shared<BoolVar>(BoolVar{get<bool>(expr), var.identifier, std::move(annotations)})};
+      return Var{std::make_shared<BoolVar>(
+          BoolVar{get<bool>(expr), var.identifier, std::move(annotations)})};
     } else if (expr.type() == typeid(int64_t)) {
-      return Var{std::make_shared<IntVar>(IntVar{get<int64_t>(expr), var.identifier, std::move(annotations)})};
+      return Var{std::make_shared<IntVar>(
+          IntVar{get<int64_t>(expr), var.identifier, std::move(annotations)})};
     } else if (expr.type() == typeid(double)) {
-      return Var{std::make_shared<FloatVar>(FloatVar{get<double>(expr), var.identifier, std::move(annotations)})};
+      return Var{std::make_shared<FloatVar>(
+          FloatVar{get<double>(expr), var.identifier, std::move(annotations)})};
     } else if (isIntSet(expr.type())) {
-      return Var{std::make_shared<SetVar>(SetVar{toIntSet(expr), var.identifier, std::move(annotations)})};
+      return Var{std::make_shared<SetVar>(
+          SetVar{toIntSet(expr), var.identifier, std::move(annotations)})};
+    } else if (expr.type() == typeid(std::string)) {
+      const auto& refIdentifier = get<std::string>(expr);
+      if (vars.contains(refIdentifier)) {
+        return Var{std::make_shared<VarReference>(var.identifier, vars.at(refIdentifier), std::move(annotations))};
+      }
     }
   } else if (isBoolVar(var)) {
-    return Var{std::make_shared<BoolVar>(BoolVar{var.identifier, std::move(annotations)})};
+    return Var{std::make_shared<BoolVar>(
+        BoolVar{var.identifier, std::move(annotations)})};
   } else if (isIntVar(var)) {
     return Var{std::make_shared<IntVar>(toIntVar(var, std::move(annotations)))};
   } else if (isFloatVar(var)) {
-    return Var{std::make_shared<FloatVar>(toFloatVar(var, std::move(annotations)))};
+    return Var{
+        std::make_shared<FloatVar>(toFloatVar(var, std::move(annotations)))};
   } else if (isSetVar(var)) {
     return Var{std::make_shared<SetVar>(toSetVar(var, std::move(annotations)))};
   }
@@ -620,9 +640,10 @@ std::shared_ptr<ArrayType> generateVarArray(
   std::vector<fznparser::Annotation> annotations;
   annotations.reserve(arrayVarDecl.annotations.size());
   for (const parser::Annotation& ann : arrayVarDecl.annotations) {
-    annotations.push_back(std::move(transformAnnotation(ann)));
+    annotations.push_back(transformAnnotation(ann));
   }
-  std::shared_ptr<ArrayType> res = std::make_shared<ArrayType>(arrayVarDecl.identifier, std::move(annotations));
+  std::shared_ptr<ArrayType> res = std::make_shared<ArrayType>(
+      arrayVarDecl.identifier, std::move(annotations));
   for (const BasicExpr& basicExpr : arrayVarDecl.literals) {
     if (basicExpr.type() == typeid(std::string)) {
       const std::string& identifier = get<std::string>(basicExpr);
@@ -655,9 +676,10 @@ std::shared_ptr<SetVarArray> generateSetVarArray(
   std::vector<fznparser::Annotation> annotations;
   annotations.reserve(arrayVarDecl.annotations.size());
   for (const parser::Annotation& ann : arrayVarDecl.annotations) {
-    annotations.push_back(std::move(transformAnnotation(ann)));
+    annotations.push_back(transformAnnotation(ann));
   }
-  std::shared_ptr<SetVarArray> res = std::make_shared<SetVarArray>(arrayVarDecl.identifier, std::move(annotations));
+  std::shared_ptr<SetVarArray> res = std::make_shared<SetVarArray>(
+      arrayVarDecl.identifier, std::move(annotations));
   for (const BasicExpr& basicExpr : arrayVarDecl.literals) {
     if (basicExpr.type() == typeid(std::string)) {
       const std::string& identifier = get<std::string>(basicExpr);
@@ -812,36 +834,27 @@ Arg ModelTransformer::transformArgArray(
     }
     return res;
   }
-  throw FznException("transformArgArray(): Invalid variant type: " + toString(array));
-}
-
-template <class ArgArrayType, class VarArrayType, class ParType, class VarType>
-ArgArrayType translateVariableArray(const VarArrayType& varArray) {
-  ArgArrayType res;
-  res.reserve(varArray.size());
-  for (const auto& var : varArray) {
-    if (std::holds_alternative<ParType>(var)) {
-      res.push_back(get<ParType>(var));
-    } else {
-      res.push_back(get<shared_ptr<const VarType>>(var));
-    }
-  }
-  return res;
+  throw FznException("transformArgArray(): Invalid variant type: " +
+                     toString(array));
 }
 
 Var ModelTransformer::transformVarArray(
     const std::unordered_map<std::string, Var>& vars,
     const ArrayVarDecl& arrayVarDecl) {
   if (isBoolVar(arrayVarDecl)) {
-    return Var{generateVarArray<BoolVarArray, BoolVar, bool>(vars, arrayVarDecl)};
+    return Var{
+        generateVarArray<BoolVarArray, BoolVar, bool>(vars, arrayVarDecl)};
   } else if (isIntVar(arrayVarDecl)) {
-    return Var{generateVarArray<IntVarArray, IntVar, int64_t>(vars, arrayVarDecl)};
+    return Var{
+        generateVarArray<IntVarArray, IntVar, int64_t>(vars, arrayVarDecl)};
   } else if (isFloatVar(arrayVarDecl)) {
-    return Var{generateVarArray<FloatVarArray, FloatVar, double>(vars, arrayVarDecl)};
+    return Var{
+        generateVarArray<FloatVarArray, FloatVar, double>(vars, arrayVarDecl)};
   } else if (isSetVar(arrayVarDecl)) {
     return Var{generateSetVarArray(vars, arrayVarDecl)};
   }
-  throw FznException("transformVarArray(): Invalid variant type: " + toString(arrayVarDecl));
+  throw FznException("transformVarArray(): Invalid variant type: " +
+                     toString(arrayVarDecl));
 }
 
 Var ModelTransformer::transform(
@@ -863,7 +876,7 @@ SolveType ModelTransformer::transform(
   std::vector<fznparser::Annotation> annotations;
   annotations.reserve(parserAnns.size());
   for (const parser::Annotation& ann : parserAnns) {
-    annotations.push_back(std::move(transformAnnotation(ann)));
+    annotations.push_back(transformAnnotation(ann));
   }
 
   if (solveItem.type() == typeid(SolveSatisfy)) {
@@ -882,17 +895,17 @@ SolveType ModelTransformer::transform(
         "Error when transforming solve type \"" + toString(solveItem) +
         "\": Reference to undefined variable \"" + identifier + "\"");
   }
-  Var var = vars.at(identifier);
+  const Var& var = vars.at(identifier);
   if (isVarArray(var)) {
     throw FznException(
         "Error when transforming solve item \"" + toString(solveItem) +
         "\": Cannot optimize over array variable with identifier \"" +
         identifier + "\"");
   }
-  return SolveType(solveOptimize.type == OptimizationType::MINIMIZE
-                       ? ProblemType::MINIMIZE
-                       : ProblemType::MAXIMIZE,
-                   var, std::move(annotations));
+  return {solveOptimize.type == OptimizationType::MINIMIZE
+              ? ProblemType::MINIMIZE
+              : ProblemType::MAXIMIZE,
+          var, std::move(annotations)};
 }
 
 Arg ModelTransformer::transformArgument(
@@ -946,17 +959,17 @@ Constraint ModelTransformer::transform(
   std::vector<fznparser::Annotation> annotations;
   annotations.reserve(constraintItem.annotations.size());
   for (const parser::Annotation& ann : constraintItem.annotations) {
-    annotations.push_back(std::move(transformAnnotation(ann)));
+    annotations.push_back(transformAnnotation(ann));
   }
 
   std::vector<Arg> arguments;
   arguments.reserve(constraintItem.expressions.size());
   for (const Expr& expr : constraintItem.expressions) {
-    arguments.push_back(std::move(transformArgument(vars, expr)));
+    arguments.push_back(transformArgument(vars, expr));
   }
 
-  return Constraint(std::move(constraintItem.identifier), std::move(arguments),
-                    std::move(annotations));
+  return {constraintItem.identifier, std::move(arguments),
+          std::move(annotations)};
 }
 
 fznparser::Model ModelTransformer::generateModel() {
@@ -965,7 +978,7 @@ fznparser::Model ModelTransformer::generateModel() {
     Var var = transform(vars, varDeclItem);
     std::string identifier(var.identifier());
     vars.emplace(std::make_pair<std::string, Var>(std::move(identifier),
-                                                       std::move(var)))
+                                                  std::move(var)))
         .first->second.interpretAnnotations(vars);
   }
   std::vector<Constraint> constraints;
@@ -975,8 +988,8 @@ fznparser::Model ModelTransformer::generateModel() {
     constraints.back().interpretAnnotations(vars);
   }
 
-  return fznparser::Model(std::move(vars), std::move(constraints),
-                          std::move(transform(vars, _model.solveItem)));
+  return {std::move(vars), std::move(constraints),
+          transform(vars, _model.solveItem)};
 }
 
 }  // namespace fznparser

@@ -120,9 +120,6 @@ void expect_eq(const ParExpr &, const ParExpr &, const std::string &);
 
 void expect_eq(const ParDeclItem &, const ParDeclItem &, const std::string &);
 
-void expect_eq(const PredParamArrayType &, const PredParamArrayType &,
-               const std::string &);
-
 void expect_eq(const parser::Annotation &, const parser::Annotation &,
                const std::string &);
 

@@ -30,7 +30,8 @@ TEST(parser, car_sequencing) {
   EXPECT_EQ(resModel.numVars(), 61);
   EXPECT_EQ(resModel.numConstraints(), 88);
   EXPECT_TRUE(resModel.hasVar("Sequence"));
-  std::shared_ptr<IntVarArray> sequence = std::get<std::shared_ptr<IntVarArray>>(resModel.var("Sequence"));
+  std::shared_ptr<IntVarArray> sequence =
+      std::get<std::shared_ptr<IntVarArray>>(resModel.var("Sequence"));
   std::vector<int64_t> outputIndexSetSizes = sequence->outputIndexSetSizes();
   EXPECT_EQ(outputIndexSetSizes.size(), 1);
   EXPECT_EQ(outputIndexSetSizes.front(), 10);
@@ -42,7 +43,8 @@ TEST(parser, magic_square) {
   EXPECT_EQ(resModel.numVars(), 11);
   EXPECT_EQ(resModel.numConstraints(), 9);
   EXPECT_TRUE(resModel.hasVar("Magic"));
-  std::shared_ptr<IntVarArray> magic = std::get<std::shared_ptr<IntVarArray>>(resModel.var("Magic"));
+  std::shared_ptr<IntVarArray> magic =
+      std::get<std::shared_ptr<IntVarArray>>(resModel.var("Magic"));
   std::vector<int64_t> outputIndexSetSizes = magic->outputIndexSetSizes();
   EXPECT_EQ(outputIndexSetSizes.size(), 2);
   EXPECT_EQ(outputIndexSetSizes.at(0), 3);
@@ -54,7 +56,8 @@ TEST(parser, n_queens) {
   fznparser::Model resModel = parseFznFile(filename);
   EXPECT_EQ(resModel.numVars(), 99);
   EXPECT_EQ(resModel.numConstraints(), 67);
-  std::shared_ptr<IntVarArray> q = std::get<std::shared_ptr<IntVarArray>>(resModel.var("q"));
+  std::shared_ptr<IntVarArray> q =
+      std::get<std::shared_ptr<IntVarArray>>(resModel.var("q"));
   std::vector<int64_t> outputIndexSetSizes = q->outputIndexSetSizes();
   EXPECT_EQ(outputIndexSetSizes.size(), 1);
   EXPECT_EQ(outputIndexSetSizes.at(0), 32);
@@ -65,7 +68,8 @@ TEST(parser, tsp_alldiff) {
   fznparser::Model resModel = parseFznFile(filename);
   EXPECT_EQ(resModel.numVars(), 37);
   EXPECT_EQ(resModel.numConstraints(), 19);
-  std::shared_ptr<IntVarArray> sequence = std::get<std::shared_ptr<IntVarArray>>(resModel.var("Sequence"));
+  std::shared_ptr<IntVarArray> sequence =
+      std::get<std::shared_ptr<IntVarArray>>(resModel.var("Sequence"));
   std::vector<int64_t> outputIndexSetSizes = sequence->outputIndexSetSizes();
   EXPECT_EQ(outputIndexSetSizes.size(), 1);
   EXPECT_EQ(outputIndexSetSizes.at(0), 17);

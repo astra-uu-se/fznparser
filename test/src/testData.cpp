@@ -64,14 +64,12 @@ template <typename T>
 vector<std::string> combine_str_vec(
     const vector<pair<vector<std::string>, T>> &data, const std::string &prefix,
     const std::string &separator, const std::string &suffix) {
-  return combine_str_vec<T>(data,
-                            prefix.length() == 0 ? vector<std::string>{}
-                                                 : vector<std::string>{prefix},
-                            separator.length() == 0
-                                ? vector<std::string>{}
-                                : vector<std::string>{separator},
-                            suffix.length() == 0 ? vector<std::string>{}
-                                                 : vector<std::string>{suffix});
+  return combine_str_vec<T>(
+      data,
+      prefix.empty() ? vector<std::string>{} : vector<std::string>{prefix},
+      separator.empty() ? vector<std::string>{}
+                        : vector<std::string>{separator},
+      suffix.empty() ? vector<std::string>{} : vector<std::string>{suffix});
 }
 
 template <typename T>
@@ -88,25 +86,20 @@ template <typename T>
 vector<std::string> front_str_vec(
     const vector<pair<vector<std::string>, T>> &data, const std::string &prefix,
     const std::string &suffix) {
-  return front_str_vec<T>(data,
-                          prefix.length() == 0 ? vector<std::string>{}
-                                               : vector<std::string>{prefix},
-                          suffix.length() == 0 ? vector<std::string>{}
-                                               : vector<std::string>{suffix});
+  return front_str_vec<T>(
+      data,
+      prefix.empty() ? vector<std::string>{} : vector<std::string>{prefix},
+      suffix.empty() ? vector<std::string>{} : vector<std::string>{suffix});
 }
 
 template <typename T>
 vector<T> combine_data(const vector<pair<vector<std::string>, T>> &data) {
   vector<T> data_vec{};
+  data_vec.reserve(data.size());
   for (const auto &[_, d] : data) {
     data_vec.emplace_back(d);
   }
   return data_vec;
-}
-
-template <typename T>
-T front_data(const vector<pair<vector<std::string>, T>> &data) {
-  return data.front().second;
 }
 
 template <typename T>
@@ -210,7 +203,7 @@ vector<pair<vector<std::string>, std::string>> string_literal_data_pos() {
   return vector<pair<vector<std::string>, std::string>>{
       {{"\"abcd\""}, "\"abcd\""},
       {{"\"e f g h\""}, "\"e f g h\""},
-      {{"\"\\\"ijk\\\"\""}, "\"\"ijk\"\""},
+      {{R"("\"ijk\"")"}, R"(""ijk"")"},
       {{"\"l\tm\tn\to\""}, "\"l\tm\tn\to\""}};
 }
 
@@ -238,39 +231,33 @@ float_set_literal_set_data_pos() {
   return float_set<FloatSetLiteralSet>(vector<std::string>{"{"},
                                        vector<std::string>{","},
                                        vector<std::string>{"}"}, false);
-};
+}
 
 vector<pair<vector<std::string>, FloatSetLiteralBounded>>
 float_set_literal_bounded_data_pos() {
   return float_bounded<FloatSetLiteralBounded>(
       vector<std::string>{}, vector<std::string>{".."}, vector<std::string>{});
-};
-
-vector<pair<vector<std::string>, SetLiteralEmpty>>
-set_literal_empty_data_pos() {
-  return vector<pair<vector<std::string>, SetLiteralEmpty>>{{{"{", "}"}, {}}};
-};
+}
 
 vector<pair<vector<std::string>, IntSetLiteralSet>>
 int_set_literal_set_data_pos() {
   return int_set<IntSetLiteralSet>(vector<std::string>{"{"},
                                    vector<std::string>{","},
                                    vector<std::string>{"}"}, false);
-};
+}
 
 vector<pair<vector<std::string>, IntSetLiteralBounded>>
 int_set_literal_bounded_data_pos() {
   return int_bounded<IntSetLiteralBounded>(
       vector<std::string>{}, vector<std::string>{".."}, vector<std::string>{});
-};
+}
 
 vector<pair<vector<std::string>, IndexSet>> index_set_data_pos() {
   vector<pair<vector<std::string>, IndexSet>> good_inputs{};
   for (const auto &[il_str_vec, il] : int_literal_data_pos()) {
     vector<std::string> str_vec{"1", ".."};
     extend(str_vec, il_str_vec);
-    good_inputs.emplace_back(
-        pair<vector<std::string>, IndexSet>{str_vec, IndexSet{il}});
+    good_inputs.emplace_back(str_vec, IndexSet{il});
   }
   return good_inputs;
 }
@@ -285,8 +272,7 @@ basic_par_type_array_data_pos() {
       str_vec.emplace_back("]");
       str_vec.emplace_back("of");
       extend(str_vec, bpt_str_vec);
-      good_inputs.emplace_back(pair<vector<std::string>, BasicParTypeArray>{
-          str_vec, BasicParTypeArray{is, bpt}});
+      good_inputs.emplace_back(str_vec, BasicParTypeArray{is, bpt});
     }
   }
 
@@ -324,7 +310,7 @@ basic_var_int_type_set_data_pos() {
   return int_set<BasicVarIntTypeSet>(vector<std::string>{"var", "{"},
                                      vector<std::string>{","},
                                      vector<std::string>{"}"});
-};
+}
 
 vector<pair<vector<std::string>, BasicVarFloatTypeUnbounded>>
 basic_var_float_type_unbounded_data_pos() {
@@ -351,7 +337,7 @@ basic_var_set_type_set_data_pos() {
   return int_set<BasicVarSetTypeSet>(
       vector<std::string>{"var", "set", "of", "{"}, vector<std::string>{","},
       vector<std::string>{"}"});
-};
+}
 
 vector<pair<vector<std::string>, BasicVarType>> basic_var_type_data_pos() {
   vector<pair<vector<std::string>, BasicVarType>> good_inputs{};
@@ -384,8 +370,8 @@ vector<pair<vector<std::string>, ArrayVarType>> array_var_type_data_pos() {
       str_vec.emplace_back("]");
       str_vec.emplace_back("of");
       extend(str_vec, var_str_vec);
-      good_inputs.emplace_back(pair<vector<std::string>, ArrayVarType>{
-          str_vec, ArrayVarType{index_set, basic_var_type}});
+      good_inputs.emplace_back(str_vec,
+                               ArrayVarType{index_set, basic_var_type});
     }
   }
   return good_inputs;
@@ -394,7 +380,7 @@ vector<pair<vector<std::string>, ArrayVarType>> array_var_type_data_pos() {
 vector<pair<vector<std::string>, IndexSetUnbounded>>
 index_set_unbounded_data_pos() {
   return vector<pair<vector<std::string>, IndexSetUnbounded>>{{{"int"}, {}}};
-};
+}
 
 vector<pair<vector<std::string>, PredIndexSet>> pred_index_set_data_pos() {
   vector<pair<vector<std::string>, PredIndexSet>> good_inputs{};
@@ -484,8 +470,7 @@ pred_param_array_data_pos() {
       str_vec.emplace_back("]");
       str_vec.emplace_back("of");
       extend(str_vec, bppt_str_vec);
-      good_inputs.emplace_back(pair<vector<std::string>, PredParamArrayType>{
-          str_vec, PredParamArrayType{pis, bppt}});
+      good_inputs.emplace_back(str_vec, PredParamArrayType{pis, bppt});
     }
   }
   return good_inputs;
@@ -534,8 +519,7 @@ vector<pair<vector<std::string>, PredParam>> pred_param_data_pos() {
     vector<std::string> str_vec(ppt_str_vec);
     str_vec.emplace_back(":");
     extend(str_vec, i_str_vec);
-    good_inputs.emplace_back(
-        pair<vector<std::string>, PredParam>{str_vec, PredParam{ppt, i}});
+    good_inputs.emplace_back(str_vec, PredParam{ppt, i});
   }
   return good_inputs;
 }
@@ -636,8 +620,7 @@ vector<pair<vector<std::string>, ParDeclItem>> par_decl_item_data_pos() {
         str_vec.emplace_back("=");
         extend(str_vec, pe_str_vec);
         str_vec.emplace_back(";");
-        good_inputs.emplace_back(pair<vector<std::string>, ParDeclItem>{
-            str_vec, ParDeclItem{pt, vpi, pe}});
+        good_inputs.emplace_back(str_vec, ParDeclItem{pt, vpi, pe});
       }
     }
   }
@@ -654,8 +637,7 @@ pred_param_array_type_data_pos() {
       str_vec.emplace_back("]");
       str_vec.emplace_back("of");
       extend(str_vec, bppt_str_vec);
-      good_inputs.emplace_back(pair<vector<std::string>, PredParamArrayType>{
-          str_vec, PredParamArrayType{is, bppt}});
+      good_inputs.emplace_back(str_vec, PredParamArrayType{is, bppt});
     }
   }
   return good_inputs;
@@ -683,15 +665,15 @@ vector<pair<vector<std::string>, PredicateItem>> predicate_item_data_pos() {
       }
       str_vec.emplace_back(")");
       str_vec.emplace_back(";");
-      good_inputs.emplace_back(pair<vector<std::string>, PredicateItem>{
-          str_vec, PredicateItem{identifier, params}});
+      good_inputs.emplace_back(str_vec, PredicateItem{identifier, params});
     }
   }
 
   return good_inputs;
 }
 
-vector<pair<vector<std::string>, BasicAnnExpr>> basic_ann_expr_data_pos(
+vector<pair<vector<std::string>, BasicAnnExpr>>
+basic_ann_expr_data_pos(  // NOLINT(*-no-recursion)
     int64_t recursion) {
   vector<pair<vector<std::string>, BasicAnnExpr>> good_inputs{};
   if (recursion < 0) {
@@ -714,7 +696,8 @@ vector<pair<vector<std::string>, BasicAnnExpr>> basic_ann_expr_data_pos(
   return good_inputs;
 }
 
-vector<pair<vector<std::string>, AnnExpr>> ann_expr_data_pos(
+vector<pair<vector<std::string>, AnnExpr>>
+ann_expr_data_pos(  // NOLINT(*-no-recursion)
     int64_t recursion) {
   vector<pair<vector<std::string>, AnnExpr>> good_inputs{};
   if (recursion < 0) {
@@ -735,17 +718,16 @@ vector<pair<vector<std::string>, AnnExpr>> ann_expr_data_pos(
       vals.emplace_back(baed.at(j).second);
     }
     str_vec.emplace_back("]");
-    good_inputs.emplace_back(
-        pair<vector<std::string>, AnnExpr>{str_vec, AnnExpr{vals}});
+    good_inputs.emplace_back(str_vec, AnnExpr{vals});
   }
   for (const size_t i : vector<size_t>{0, 1, baed.size() - 1}) {
-    good_inputs.emplace_back(pair<vector<std::string>, AnnExpr>{
-        baed.at(i).first, AnnExpr{baed.at(i).second}});
+    good_inputs.emplace_back(baed.at(i).first, AnnExpr{baed.at(i).second});
   }
   return good_inputs;
 }
 
-vector<pair<vector<std::string>, parser::Annotation>> annotation_data_pos(
+vector<pair<vector<std::string>, parser::Annotation>>
+annotation_data_pos(  // NOLINT(*-no-recursion)
     int64_t recursion) {
   vector<pair<vector<std::string>, parser::Annotation>> good_inputs{};
   if (recursion < 0) {
@@ -753,9 +735,8 @@ vector<pair<vector<std::string>, parser::Annotation>> annotation_data_pos(
   }
   const auto id = identifier_data_pos();
   for (const size_t i : vector<size_t>{1, id.size() - 1}) {
-    good_inputs.emplace_back(pair<vector<std::string>, parser::Annotation>{
-        id.at(i).first,
-        parser::Annotation{id.at(i).second, vector<AnnExpr>{}}});
+    good_inputs.emplace_back(
+        id.at(i).first, parser::Annotation{id.at(i).second, vector<AnnExpr>{}});
   }
   const auto ae = ann_expr_data_pos(recursion - 1);
   if (ae.empty()) {
@@ -774,8 +755,8 @@ vector<pair<vector<std::string>, parser::Annotation>> annotation_data_pos(
     }
     str_vec.emplace_back(")");
 
-    good_inputs.emplace_back(pair<vector<std::string>, parser::Annotation>{
-        str_vec, parser::Annotation{id.front().second, expressions}});
+    good_inputs.emplace_back(
+        str_vec, parser::Annotation{id.front().second, expressions});
   }
 
   return good_inputs;
@@ -783,8 +764,7 @@ vector<pair<vector<std::string>, parser::Annotation>> annotation_data_pos(
 
 vector<pair<vector<std::string>, Annotations>> annotations_data_pos() {
   vector<pair<vector<std::string>, Annotations>> good_inputs{};
-  good_inputs.emplace_back(pair<vector<std::string>, Annotations>{
-      vector<std::string>{""}, Annotations{}});
+  good_inputs.emplace_back(vector<std::string>{""}, Annotations{});
 
   const auto ad = annotation_data_pos(1);
 
@@ -797,8 +777,7 @@ vector<pair<vector<std::string>, Annotations>> annotations_data_pos() {
       annotations.emplace_back(ad.at(j).second);
     }
 
-    good_inputs.emplace_back(
-        pair<vector<std::string>, Annotations>{str_vec, annotations});
+    good_inputs.emplace_back(str_vec, annotations);
   }
 
   return good_inputs;
@@ -834,8 +813,7 @@ vector<pair<vector<std::string>, BasicVarDecl>> basic_var_decl_data_pos() {
         extend(str_vec, a_str_vec);
         str_vec.emplace_back(";");
 
-        good_inputs.emplace_back(pair<vector<std::string>, BasicVarDecl>{
-            str_vec, BasicVarDecl{bvt, vpi, a, {}}});
+        good_inputs.emplace_back(str_vec, BasicVarDecl{bvt, vpi, a, {}});
 
         for (const auto &[be_str_vec, be] :
              vector<pair<vector<std::string>, BasicExpr>>{bed.front(),
@@ -844,8 +822,8 @@ vector<pair<vector<std::string>, BasicVarDecl>> basic_var_decl_data_pos() {
           str_vec_extended.back() = "=";  // replace ';'
           extend(str_vec_extended, be_str_vec);
           str_vec_extended.emplace_back(";");
-          good_inputs.emplace_back(pair<vector<std::string>, BasicVarDecl>{
-              str_vec_extended, BasicVarDecl{bvt, vpi, a, be}});
+          good_inputs.emplace_back(str_vec_extended,
+                                   BasicVarDecl{bvt, vpi, a, be});
         }
       }
     }
@@ -878,8 +856,7 @@ vector<pair<vector<std::string>, ArrayVarDecl>> array_var_decl_data_pos() {
           str_vec.emplace_back("=");
           extend(str_vec, be_str_vec);
           str_vec.emplace_back(";");
-          good_inputs.emplace_back(pair<vector<std::string>, ArrayVarDecl>{
-              str_vec, ArrayVarDecl{avt, vpi, a, al}});
+          good_inputs.emplace_back(str_vec, ArrayVarDecl{avt, vpi, a, al});
         }
       }
     }
@@ -891,12 +868,10 @@ vector<pair<vector<std::string>, ArrayVarDecl>> array_var_decl_data_pos() {
 vector<pair<vector<std::string>, VarDeclItem>> var_decl_item_data_pos() {
   vector<pair<vector<std::string>, VarDeclItem>> good_inputs{};
   for (const auto &[str_vec, bvd] : basic_var_decl_data_pos()) {
-    good_inputs.emplace_back(
-        pair<vector<std::string>, VarDeclItem>{str_vec, bvd});
+    good_inputs.emplace_back(str_vec, bvd);
   }
   for (const auto &[str_vec, bad] : array_var_decl_data_pos()) {
-    good_inputs.emplace_back(
-        pair<vector<std::string>, VarDeclItem>{str_vec, bad});
+    good_inputs.emplace_back(str_vec, bad);
   }
   return good_inputs;
 }
@@ -927,8 +902,7 @@ vector<pair<vector<std::string>, ConstraintItem>> constraint_item_data_pos() {
         extend(str_vec, a_str_vec);
         str_vec.emplace_back(";");
 
-        good_inputs.emplace_back(pair<vector<std::string>, ConstraintItem>{
-            str_vec, ConstraintItem{id, expressions, a}});
+        good_inputs.emplace_back(str_vec, ConstraintItem{id, expressions, a});
       }
     }
   }
@@ -946,8 +920,7 @@ vector<pair<vector<std::string>, SolveSatisfy>> solve_satisfy_data_pos() {
     extend(str_vec, ad.at(i).first);
     str_vec.emplace_back("satisfy");
     str_vec.emplace_back(";");
-    good_inputs.emplace_back(pair<vector<std::string>, SolveSatisfy>{
-        str_vec, SolveSatisfy{ad.at(i).second}});
+    good_inputs.emplace_back(str_vec, SolveSatisfy{ad.at(i).second});
   }
   return good_inputs;
 }
@@ -967,8 +940,8 @@ vector<pair<vector<std::string>, SolveOptimize>> solve_optimize_data_pos() {
         str_vec.emplace_back(st_str);
         extend(str_vec, be_str_vec);
         str_vec.emplace_back(";");
-        good_inputs.emplace_back(pair<vector<std::string>, SolveOptimize>{
-            str_vec, SolveOptimize{ad.at(i).second, st, be}});
+        good_inputs.emplace_back(str_vec,
+                                 SolveOptimize{ad.at(i).second, st, be});
       }
     }
   }
@@ -1039,8 +1012,8 @@ vector<pair<vector<std::string>, parser::Model>> model_data_pos() {
           extend(str_vec, pdi_str_vec);
           extend(str_vec, ci_str_vec);
           extend(str_vec, si_str_vec);
-          good_inputs.emplace_back(pair<vector<std::string>, parser::Model>{
-              str_vec, parser::Model{pi, pdi, vector<VarDeclItem>{}, ci, si}});
+          good_inputs.emplace_back(
+              str_vec, parser::Model{pi, pdi, vector<VarDeclItem>{}, ci, si});
         }
       }
     }

@@ -2,7 +2,6 @@
 
 #include <boost/spirit/home/x3.hpp>
 #include <string>
-#include <vector>
 
 #include "fznparser/parser/grammarAst.hpp"
 

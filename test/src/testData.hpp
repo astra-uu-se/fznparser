@@ -18,11 +18,11 @@ using std::vector;
 
 vector<std::string> padding();
 
-bool isalnum_us_minus(const char c);
+bool isalnum_us_minus(char c);
 
 std::string flatten(const vector<std::string> &str_v, const std::string &p);
 
-bool contains(const std::string &str, const std::string needle);
+bool contains(const std::string &str, const std::string &needle);
 
 vector<std::string> extend(vector<std::string> &str_vec,
                            const vector<std::string> &other);
@@ -33,8 +33,6 @@ vector<pair<vector<std::string>, BasicParType>> basic_par_type_data_pos();
 vector<pair<vector<std::string>, bool>> bool_literal_data_pos();
 vector<pair<vector<std::string>, FloatSetLiteralSet>>
 float_set_literal_set_data_pos();
-vector<pair<vector<std::string>, FloatSetLiteralBounded>>
-float_set_literal_bounded_data_pos();
 vector<pair<vector<std::string>, FloatSetLiteralBounded>>
 float_set_literal_bounded_data_pos();
 vector<pair<vector<std::string>, IntSetLiteralSet>>
@@ -180,53 +178,11 @@ void extend_should_fail(
   do {                                                                 \
     size_t i = 0;                                                      \
     for (const auto &[input_str_vec, expected] : sub_rule_inputs) {    \
-      good_inputs.emplace_back(pair<vector<std::string>, data_type>(   \
-          input_str_vec, data_type{expected}));                        \
+      good_inputs.emplace_back(input_str_vec, data_type{expected});    \
       if (++i > 2) {                                                   \
         break;                                                         \
       }                                                                \
     }                                                                  \
   } while (false)
-
-#define populate_with_bounds(good_inputs, data, T, prefix)    \
-  do {                                                        \
-    for (size_t i = 0; i < data.size(); ++i) {                \
-      const size_t j = (i + 1) % data.size();                 \
-      vector<std::string> str_vec = prefix;                   \
-      extend(str_vec, data.at(i).first);                      \
-      str_vec.emplace_back("..");                             \
-      extend(str_vec, data.at(j).first);                      \
-      good_inputs.emplace_back(pair<vector<std::string>, T>{  \
-          str_vec, T{data.at(i).second, data.at(j).second}}); \
-    }                                                         \
-  } while (false);
-#define populate_with_sets(good_inputs, data, NumberType, T, prefix)       \
-  do {                                                                     \
-    for (size_t i = 0; i < data.size(); ++i) {                             \
-      const size_t j = (i + 1) % data.size();                              \
-      vector<std::string> str_vec = prefix;                                \
-      extend(str_vec, data.at(i).first);                                   \
-      str_vec.emplace_back("..");                                          \
-      extend(str_vec, data.at(j).first);                                   \
-      good_inputs.emplace_back(pair<vector<std::string>, T>{               \
-          str_vec,                                                         \
-          T{vector<NumberType>{}, data.at(i).second, data.at(j).second}}); \
-    }                                                                      \
-    for (size_t i : vector<size_t>{0, 1, data.size()}) {                   \
-      vector<NumberType> vals{};                                           \
-      vector<std::string> str_vec = prefix;                                \
-      str_vec.emplace_back("{");                                           \
-      for (size_t j = 0; j < i; ++j) {                                     \
-        if (j != 0) {                                                      \
-          str_vec.emplace_back(",");                                       \
-        }                                                                  \
-        extend(str_vec, data.at(j).first);                                 \
-        vals.emplace_back(data.at(j).second);                              \
-      }                                                                    \
-      str_vec.emplace_back("}");                                           \
-      good_inputs.emplace_back(                                            \
-          pair<vector<std::string>, T>{str_vec, T{vals, 0, 0}});           \
-    }                                                                      \
-  } while (false);
 
 }  // namespace fznparser::testing

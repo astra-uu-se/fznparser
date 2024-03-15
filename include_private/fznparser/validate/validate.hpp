@@ -1,7 +1,5 @@
 #pragma once
 
-#include <vector>
-
 #include "fznparser/parser/grammar.hpp"
 
 namespace fznparser::parser {

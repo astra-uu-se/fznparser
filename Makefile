@@ -62,4 +62,8 @@ fzn: fzn-sanity
 					    --fzn ${FZN_MODEL_DIR}/n_queens.fzn \
 						--no-output-ozn
 	
-	
+
+.PHONY: clang-format
+clang-format:
+	find ${MKFILE_PATH}/include/ ${MKFILE_PATH}/include_private/ ${MKFILE_PATH}/src/ ${MKFILE_PATH}/test/src \
+	  -iname *.[ch]pp | xargs clang-format -i -style=Google

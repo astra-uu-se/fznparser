@@ -18,9 +18,9 @@ typedef x3::uint_parser<int64_t, 16> hextype;
 constexpr hextype hex = hextype();
 
 const auto negative_int = [](const auto &ctx) {
-  int64_t &attr = x3::_attr(ctx);
-  x3::traits::move_to(-attr, x3::_val(ctx));
-  x3::_pass(ctx) = attr >= 0;
+  int64_t &attribute = x3::_attr(ctx);
+  x3::traits::move_to(-attribute, x3::_val(ctx));
+  x3::_pass(ctx) = attribute >= 0;
 };
 
 template <typename ValueType>
@@ -425,7 +425,7 @@ const auto ann_expr_def =
                                     // singleton array
     | lit('[') >> -(basic_ann_expr % ',') >> lit(']');
 
-BOOST_SPIRIT_DEFINE(annotation, basic_ann_expr, ann_expr);
+BOOST_SPIRIT_DEFINE(annotation, basic_ann_expr, ann_expr)
 
 /*
 <annotations> ::= [ "::" <annotation> ]*

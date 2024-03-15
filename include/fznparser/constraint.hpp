@@ -1,12 +1,13 @@
 #pragma once
 
-#include <vector>
 #include <memory>
+#include <optional>
 #include <unordered_map>
+#include <vector>
 
 #include "fznparser/annotation.hpp"
 #include "fznparser/arguments.hpp"
-#include "fznparser/except.hpp"
+#include "fznparser/variables.hpp"
 
 namespace fznparser {
 
@@ -21,11 +22,10 @@ class Constraint {
  public:
   Constraint(const Constraint&) = default;
   Constraint(Constraint&&) = default;
-  Constraint(const std::string&, std::vector<Arg>&&,
-             std::vector<Annotation>&& = {});
+  Constraint(std::string, std::vector<Arg>&&, std::vector<Annotation>&& = {});
 
-  const std::vector<Annotation>& annotations() const;
-  const std::string& identifier() const;
+  [[nodiscard]] const std::vector<Annotation>& annotations() const;
+  [[nodiscard]] const std::string& identifier() const;
 
   void addAnnotation(const Annotation&);
   void addAnnotation(const std::string&);
@@ -34,12 +34,12 @@ class Constraint {
 
   void interpretAnnotations(const std::unordered_map<std::string, Var>&);
 
-  const std::vector<Arg>& arguments() const;
-  std::optional<const Var> definedVar() const;
+  [[nodiscard]] const std::vector<Arg>& arguments() const;
+  [[nodiscard]] std::optional<const Var> definedVar() const;
 
   bool operator==(const Constraint&) const;
   bool operator!=(const Constraint&) const;
-  std::string toString() const;
+  [[nodiscard]] std::string toString() const;
 };
 
-};  // namespace fznparser
+}  // namespace fznparser

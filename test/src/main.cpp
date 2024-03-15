@@ -3,9 +3,8 @@
 #include "parser/tGrammarRules.hpp"
 #include "parser/tStubs.hpp"
 #include "tModels.hpp"
-#include "tParser.hpp"
 #include "tMznChallenge.hpp"
-
+#include "tParser.hpp"
 #include "transformer/tModelTransformer.hpp"
 
 int main(int argc, char **argv) {

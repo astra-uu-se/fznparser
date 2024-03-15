@@ -1,16 +1,24 @@
 #include "fznparser/annotation.hpp"
 
+#include <array>
+#include <functional>
+#include <numeric>
+#include <string>
+#include <unordered_set>
+#include <utility>
+
 namespace fznparser {
 
 using std::get;
 
-Annotation::Annotation(const std::string& identifier)
-    : _identifier(identifier), _expressions() {}
+Annotation::Annotation(std::string identifier)
+    : _identifier(std::move(identifier)), _expressions() {}
 
 Annotation::Annotation(
-    const std::string& identifier,
+    std::string identifier,
     std::vector<std::vector<AnnotationExpression>>&& expressions)
-    : _identifier(identifier), _expressions(std::move(expressions)) {}
+    : _identifier(std::move(identifier)),
+      _expressions(std::move(expressions)) {}
 
 const std::vector<AnnotationExpression>& Annotation::addAnnotationExpression(
     std::vector<AnnotationExpression>&& expression) {
@@ -108,7 +116,7 @@ std::string AnnotationExpression::toString() const {
   } else if (holds_alternative<FloatSet>(*this)) {
     return get<FloatSet>(*this).toString();
   } else if (holds_alternative<std::string>(*this)) {
-    return std::string(get<std::string>(*this));
+    return get<std::string>(*this);
   } else if (holds_alternative<Annotation>(*this)) {
     return get<Annotation>(*this).toString();
   }
