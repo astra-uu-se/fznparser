@@ -38,7 +38,7 @@ file(GLOB_RECURSE
 
 add_executable(${PROJECT_NAME} ${TEST_SRC_FILES})
 
-target_link_libraries(${PROJECT_NAME} GTest::gtest GTest::gtest_main fznparser::fznparser)
+target_link_libraries(${PROJECT_NAME} GTest::gtest_main fznparser::fznparser)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER tests)
 
