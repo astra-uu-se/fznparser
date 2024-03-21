@@ -113,7 +113,7 @@ const auto basic_var_set_type_bounded =
     rule<struct basic_var_set_type_bounded, BasicVarSetTypeBounded>{
         "basic_var_set_type_bounded"} =
         lexeme[lit("var") >> omit[+space] >> lit("set") >> omit[+space] >>
-               lit("of") >> omit[+space] >> lit("int") >> omit[+space]] >>
+               lit("of") >> omit[+space] >> -(lit("int") >> omit[+space])] >>
         int_literal >> lit("..") >> int_literal;
 
 const auto basic_var_set_type_set =
@@ -122,6 +122,11 @@ const auto basic_var_set_type_set =
         lexeme[lit("var") >> omit[+space] >> lit("set") >> omit[+space] >>
                lit("of")] >>
         lit('{') >> -(int_literal % ',') >> lit('}');
+
+const auto basic_var_set_type_unbounded =
+    rule<struct basic_var_set_type_unbounded, BasicVarSetTypeUnbounded>{
+        "basic_var_set_type_unbounded"} =
+        lexeme[lit("var") >> omit[+space] >> lit("set of int")];
 
 /*
 <basic-var-type> ::= "var" <basic-par-type>
@@ -136,7 +141,8 @@ const auto basic_var_type =
         basic_var_bool_type | basic_var_int_type_unbounded |
         basic_var_int_type_bounded | basic_var_int_type_set |
         basic_var_float_type_unbounded | basic_var_float_type_bounded |
-        basic_var_set_type_bounded | basic_var_set_type_set;
+        basic_var_set_type_bounded | basic_var_set_type_set |
+        basic_var_set_type_unbounded;
 
 /*
 <index-set> ::= "1" ".." <int-literal>
@@ -149,15 +155,13 @@ const auto index_set = rule<struct index_set, IndexSet>{
 */
 const auto array_var_type =
     rule<struct array_var_type, ArrayVarType>{"array_var_type"} =
-        lit("array") >> lit('[') >> index_set >> lit(']') >>
-        (lit("of") >> basic_var_bool_type |
-         lit("of") >> basic_var_int_type_unbounded |
-         lit("of") >> basic_var_int_type_bounded |
-         lit("of") >> basic_var_int_type_set |
-         lit("of") >> basic_var_float_type_unbounded |
-         lit("of") >> basic_var_float_type_bounded |
-         lit("of") >> basic_var_set_type_bounded |
-         lexeme[lit("of") >> omit[+space]] >> basic_var_set_type_set);
+        lit("array") >> lit('[') >> index_set >>
+        lit(']') >> lexeme[lit("of") >> omit[+space]] >>
+        (basic_var_bool_type | basic_var_int_type_unbounded |
+         basic_var_int_type_bounded | basic_var_int_type_set |
+         basic_var_float_type_unbounded | basic_var_float_type_bounded |
+         basic_var_set_type_bounded | basic_var_set_type_set |
+         basic_var_set_type_unbounded);
 
 /*
              | "array" "[" <index-set> "]" "of" <basic-par-type>
@@ -287,10 +291,9 @@ const auto pred_param = rule<struct pred_param, PredParam>{
 */
 
 const auto predicate_item =
-    rule<struct predicate_item, PredicateItem>{
-        "predicate_item"} = lexeme[lit("predicate") >> omit[+space]] >>
-                            identifier >> lit('(') >> -(pred_param % ',') >>
-                            lit(')') >> lit(';');
+    rule<struct predicate_item, PredicateItem>{"predicate_item"} =
+        lexeme[lit("predicate") >> omit[+space] >> identifier] >> lit('(') >>
+        -(pred_param % ',') >> lit(')') >> lit(';');
 
 const auto set_literal_empty = rule<struct set_literal_empty, SetLiteralEmpty>{
     "set_literal_empty"} = lit('{') >> lit('}');

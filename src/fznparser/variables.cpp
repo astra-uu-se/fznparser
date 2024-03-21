@@ -632,7 +632,7 @@ const std::string& Var::identifier() const {
   } else if (std::holds_alternative<std::shared_ptr<VarReference>>(*this)) {
     return get<std::shared_ptr<VarReference>>(*this)->identifier();
   }
-  throw std::runtime_error("Unknown variable type");
+  throw FznException("Unknown variable type");
 }
 
 bool Var::isArray() const {
@@ -778,20 +778,17 @@ bool Var::isOutput() const {
   return false;
 }
 
-VarReference::VarReference(const std::string& identifier, fznparser::Var source, std::vector<fznparser::Annotation>&& annotations)
-: VarBase(identifier, std::move(annotations)),
-_source(std::move(source)) {}
+VarReference::VarReference(const std::string& identifier, fznparser::Var source,
+                           std::vector<fznparser::Annotation>&& annotations)
+    : VarBase(identifier, std::move(annotations)), _source(std::move(source)) {}
 
-const Var& VarReference::source() const {
-  return _source;
-}
+const Var& VarReference::source() const { return _source; }
 
-bool VarReference::isFixed() const {
-  return _source.isFixed();
-}
+bool VarReference::isFixed() const { return _source.isFixed(); }
 
 bool VarReference::operator==(const fznparser::VarReference& other) const {
-  if (identifier() != other.identifier() || annotations().size() != other.annotations().size()) {
+  if (identifier() != other.identifier() ||
+      annotations().size() != other.annotations().size()) {
     return false;
   }
   for (size_t i = 0; i < annotations().size(); ++i) {

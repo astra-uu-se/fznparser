@@ -37,7 +37,7 @@ class ModelTransformer {
       const parser::ArrayLiteral&) const;
 
   static Var transform(const std::unordered_map<std::string, Var>&,
-                const parser::VarDeclItem&);
+                       const parser::VarDeclItem&);
   static Var transformVar(const std::unordered_map<std::string, Var>&,
                           const parser::BasicVarDecl&);
   static Var transformVarArray(const std::unordered_map<std::string, Var>&,

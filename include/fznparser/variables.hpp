@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "fznparser/annotation.hpp"
+#include "fznparser/except.hpp"
 #include "fznparser/types.hpp"
 
 namespace fznparser {
@@ -193,7 +194,7 @@ class VarArrayTemplate : public VarArrayBase {
     parVector.reserve(_vars.size());
     for (const auto& var : _vars) {
       if (!std::holds_alternative<ParType>(var)) {
-        throw std::runtime_error("Cannot convert to parameter array");
+        throw FznException("Cannot convert to parameter array");
       }
       parVector.push_back(std::get<ParType>(var));
     }
@@ -292,7 +293,7 @@ class Var : public std::variant<
       std::shared_ptr<FloatVar>, std::shared_ptr<SetVar>,
       std::shared_ptr<BoolVarArray>, std::shared_ptr<IntVarArray>,
       std::shared_ptr<FloatVarArray>, std::shared_ptr<SetVarArray>,
-          std::shared_ptr<VarReference>>::variant;
+      std::shared_ptr<VarReference>>::variant;
 
   [[nodiscard]] bool isOutput() const;
   [[nodiscard]] const std::string& identifier() const;
@@ -307,10 +308,12 @@ class Var : public std::variant<
 class VarReference : public VarBase {
  private:
   Var _source;
+
  public:
   VarReference(const VarReference&) = default;
   VarReference(VarReference&&) = default;
-  VarReference(const std::string&, Var, std::vector<fznparser::Annotation>&& = {});
+  VarReference(const std::string&, Var,
+               std::vector<fznparser::Annotation>&& = {});
   [[nodiscard]] const Var& source() const;
   [[nodiscard]] bool isFixed() const override;
   [[nodiscard]] bool operator==(const VarReference&) const;

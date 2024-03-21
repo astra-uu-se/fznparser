@@ -82,11 +82,12 @@ struct BasicVarSetTypeBounded : public IntRange {};
 
 struct BasicVarSetTypeSet : public std::vector<int64_t> {};
 
-using BasicVarType =
-    boost::variant<BasicVarBoolType, BasicVarIntTypeUnbounded,
-                   BasicVarIntTypeBounded, BasicVarIntTypeSet,
-                   BasicVarFloatTypeBounded, BasicVarFloatTypeUnbounded,
-                   BasicVarSetTypeBounded, BasicVarSetTypeSet>;
+struct BasicVarSetTypeUnbounded {};
+
+using BasicVarType = boost::variant<
+    BasicVarBoolType, BasicVarIntTypeUnbounded, BasicVarIntTypeBounded,
+    BasicVarIntTypeSet, BasicVarFloatTypeBounded, BasicVarFloatTypeUnbounded,
+    BasicVarSetTypeBounded, BasicVarSetTypeSet, BasicVarSetTypeUnbounded>;
 
 // <array-var-type> ::= "array" "[" <index-set> "]" "of" <basic-var-type>
 struct ArrayVarType {
@@ -124,9 +125,9 @@ using BasicPredParamType =
                    BasicVarIntTypeBounded, BasicVarIntTypeSet,
                    BasicVarFloatTypeBounded, BasicVarFloatTypeUnbounded,
                    BasicVarSetTypeBounded, BasicVarSetTypeSet,
-                   BasicPredParamTypeIntBounded, BasicPredParamTypeFloatBounded,
-                   BasicPredParamTypeIntSet, BasicPredParamTypeSetBounded,
-                   BasicPredParamTypeSetSet>;
+                   BasicVarSetTypeUnbounded, BasicPredParamTypeIntBounded,
+                   BasicPredParamTypeFloatBounded, BasicPredParamTypeIntSet,
+                   BasicPredParamTypeSetBounded, BasicPredParamTypeSetSet>;
 
 // | "array" "[" <pred-index-set> "]" "of" <basic-pred-param-type>
 struct PredParamArrayType {
@@ -139,14 +140,13 @@ struct PredParamArrayType {
                     | "array" "[" <pred-index-set> "]" "of"
                       <basic-pred-param-type>
 */
-using PredParamType =
-    boost::variant<BasicParType, BasicVarBoolType, BasicVarIntTypeUnbounded,
-                   BasicVarIntTypeBounded, BasicVarIntTypeSet,
-                   BasicVarFloatTypeBounded, BasicVarFloatTypeUnbounded,
-                   BasicVarSetTypeBounded, BasicVarSetTypeSet,
-                   BasicPredParamTypeIntBounded, BasicPredParamTypeFloatBounded,
-                   BasicPredParamTypeIntSet, BasicPredParamTypeSetBounded,
-                   BasicPredParamTypeSetSet, PredParamArrayType>;
+using PredParamType = boost::variant<
+    BasicParType, BasicVarBoolType, BasicVarIntTypeUnbounded,
+    BasicVarIntTypeBounded, BasicVarIntTypeSet, BasicVarFloatTypeBounded,
+    BasicVarFloatTypeUnbounded, BasicVarSetTypeBounded, BasicVarSetTypeSet,
+    BasicVarSetTypeUnbounded, BasicPredParamTypeIntBounded,
+    BasicPredParamTypeFloatBounded, BasicPredParamTypeIntSet,
+    BasicPredParamTypeSetBounded, BasicPredParamTypeSetSet, PredParamArrayType>;
 
 // <pred-param-type> : <identifier>
 struct PredParam {
@@ -351,6 +351,7 @@ BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::BasicVarFloatTypeBounded,
                           lowerBound, upperBound)
 BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::BasicVarSetTypeBounded, lowerBound,
                           upperBound)
+BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::BasicVarSetTypeUnbounded)
 BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::ArrayVarType, indexSet, type)
 BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::IndexSetUnbounded)
 BOOST_FUSION_ADAPT_STRUCT(fznparser::parser::BasicPredParamTypeIntBounded,

@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <boost/spirit/home/x3.hpp>
 #include <boost/spirit/home/x3/support/ast/variant.hpp>
+#include <unordered_set>
 #include <variant>
 #include <vector>
 
@@ -176,7 +177,9 @@ bool isFloatVar(const ArrayVarDecl& array) {
 bool isFloatVar(const BasicVarDecl& var) { return isFloatVar(var.type.type()); }
 
 bool isSetVar(const std::type_info& t) {
-  return t == typeid(BasicVarSetTypeBounded) || t == typeid(BasicVarSetTypeSet);
+  return t == typeid(BasicVarSetTypeBounded) ||
+         t == typeid(BasicVarSetTypeSet) ||
+         t == typeid(BasicVarSetTypeUnbounded);
 }
 
 bool isSetVar(const ArrayVarDecl& array) {
@@ -224,13 +227,15 @@ BasicExpr toBasicExpr(const ParExpr& parExpr) {
     return get<SetLiteralEmpty>(parExpr);
   } else if (parExpr.type() == typeid(IntSetLiteralBounded)) {
     return get<IntSetLiteralBounded>(parExpr);
+  } else if (parExpr.type() == typeid(IntSetLiteralSet)) {
+    return get<IntSetLiteralSet>(parExpr);
   } else if (parExpr.type() == typeid(FloatSetLiteralBounded)) {
     return get<FloatSetLiteralBounded>(parExpr);
   } else if (parExpr.type() == typeid(FloatSetLiteralSet)) {
     return get<FloatSetLiteralSet>(parExpr);
   }
-  throw FznException("Exception when transforming \"" + toString(parExpr) +
-                     "\": parameter has invalid type");
+  throw FznException("Exception when transforming basic expression \"" +
+                     toString(parExpr) + "\": parameter has invalid type");
 }
 
 ArrayLiteral toArrayLiteral(const ParArrayLiteral& parArrayLiteral) {
@@ -259,8 +264,8 @@ Expr toExpr(const ParExpr& parExpr) {
   } else if (parExpr.type() == typeid(ParArrayLiteral)) {
     return toArrayLiteral(get<ParArrayLiteral>(parExpr));
   }
-  throw FznException("Exception when transforming \"" + toString(parExpr) +
-                     "\": parameter has invalid type");
+  throw FznException("Exception when transforming expression \"" +
+                     toString(parExpr) + "\": parameter has invalid type");
 }
 
 void ModelTransformer::replaceParameters(VarDeclItem& varDeclItem) {
@@ -269,8 +274,8 @@ void ModelTransformer::replaceParameters(VarDeclItem& varDeclItem) {
   } else if (varDeclItem.type() == typeid(ArrayVarDecl)) {
     replaceParameters(get<ArrayVarDecl>(varDeclItem));
   } else {
-    throw std::runtime_error("replaceParameter(): invalid variant type: " +
-                             toString(varDeclItem));
+    throw FznException("replaceParameter(): invalid variant type: " +
+                       toString(varDeclItem));
   }
 }
 
@@ -528,8 +533,8 @@ void replaceEmptySets(VarDeclItem& var) {
   } else if (var.type() == typeid(ArrayVarDecl)) {
     replaceEmptySets(get<ArrayVarDecl>(var));
   } else {
-    throw std::runtime_error("replaceEmptySets(): Invalid variant type: " +
-                             toString(var));
+    throw FznException("replaceEmptySets(): Invalid variant type: " +
+                       toString(var));
   }
 }
 
@@ -566,6 +571,8 @@ AnnotationExpression transformAnnotationExpression(
     return AnnotationExpression{get<int64_t>(expr)};
   } else if (expr.type() == typeid(double)) {
     return AnnotationExpression{get<double>(expr)};
+  } else if (expr.type() == typeid(std::string)) {
+    return AnnotationExpression{get<std::string>(expr)};
   } else if (isIntSet(expr.type())) {
     return AnnotationExpression{toIntSet(expr)};
   } else if (isFloatSet(expr.type())) {
@@ -592,8 +599,8 @@ fznparser::Annotation transformAnnotation(
   return {annotation.identifier, std::move(expressions)};
 }
 
-Var ModelTransformer::transformVar(const std::unordered_map<std::string, Var>& vars,
-                                   const BasicVarDecl& var) {
+Var ModelTransformer::transformVar(
+    const std::unordered_map<std::string, Var>& vars, const BasicVarDecl& var) {
   std::vector<fznparser::Annotation> annotations;
   annotations.reserve(var.annotations.size());
   for (const parser::Annotation& ann : var.annotations) {
@@ -616,7 +623,8 @@ Var ModelTransformer::transformVar(const std::unordered_map<std::string, Var>& v
     } else if (expr.type() == typeid(std::string)) {
       const auto& refIdentifier = get<std::string>(expr);
       if (vars.contains(refIdentifier)) {
-        return Var{std::make_shared<VarReference>(var.identifier, vars.at(refIdentifier), std::move(annotations))};
+        return Var{std::make_shared<VarReference>(
+            var.identifier, vars.at(refIdentifier), std::move(annotations))};
       }
     }
   } else if (isBoolVar(var)) {
@@ -653,11 +661,15 @@ std::shared_ptr<ArrayType> generateVarArray(
             "\": Reference to undefined " + toString(arrayVarDecl.type.type) +
             " variable with identifier \"" + identifier + "\"");
       }
-      const Var& var = vars.at(identifier);
+      Var var = vars.at(identifier);
+      while (std::holds_alternative<std::shared_ptr<VarReference>>(var)) {
+        var = get<std::shared_ptr<VarReference>>(var)->source();
+      }
       if (!std::holds_alternative<std::shared_ptr<VarType>>(var)) {
         throw FznException("Reference to non-" +
                            toString(arrayVarDecl.type.type) +
-                           " variable with identifier \"" + identifier + "\"");
+                           " variable with identifier \"" + identifier +
+                           "\". Got " + var.toString());
       }
       res->append(get<std::shared_ptr<VarType>>(var));
     } else if (basicExpr.type() == typeid(ParType)) {
@@ -908,6 +920,39 @@ SolveType ModelTransformer::transform(
           var, std::move(annotations)};
 }
 
+bool isNonVarRef(Var& var) {
+  return std::holds_alternative<std::shared_ptr<BoolVar>>(var) ||
+         std::holds_alternative<std::shared_ptr<IntVar>>(var) ||
+         std::holds_alternative<std::shared_ptr<FloatVar>>(var) ||
+         std::holds_alternative<std::shared_ptr<SetVar>>(var) ||
+         std::holds_alternative<std::shared_ptr<BoolVarArray>>(var) ||
+         std::holds_alternative<std::shared_ptr<IntVarArray>>(var) ||
+         std::holds_alternative<std::shared_ptr<FloatVarArray>>(var) ||
+         std::holds_alternative<std::shared_ptr<SetVarArray>>(var);
+}
+
+Arg tryGetNonVarRef(Var& var) {
+  if (std::holds_alternative<std::shared_ptr<BoolVar>>(var)) {
+    return Arg{std::get<std::shared_ptr<BoolVar>>(var)};
+  } else if (std::holds_alternative<std::shared_ptr<IntVar>>(var)) {
+    return Arg{std::get<std::shared_ptr<IntVar>>(var)};
+  } else if (std::holds_alternative<std::shared_ptr<FloatVar>>(var)) {
+    return Arg{std::get<std::shared_ptr<FloatVar>>(var)};
+  } else if (std::holds_alternative<std::shared_ptr<SetVar>>(var)) {
+    return Arg{std::get<std::shared_ptr<SetVar>>(var)};
+  } else if (std::holds_alternative<std::shared_ptr<BoolVarArray>>(var)) {
+    return Arg{std::get<std::shared_ptr<BoolVarArray>>(var)};
+  } else if (std::holds_alternative<std::shared_ptr<IntVarArray>>(var)) {
+    return Arg{std::get<std::shared_ptr<IntVarArray>>(var)};
+  } else if (std::holds_alternative<std::shared_ptr<FloatVarArray>>(var)) {
+    return Arg{std::get<std::shared_ptr<FloatVarArray>>(var)};
+  } else if (std::holds_alternative<std::shared_ptr<SetVarArray>>(var)) {
+    return Arg{std::get<std::shared_ptr<SetVarArray>>(var)};
+  }
+  throw FznException("Invalid variant type for variable with identifier \"" +
+                     var.identifier() + "\"");
+}
+
 Arg ModelTransformer::transformArgument(
     const std::unordered_map<std::string, Var>& vars,
     const parser::Expr& expr) {
@@ -931,22 +976,22 @@ Arg ModelTransformer::transformArgument(
           "\": Reference to undefined variable \"" + identifier + "\"");
     }
     Var var = vars.at(identifier);
-    if (std::holds_alternative<std::shared_ptr<BoolVar>>(var)) {
-      return Arg{std::get<std::shared_ptr<BoolVar>>(var)};
-    } else if (std::holds_alternative<std::shared_ptr<IntVar>>(var)) {
-      return Arg{std::get<std::shared_ptr<IntVar>>(var)};
-    } else if (std::holds_alternative<std::shared_ptr<FloatVar>>(var)) {
-      return Arg{std::get<std::shared_ptr<FloatVar>>(var)};
-    } else if (std::holds_alternative<std::shared_ptr<SetVar>>(var)) {
-      return Arg{std::get<std::shared_ptr<SetVar>>(var)};
-    } else if (std::holds_alternative<std::shared_ptr<BoolVarArray>>(var)) {
-      return Arg{std::get<std::shared_ptr<BoolVarArray>>(var)};
-    } else if (std::holds_alternative<std::shared_ptr<IntVarArray>>(var)) {
-      return Arg{std::get<std::shared_ptr<IntVarArray>>(var)};
-    } else if (std::holds_alternative<std::shared_ptr<FloatVarArray>>(var)) {
-      return Arg{std::get<std::shared_ptr<FloatVarArray>>(var)};
-    } else if (std::holds_alternative<std::shared_ptr<SetVarArray>>(var)) {
-      return Arg{std::get<std::shared_ptr<SetVarArray>>(var)};
+    if (isNonVarRef(var)) {
+      return tryGetNonVarRef(var);
+    } else if (std::holds_alternative<std::shared_ptr<VarReference>>(var)) {
+      std::unordered_set<std::string> visited{identifier};
+      Var source = var;
+      while (std::holds_alternative<std::shared_ptr<VarReference>>(source)) {
+        source = std::get<std::shared_ptr<VarReference>>(source)->source();
+        if (visited.contains(source.identifier())) {
+          throw FznException(
+              "Error when transforming argument \"" + toString(expr) +
+              "\": Circular reference in variable \"" + identifier + "\"");
+        }
+      }
+      if (isNonVarRef(source)) {
+        return tryGetNonVarRef(source);
+      }
     }
   }
   throw FznException("Invalid variant type for argument \"" + toString(expr) +

@@ -1,0 +1,4 @@
+predicate pred();
+predicate pred_1(var int: a);
+predicate int_eq_imp(var int: a,var int: b,var bool: r);
+solve satisfy;
