@@ -1,5 +1,3 @@
-#pragma once
-
 #include <gtest/gtest.h>
 
 #include <algorithm>
@@ -13,6 +11,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include "./expectEq.hpp"
 #include "fznparser/parser/grammar.hpp"
 #include "fznparser/parser/grammarDef.hpp"
 

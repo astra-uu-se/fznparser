@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.20.. FATAL_ERROR)
 
-project(fznparserTests LANGUAGES CXX)
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+set(PROJECT_NAME fznparserTests)
+project(${PROJECT_NAME} LANGUAGES CXX)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
@@ -13,9 +17,6 @@ CPMAddPackage(
   NAME googletest
   GITHUB_REPOSITORY google/googletest
   GIT_TAG release-1.11.0
-  OPTIONS
-  "INSTALL_GTEST OFF"
-  "gtest_force_shared_crt ON"
 )
 
 CPMAddPackage(NAME fznparser SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/..)
@@ -26,18 +27,27 @@ add_compile_definitions(STUB_DIR="${CMAKE_CURRENT_SOURCE_DIR}/stubs")
 add_compile_definitions(FZN_DIR="${CMAKE_CURRENT_SOURCE_DIR}/fzn-models")
 add_compile_definitions(FZN_CHALLENGE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/flattened-mzn-challenge")
 
+# #############
+# Unit Tests
+# #############
 file(GLOB_RECURSE
-  SOURCES
-  CONFIGURE_DEPENDS
-  "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp")
+  TEST_SRC_FILES
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp)
 
-add_executable(${PROJECT_NAME} ${SOURCES})
-target_link_libraries(${PROJECT_NAME} PRIVATE fznparser::fznparser gtest)
+add_executable(${PROJECT_NAME} ${TEST_SRC_FILES})
+
+target_link_libraries(${PROJECT_NAME} GTest::gtest GTest::gtest_main fznparser::fznparser)
+
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER tests)
 
 get_target_property(PRIVATE_INCLUDE_DIRS fznparser::fznparser INCLUDE_DIRECTORIES)
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${PRIVATE_INCLUDE_DIRS})
+
+include(GoogleTest)
+gtest_add_tests(${PROJECT_NAME} SOURCES ${TEST_SRC_FILES})
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
 
@@ -49,6 +59,3 @@ elseif(MSVC)
   target_compile_definitions(${PROJECT_NAME}
     PUBLIC DOCTEST_CONFIG_USE_STD_HEADERS)
 endif()
-
-include(GoogleTest)
-gtest_discover_tests(${PROJECT_NAME})
