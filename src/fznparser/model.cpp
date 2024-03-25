@@ -1,5 +1,10 @@
 #include "fznparser/model.hpp"
 
+#include <functional>
+#include <numeric>
+#include <string>
+#include <unordered_map>
+
 namespace fznparser {
 
 std::unordered_map<std::string, Var> varToMap(Var&& var) {
@@ -16,7 +21,7 @@ std::unordered_map<std::string, Var> varVectorToMap(std::vector<Var>&& vars) {
   return varMap;
 }
 
-const Var& varInMap(const std::unordered_map<std::string, Var>& vars) {
+Var varInMap(const std::unordered_map<std::string, Var>& vars) {
   if (vars.size() != 1) {
     throw FznException("Invalid initialization: expected exactly one variable");
   }
@@ -30,14 +35,16 @@ Model::Model(Var&& objective, ProblemType problemType)
     : _vars(varToMap(std::move(objective))),
       _constraints(),
       _solveType(problemType, varInMap(_vars)),
-      _boolVarPars{BoolVar(false, ""), BoolVar(true, "")} {}
+      _boolVarPars{std::make_shared<BoolVar>(BoolVar(false, "")),
+                   std::make_shared<BoolVar>(BoolVar(true, ""))} {}
 
 Model::Model(std::unordered_map<std::string, Var>&& vars,
              std::vector<Constraint>&& constraints, SolveType&& solveType)
     : _vars(std::move(vars)),
       _constraints(std::move(constraints)),
       _solveType(std::move(solveType)),
-      _boolVarPars{BoolVar(false, ""), BoolVar(true, "")} {}
+      _boolVarPars{std::make_shared<BoolVar>(BoolVar(false, "")),
+                   std::make_shared<BoolVar>(BoolVar(true, ""))} {}
 
 Model::Model()
     : Model(std::vector<Var>{}, std::vector<Constraint>{}, SolveType()) {}
@@ -47,32 +54,34 @@ Model::Model(std::vector<Var>&& vars, std::vector<Constraint>&& constraints,
     : Model(varVectorToMap(std::move(vars)), std::move(constraints),
             std::move(solveType)) {}
 
-BoolVar& Model::boolVarPar(bool b) { return _boolVarPars.at(b ? 1 : 0); }
+std::shared_ptr<BoolVar> Model::boolVarPar(bool b) {
+  return _boolVarPars.at(b ? 1 : 0);
+}
 
-IntVar& Model::addIntVarPar(int64_t i) {
-  if (_intVarPars.find(i) == _intVarPars.end()) {
-    _intVarPars.emplace(i, IntVar(i, ""));
+std::shared_ptr<IntVar> Model::addIntVarPar(int64_t i) {
+  if (_intVarPars.contains(i)) {
+    _intVarPars.emplace(i, std::make_shared<IntVar>(IntVar(i, "")));
   }
   return _intVarPars.at(i);
 }
 
-FloatVar& Model::addFloatVarPar(double f) {
-  if (_floatVarPars.find(f) == _floatVarPars.end()) {
-    _floatVarPars.emplace(f, FloatVar(f, ""));
+std::shared_ptr<FloatVar> Model::addFloatVarPar(double f) {
+  if (_floatVarPars.contains(f)) {
+    _floatVarPars.emplace(f, std::make_shared<FloatVar>(FloatVar(f, "")));
   }
   return _floatVarPars.at(f);
 }
 
-SetVar& Model::addSetVarPar(const IntSet& is) {
-  return _setVarPars.emplace_back(SetVar(is, ""));
+std::shared_ptr<SetVar> Model::addSetVarPar(const IntSet& is) {
+  return _setVarPars.emplace_back(std::make_shared<SetVar>(SetVar(is, "")));
 }
 
-const Var& Model::addVar(Var&& var) {
+Var Model::addVar(Var&& var) {
   if (_vars.contains(var.identifier())) {
     throw FznException("Variable with identifier \"" + var.identifier() +
                        "\" already exists");
   }
-  Var& addedVar = _vars.emplace(var.identifier(), std::move(var)).first->second;
+  auto addedVar = _vars.emplace(var.identifier(), std::move(var)).first->second;
   addedVar.interpretAnnotations(_vars);
   return addedVar;
 }
@@ -85,12 +94,13 @@ const Constraint& Model::addConstraint(Constraint&& constraint) {
 
 size_t Model::numVars() const { return _vars.size(); }
 size_t Model::numConstraints() const { return _constraints.size(); }
-const Var& Model::var(std::string identifier) const {
+
+Var Model::var(const std::string& identifier) const {
   return _vars.at(identifier);
 }
 
-bool Model::hasVar(std::string identifier) const {
-  return _vars.find(identifier) != _vars.end();
+bool Model::hasVar(const std::string& identifier) const {
+  return _vars.contains(identifier);
 }
 
 const std::unordered_map<std::string, Var>& Model::vars() const {
@@ -104,7 +114,7 @@ const std::vector<Constraint>& Model::constraints() const {
 const SolveType& Model::solveType() const { return _solveType; }
 
 bool Model::hasObjective() const noexcept { return _solveType.hasObjective(); }
-const Var& Model::objective() const { return _solveType.objective(); }
+Var Model::objective() const { return _solveType.objective(); }
 
 bool Model::isSatisfactionProblem() const {
   return _solveType.isSatisfactionProblem();
@@ -122,11 +132,11 @@ bool Model::isMinimisationProblem() const {
 bool Model::operator==(const Model& other) const {
   if (_vars.size() != other._vars.size() ||
       _constraints.size() != other._constraints.size() ||
-      _solveType != other._solveType) {
+      _solveType.operator!=(other._solveType)) {
     return false;
   }
   for (const auto& [identifier, var] : _vars) {
-    if (other._vars.find(identifier) == other._vars.end() ||
+    if (!other._vars.contains(identifier) ||
         var.operator!=(other._vars.at(identifier))) {
       return false;
     }
@@ -152,7 +162,7 @@ bool Model::operator==(const Model& other) const {
 bool Model::operator!=(const Model& other) const { return !operator==(other); }
 
 std::string Model::toString() const {
-  std::string s = "";
+  std::string s;
   for (const auto& [identifier, var] : _vars) {
     s += var.toString() + ";\n";
   }

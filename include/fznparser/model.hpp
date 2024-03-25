@@ -1,18 +1,10 @@
 #pragma once
 
 #include <array>
-#include <functional>
-#include <numeric>
-#include <optional>
-#include <stdexcept>
-#include <string>
 #include <unordered_map>
-#include <unordered_set>
-#include <variant>
 #include <vector>
 
 #include "fznparser/constraint.hpp"
-#include "fznparser/except.hpp"
 #include "fznparser/solveType.hpp"
 #include "fznparser/types.hpp"
 #include "fznparser/variables.hpp"
@@ -25,10 +17,10 @@ class Model {
   std::vector<Constraint> _constraints;
   SolveType _solveType;
 
-  std::array<BoolVar, 2> _boolVarPars;
-  std::unordered_map<int64_t, IntVar> _intVarPars;
-  std::unordered_map<double, FloatVar> _floatVarPars;
-  std::vector<SetVar> _setVarPars;
+  std::array<std::shared_ptr<BoolVar>, 2> _boolVarPars;
+  std::unordered_map<int64_t, std::shared_ptr<IntVar>> _intVarPars;
+  std::unordered_map<double, std::shared_ptr<FloatVar>> _floatVarPars;
+  std::vector<std::shared_ptr<SetVar>> _setVarPars;
 
  public:
   Model(const Model&) = default;
@@ -41,26 +33,28 @@ class Model {
         std::vector<Constraint>&& constraints, SolveType&& solveType);
   Model(Var&& objective, ProblemType);
 
-  BoolVar& boolVarPar(bool);
-  IntVar& addIntVarPar(int64_t);
-  FloatVar& addFloatVarPar(double);
-  SetVar& addSetVarPar(const IntSet&);
+  std::shared_ptr<BoolVar> boolVarPar(bool);
+  std::shared_ptr<IntVar> addIntVarPar(int64_t);
+  std::shared_ptr<FloatVar> addFloatVarPar(double);
+  std::shared_ptr<SetVar> addSetVarPar(const IntSet&);
 
-  const Var& addVar(Var&& var);
+  Var addVar(Var&& var);
   const Constraint& addConstraint(Constraint&& constraint);
 
   size_t numVars() const;
   size_t numConstraints() const;
 
-  bool hasVar(std::string var) const;
-  const Var& var(std::string identifier) const;
+  bool hasIdentifier(const std::string& var) const;
+
+  bool hasVar(const std::string& var) const;
+  Var var(const std::string& identifier) const;
 
   const std::unordered_map<std::string, Var>& vars() const;
   const std::vector<Constraint>& constraints() const;
   const SolveType& solveType() const;
 
   bool hasObjective() const noexcept;
-  const Var& objective() const;
+  Var objective() const;
   bool isSatisfactionProblem() const;
   bool isOptimizationProblem() const;
   bool isMaximisationProblem() const;

@@ -1,13 +1,5 @@
 #pragma once
 
-#include <array>
-#include <functional>
-#include <numeric>
-#include <optional>
-#include <stdexcept>
-#include <string>
-#include <unordered_map>
-#include <unordered_set>
 #include <variant>
 #include <vector>
 
@@ -25,11 +17,11 @@ class Annotation {
   Annotation(const Annotation&) = default;
   Annotation(Annotation&&) = default;
 
-  Annotation(const std::string&);
-  Annotation(const std::string&,
-             std::vector<std::vector<AnnotationExpression>>&&);
-  const std::string& identifier() const { return _identifier; }
-  const std::vector<std::vector<AnnotationExpression>>& expressions() const {
+  explicit Annotation(std::string);
+  Annotation(std::string, std::vector<std::vector<AnnotationExpression>>&&);
+  [[nodiscard]] const std::string& identifier() const { return _identifier; }
+  [[nodiscard]] const std::vector<std::vector<AnnotationExpression>>&
+  expressions() const {
     return _expressions;
   }
 
@@ -40,7 +32,7 @@ class Annotation {
 
   bool operator==(const Annotation&) const;
   bool operator!=(const Annotation&) const;
-  std::string toString() const;
+  [[nodiscard]] std::string toString() const;
 };
 
 class AnnotationExpression
@@ -51,7 +43,7 @@ class AnnotationExpression
                      Annotation>::variant;
   bool operator==(const AnnotationExpression&) const;
   bool operator!=(const AnnotationExpression&) const;
-  std::string toString() const;
+  [[nodiscard]] std::string toString() const;
 };
 
 }  // namespace fznparser

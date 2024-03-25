@@ -53,3 +53,11 @@ benchmark-data.json
 /tmp-*.json
 /plots/*
 /benchmark-json/*
+/test/mzn-challenge
+/test/mzn-challenge/*
+/test/mzn-challenge.new
+/test/mzn-challenge.new/*
+/test/flattened-mzn-challenge
+/test/flattened-mzn-challenge/*
+/test/flattened-mzn-challenge.new
+/test/flattened-mzn-challenge.new/*

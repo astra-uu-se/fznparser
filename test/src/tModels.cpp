@@ -1,5 +1,3 @@
-#pragma once
-
 #include <gtest/gtest.h>
 
 #include <algorithm>
@@ -23,14 +21,14 @@ using namespace fznparser;
 
 namespace x3 = boost::spirit::x3;
 
-void test_model(std::string filename) {
+void test_model(const std::string& filename) {
   parser::Model resModel;
   std::string path = std::string(FZN_DIR) + "/" + filename;
   std::ifstream input_file(path, std::ios_base::in);
   if (!input_file.is_open()) {
     FAIL() << "Could not open file: " << path;
   }
-  std::string input{""};
+  std::string input;
   input_file.unsetf(std::ios::skipws);  // No white space skipping!
   std::copy(std::istream_iterator<char>(input_file),
             std::istream_iterator<char>(), std::back_inserter(input));

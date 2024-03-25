@@ -1,5 +1,10 @@
 #include "fznparser/types.hpp"
 
+#include <functional>
+#include <numeric>
+
+#include "fznparser/except.hpp"
+
 using std::get;
 
 std::vector<int64_t> sortAndRemoveDuplicates(std::vector<int64_t>& vals) {
@@ -18,12 +23,13 @@ namespace fznparser {
 IntSet::IntSet(int64_t val) : _elements(std::make_pair(val, val)) {}
 IntSet::IntSet(int64_t lb, int64_t ub) : _elements(std::make_pair(lb, ub)) {
   if (lb > ub) {
-    throw std::runtime_error("Lower bound cannot be greater than upper bound");
+    throw FznException("Lower bound cannot be greater than upper bound (" +
+                       std::to_string(lb) + " > " + std::to_string(ub) + ")");
   }
 }
 
 IntSet::IntSet(std::vector<int64_t>&& vals)
-    : _elements(std::move(sortAndRemoveDuplicates(vals))) {}
+    : _elements(sortAndRemoveDuplicates(vals)) {}
 
 bool IntSet::contains(int64_t val) const {
   if (holds_alternative<std::pair<int64_t, int64_t>>(_elements)) {
@@ -70,7 +76,7 @@ const std::vector<int64_t>& IntSet::populateElements() {
 
 const std::vector<int64_t>& IntSet::elements() const {
   if (holds_alternative<std::pair<int64_t, int64_t>>(_elements)) {
-    throw std::runtime_error("Cannot get elements from interval");
+    throw FznException("Cannot get elements from interval");
   }
   return get<std::vector<int64_t>>(_elements);
 }
@@ -118,12 +124,12 @@ std::string IntSet::toString() const {
 FloatSet::FloatSet(double val) : _elements(std::make_pair(val, val)) {}
 FloatSet::FloatSet(double lb, double ub) : _elements(std::make_pair(lb, ub)) {
   if (lb > ub) {
-    throw std::runtime_error("Lower bound cannot be greater than upper bound");
+    throw FznException("Lower bound cannot be greater than upper bound");
   }
 }
 
 FloatSet::FloatSet(std::vector<double>&& vals)
-    : _elements(std::move(sortAndRemoveDuplicates(vals))) {}
+    : _elements(sortAndRemoveDuplicates(vals)) {}
 
 bool FloatSet::contains(double val) const {
   if (holds_alternative<std::pair<double, double>>(_elements)) {
@@ -193,7 +199,7 @@ std::string FloatSet::toString() const {
 
 const std::vector<double>& FloatSet::elements() const {
   if (holds_alternative<std::pair<double, double>>(_elements)) {
-    throw std::runtime_error("Cannot get elements from interval");
+    throw FznException("Cannot get elements from interval");
   }
   return get<std::vector<double>>(_elements);
 }

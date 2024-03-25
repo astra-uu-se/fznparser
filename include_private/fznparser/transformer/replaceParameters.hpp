@@ -2,7 +2,7 @@
 
 #include <algorithm>
 #include <unordered_map>
-#include <vector>
+#include <unordered_set>
 
 #include "fznparser/except.hpp"
 #include "fznparser/parser/grammarAst.hpp"
@@ -44,46 +44,6 @@ void replaceParameter(
     *basicExpr = get<FloatSetLiteralSet>(parameters.at(identifier));
   } else {
     throw FznException("Parameter \"" + identifier + "\" has invalid type");
-  }
-}
-
-void replaceParameters(Model& model) {
-  std::unordered_set<std::string> identifiers;
-  std::unordered_map<std::string, ParExpr> parameters;
-
-  // find all identifiers
-  for (const ParDeclItem& par : model.parameters()) {
-    if (identifiers.find(par.identifier) != identifiers.end()) {
-      throw FznException("A parameter with identifier \"" + par.identifier +
-                         "\" already declared");
-    }
-    identifiers.emplace(parDecl.identifier);
-    parameters.emplace(parDecl.identifier, parDecl.expr);
-  }
-  for (const VarDeclItem& var : model.varDeclItems) {
-    const std::string& identifier = var.type() == typeid(BasicVarDecl)
-                                        ? get<BasicVarDecl>(var).identifier
-                                        : get<ArrayVarDecl>(var).identifier;
-    if (identifiers.find(identifier) != identifiers.end()) {
-      const std::string t = parameters.find(identifier) != parameters.end()
-                                ? "parameter"
-                                : "variable";
-      throw FznException("A " + t + " with identifier \"" + identifier +
-                         "\" already declared");
-    }
-    identifiers.emplace(identifier);
-  }
-
-  for (VarDeclItem var : model.varDeclItems) {
-    if (var.type() == typeid(BasicVarDecl) &&
-        get<BasicVarDecl>(var).expr.has_value()) {
-      replaceParameter(identifiers, parameters,
-                       &get<BasicVarDecl>(var).expr.value());
-    } else if (var.type() == typeid(ArrayVarDecl)) {
-      for (BasicExpr* expr : get<ArrayVarDecl>(var).exprs) {
-        replaceParameter(identifiers, parameters, expr);
-      }
-    }
   }
 }
 

@@ -22,7 +22,8 @@ void expect_eq_bounded(const T &actual, const T &expected,
 }
 
 template <class T>
-void expect_eq_vector(const T &actual, const T &expected,
+void expect_eq_vector(const T &actual,
+                      const T &expected,  // NOLINT(*-no-recursion)
                       const std::string &input) {
   EXPECT_EQ(actual.size(), expected.size()) << input;
   for (size_t i = 0; i < actual.size(); ++i) {
@@ -596,7 +597,7 @@ void expect_eq(const PredParamArrayType &actual,
   expect_eq(actual.type, expected.type, newInput);
 }
 
-void expect_eq(const parser::Annotation &actual,
+void expect_eq(const parser::Annotation &actual,  // NOLINT(*-no-recursion)
                const parser::Annotation &expected, const std::string &input) {
   const std::string newInput = input + "\nAnnotation:\nactual: \n" +
                                toString(actual) + "\nexpected:\n" +
@@ -605,7 +606,8 @@ void expect_eq(const parser::Annotation &actual,
   expect_eq_vector(actual.expressions, expected.expressions, newInput);
 }
 
-void expect_eq(const BasicAnnExpr &actual, const BasicAnnExpr &expected,
+void expect_eq(const BasicAnnExpr &actual,
+               const BasicAnnExpr &expected,  // NOLINT(*-no-recursion)
                const std::string &input) {
   const std::string newInput = input + "\nBasicAnnExpr:\nactual: \n" +
                                toString(actual) + "\nexpected:\n" +
@@ -643,7 +645,8 @@ void expect_eq(const BasicAnnExpr &actual, const BasicAnnExpr &expected,
   }
 }
 
-void expect_eq(const AnnExpr &actual, const AnnExpr &expected,
+void expect_eq(const AnnExpr &actual,
+               const AnnExpr &expected,  // NOLINT(*-no-recursion)
                const std::string &input) {
   const std::string newInput = input + "\nAnnExpr:\nactual: \n" +
                                toString(actual) + "\nexpected:\n" +

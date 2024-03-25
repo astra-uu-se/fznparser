@@ -1,19 +1,13 @@
 #pragma once
 
-#include <array>
-#include <functional>
-#include <numeric>
+#include <memory>
 #include <optional>
-#include <stdexcept>
-#include <string>
 #include <unordered_map>
-#include <unordered_set>
-#include <variant>
 #include <vector>
 
 #include "fznparser/annotation.hpp"
 #include "fznparser/arguments.hpp"
-#include "fznparser/except.hpp"
+#include "fznparser/variables.hpp"
 
 namespace fznparser {
 
@@ -23,16 +17,15 @@ class Constraint {
   std::string _identifier;
   std::vector<Arg> _arguments;
   std::vector<Annotation> _annotations;
-  std::optional<std::reference_wrapper<const Var>> _definedVar;
+  std::optional<Var> _definedVar;
 
  public:
   Constraint(const Constraint&) = default;
   Constraint(Constraint&&) = default;
-  Constraint(const std::string&, std::vector<Arg>&&,
-             std::vector<Annotation>&& = {});
+  Constraint(std::string, std::vector<Arg>&&, std::vector<Annotation>&& = {});
 
-  const std::vector<Annotation>& annotations() const;
-  const std::string& identifier() const;
+  [[nodiscard]] const std::vector<Annotation>& annotations() const;
+  [[nodiscard]] const std::string& identifier() const;
 
   void addAnnotation(const Annotation&);
   void addAnnotation(const std::string&);
@@ -41,12 +34,12 @@ class Constraint {
 
   void interpretAnnotations(const std::unordered_map<std::string, Var>&);
 
-  const std::vector<Arg>& arguments() const;
-  std::optional<std::reference_wrapper<const Var>> definedVar() const;
+  [[nodiscard]] const std::vector<Arg>& arguments() const;
+  [[nodiscard]] std::optional<const Var> definedVar() const;
 
   bool operator==(const Constraint&) const;
   bool operator!=(const Constraint&) const;
-  std::string toString() const;
+  [[nodiscard]] std::string toString() const;
 };
 
-};  // namespace fznparser
+}  // namespace fznparser

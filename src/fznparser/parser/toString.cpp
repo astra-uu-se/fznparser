@@ -1,5 +1,12 @@
 #include "fznparser/parser/toString.hpp"
 
+#include <boost/spirit/home/x3.hpp>
+#include <boost/spirit/home/x3/support/ast/variant.hpp>
+#include <string>
+#include <vector>
+
+#include "fznparser/parser/grammarAst.hpp"
+
 namespace fznparser::parser {
 
 using boost::get;
@@ -10,8 +17,8 @@ std::string toString(int64_t i) { return to_string(i); }
 std::string toString(double f) { return to_string(f); }
 
 template <class T>
-std::string vecToString(const std::vector<T>& vec) {
-  std::string str = "";
+std::string vecToString(const std::vector<T>& vec) {  // NOLINT(*-no-recursion)
+  std::string str;
   for (size_t i = 0; i < vec.size(); ++i) {
     if (i != 0) {
       str += ", ";
@@ -225,7 +232,7 @@ std::string toString(const ParExpr& expr) {
   return "";
 }
 std::string toString(const ParDeclItem&) { return ""; }
-std::string toString(const BasicAnnExpr& expr) {
+std::string toString(const BasicAnnExpr& expr) {  // NOLINT(*-no-recursion)
   if (expr.type() == typeid(bool)) {
     return to_string(get<bool>(expr));
   } else if (expr.type() == typeid(int64_t)) {
@@ -249,10 +256,10 @@ std::string toString(const BasicAnnExpr& expr) {
   }
   return "";
 }
-std::string toString(const AnnExpr& annExpr) {
+std::string toString(const AnnExpr& annExpr) {  // NOLINT(*-no-recursion)
   return "[" + vecToString(annExpr) + "]";
 }
-std::string toString(const Annotation& annotation) {
+std::string toString(const Annotation& annotation) {  // NOLINT(*-no-recursion)
   return annotation.identifier +
          (annotation.expressions.empty()
               ? ""

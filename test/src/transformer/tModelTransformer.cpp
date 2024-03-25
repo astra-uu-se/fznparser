@@ -1,5 +1,3 @@
-#pragma once
-
 #include <gtest/gtest.h>
 
 #include <algorithm>
@@ -23,14 +21,14 @@ using namespace fznparser;
 
 namespace x3 = boost::spirit::x3;
 
-void test_transformer(std::string filename) {
+void test_transformer(const std::string& filename) {
   parser::Model resModel;
   std::string path = std::string(STUB_DIR) + "/" + filename;
   std::ifstream input_file(path, std::ios_base::in);
   if (!input_file.is_open()) {
     FAIL() << "Could not open file: " << path;
   }
-  std::string input{""};
+  std::string input;
   input_file.unsetf(std::ios::skipws);  // No white space skipping!
   std::copy(std::istream_iterator<char>(input_file),
             std::istream_iterator<char>(), std::back_inserter(input));
@@ -44,14 +42,15 @@ void test_transformer(std::string filename) {
   ModelTransformer transformer(std::move(resModel));
 }
 
-void test_generator(std::string filename, fznparser::Model expectedModel) {
+void test_generator(const std::string& filename,
+                    const fznparser::Model& expectedModel) {
   parser::Model resModel;
   std::string path = std::string(STUB_DIR) + "/" + filename;
   std::ifstream input_file(path, std::ios_base::in);
   if (!input_file.is_open()) {
     FAIL() << "Could not open file: " << path;
   }
-  std::string input{""};
+  std::string input;
   input_file.unsetf(std::ios::skipws);  // No white space skipping!
   std::copy(std::istream_iterator<char>(input_file),
             std::istream_iterator<char>(), std::back_inserter(input));
@@ -87,27 +86,28 @@ TEST(generator, annotations) {
   IntVar c("c");
   IntVar d("d");
   std::unordered_map<std::string, Var> vars;
-  vars.emplace("a", Var{std::move(a)});
-  vars.emplace("b", Var{std::move(b)});
-  vars.emplace("c", Var{std::move(c)});
-  vars.emplace("d", Var{std::move(d)});
+  vars.emplace("a", Var{std::make_shared<IntVar>(std::move(a))});
+  vars.emplace("b", Var{std::make_shared<IntVar>(std::move(b))});
+  vars.emplace("c", Var{std::make_shared<IntVar>(std::move(c))});
+  vars.emplace("d", Var{std::make_shared<IntVar>(std::move(d))});
 
   IntVarArray arr("arr");
   for (const auto& identifier : std::vector<std::string>{"a", "b", "c", "d"}) {
     EXPECT_TRUE(vars.contains(identifier));
   }
-  arr.append(std::get<IntVar>(vars.at("b")));
-  arr.append(std::get<IntVar>(vars.at("c")));
-  arr.append(std::get<IntVar>(vars.at("c")));
-  arr.append(std::get<IntVar>(vars.at("d")));
+  arr.append(std::get<std::shared_ptr<IntVar>>(vars.at("b")));
+  arr.append(std::get<std::shared_ptr<IntVar>>(vars.at("c")));
+  arr.append(std::get<std::shared_ptr<IntVar>>(vars.at("c")));
+  arr.append(std::get<std::shared_ptr<IntVar>>(vars.at("d")));
 
   arr.addAnnotation("output_array", {IntSet(1, 2), IntSet(1, 2)});
-  vars.emplace("arr", Var{std::move(arr)});
+  vars.emplace("arr", Var{std::make_shared<IntVarArray>(std::move(arr))});
 
-  Constraint int_plus("int_plus",
-                      std::vector<Arg>{IntArg{std::get<IntVar>(vars.at("a"))},
-                                       IntArg{std::get<IntVar>(vars.at("b"))},
-                                       IntArg{std::get<IntVar>(vars.at("c"))}});
+  Constraint int_plus(
+      "int_plus", std::vector<Arg>{
+                      IntArg{std::get<std::shared_ptr<IntVar>>(vars.at("a"))},
+                      IntArg{std::get<std::shared_ptr<IntVar>>(vars.at("b"))},
+                      IntArg{std::get<std::shared_ptr<IntVar>>(vars.at("c"))}});
 
   int_plus.addAnnotation("defines_var",
                          AnnotationExpression{fznparser::Annotation("c")});
@@ -115,17 +115,17 @@ TEST(generator, annotations) {
   std::vector<Constraint> constraints;
   constraints.emplace_back(std::move(int_plus));
 
-  test_generator("annotations.fzn", std::move(fznparser::Model(
-                                        std::move(vars), std::move(constraints),
-                                        std::move(SolveType()))));
+  test_generator("annotations.fzn",
+                 fznparser::Model(std::move(vars), std::move(constraints),
+                                  std::move(SolveType())));
 }
 
 TEST(generator, constraints) {
   IntVar v1("v1");
   IntVar v2("v2");
   std::unordered_map<std::string, Var> vars;
-  vars.emplace("v1", Var{std::move(v1)});
-  vars.emplace("v2", Var{std::move(v2)});
+  vars.emplace("v1", Var{std::make_shared<IntVar>(std::move(v1))});
+  vars.emplace("v2", Var{std::make_shared<IntVar>(std::move(v2))});
 
   std::vector<Constraint> constraints;
 
@@ -134,94 +134,93 @@ TEST(generator, constraints) {
   coefs.append(-1);
 
   IntVarArray arr("");
-  arr.append(std::get<IntVar>(vars.at("v1")));
-  arr.append(std::get<IntVar>(vars.at("v2")));
+  arr.append(std::get<std::shared_ptr<IntVar>>(vars.at("v1")));
+  arr.append(std::get<std::shared_ptr<IntVar>>(vars.at("v2")));
 
-  constraints.emplace_back(Constraint(
+  constraints.emplace_back(
       "int_lin_eq",
-      std::vector<Arg>{std::move(coefs), std::move(arr), IntArg{2}}));
+      std::vector<Arg>{std::make_shared<IntVarArray>(std::move(coefs)),
+                       std::make_shared<IntVarArray>(std::move(arr)),
+                       IntArg{2}});
 
-  constraints.emplace_back(Constraint(
+  constraints.emplace_back(
       "set_in",
-      std::vector<Arg>{IntArg{std::reference_wrapper<const IntVar>(
-                           std::get<IntVar>(vars.at("v1")))},
-                       IntSetArg{IntSet(std::vector<int64_t>{1, 4})}}));
+      std::vector<Arg>{IntArg{std::get<std::shared_ptr<IntVar>>(vars.at("v1"))},
+                       IntSetArg{IntSet(std::vector<int64_t>{1, 4})}});
 
-  test_generator("constraints.fzn", std::move(fznparser::Model(
-                                        std::move(vars), std::move(constraints),
-                                        std::move(SolveType()))));
+  test_generator(
+      "constraints.fzn",
+      fznparser::Model(std::move(vars), std::move(constraints), SolveType()));
 }
 
 TEST(generator, maximize_objective) {
   IntVar a("a");
   std::unordered_map<std::string, Var> vars;
-  vars.emplace("a", Var{std::move(a)});
+  vars.emplace("a", Var{std::make_shared<IntVar>(std::move(a))});
 
   SolveType solveType(ProblemType::MAXIMIZE, vars.at("a"));
 
-  test_generator(
-      "maximize_objective.fzn",
-      std::move(fznparser::Model(std::move(vars), {}, std::move(solveType))));
+  test_generator("maximize_objective.fzn",
+                 fznparser::Model(std::move(vars), {}, std::move(solveType)));
 }
 
 TEST(generator, minimize_objective) {
   IntVar a("a");
   std::unordered_map<std::string, Var> vars;
-  vars.emplace("a", Var{std::move(a)});
+  vars.emplace("a", Var{std::make_shared<IntVar>(std::move(a))});
 
   SolveType solveType(ProblemType::MINIMIZE, vars.at("a"));
 
-  test_generator(
-      "minimize_objective.fzn",
-      std::move(fznparser::Model(std::move(vars), {}, std::move(solveType))));
+  test_generator("minimize_objective.fzn",
+                 fznparser::Model(std::move(vars), {}, std::move(solveType)));
 }
 
 TEST(generator, parameters) {
-  test_generator("parameters.fzn", fznparser::Model(std::vector<Var>{}, {},
-                                                    std::move(SolveType())));
+  test_generator("parameters.fzn",
+                 fznparser::Model(std::vector<Var>{}, {}, SolveType()));
 }
 
 TEST(generator, satisfy_empty) {
-  test_generator("satisfy_empty.fzn", fznparser::Model(std::vector<Var>{}, {},
-                                                       std::move(SolveType())));
+  test_generator("satisfy_empty.fzn",
+                 fznparser::Model(std::vector<Var>{}, {}, SolveType()));
 }
 
 TEST(generator, variable_arrays) {
   std::unordered_map<std::string, Var> vars;
-  vars.emplace("v1", Var{IntVar("v1")});
-  vars.emplace("v2", Var{IntVar("v2")});
-  vars.emplace("v3", Var{BoolVar("v3")});
+  vars.emplace("v1", Var{std::make_shared<IntVar>("v1")});
+  vars.emplace("v2", Var{std::make_shared<IntVar>("v2")});
+  vars.emplace("v3", Var{std::make_shared<BoolVar>("v3")});
 
   IntVarArray array1("array1");
-  array1.append(std::get<IntVar>(vars.at("v1")));
+  array1.append(std::get<std::shared_ptr<IntVar>>(vars.at("v1")));
   array1.append(2);
-  array1.append(std::get<IntVar>(vars.at("v2")));
+  array1.append(std::get<std::shared_ptr<IntVar>>(vars.at("v2")));
   array1.append(5);
-  vars.emplace("array1", Var{std::move(array1)});
+  vars.emplace("array1", Var{std::make_shared<IntVarArray>(std::move(array1))});
 
   BoolVarArray array2("array2");
-  array2.append(std::get<BoolVar>(vars.at("v3")));
+  array2.append(std::get<std::shared_ptr<BoolVar>>(vars.at("v3")));
   array2.append(true);
   array2.append(false);
-  vars.emplace("array2", Var{std::move(array2)});
+  vars.emplace("array2",
+               Var{std::make_shared<BoolVarArray>(std::move(array2))});
 
-  test_generator(
-      "variable_arrays.fzn",
-      std::move(fznparser::Model(std::move(vars), {}, std::move(SolveType()))));
+  test_generator("variable_arrays.fzn",
+                 fznparser::Model(std::move(vars), {}, SolveType()));
 }
 
 TEST(generator, vars) {
   std::unordered_map<std::string, Var> vars;
-  vars.emplace("v1", Var{BoolVar("v1")});
-  vars.emplace("v2", Var{IntVar(0, 5, "v2")});
-  vars.emplace("v3", Var{IntVar(std::vector<int64_t>{3, 5, 10}, "v3")});
-  vars.emplace("v4", Var{IntVar(5, "v4")});
-  vars.emplace("v5", Var{IntVar(3, "v5")});
-  vars.emplace("v6", Var{IntVar("v6")});
+  vars.emplace("v1", Var{std::make_shared<BoolVar>("v1")});
+  vars.emplace("v2", Var{std::make_shared<IntVar>(0, 5, "v2")});
+  vars.emplace("v3", Var{std::make_shared<IntVar>(
+                         std::vector<int64_t>{3, 5, 10}, "v3")});
+  vars.emplace("v4", Var{std::make_shared<IntVar>(5, "v4")});
+  vars.emplace("v5", Var{std::make_shared<IntVar>(3, "v5")});
+  vars.emplace("v6", Var{std::make_shared<IntVar>("v6")});
 
-  test_generator(
-      "variables.fzn",
-      std::move(fznparser::Model(std::move(vars), {}, std::move(SolveType()))));
+  test_generator("variables.fzn",
+                 fznparser::Model(std::move(vars), {}, SolveType()));
 }
 
 }  // namespace fznparser::testing

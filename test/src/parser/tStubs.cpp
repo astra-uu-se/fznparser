@@ -1,5 +1,3 @@
-#pragma once
-
 #include <gtest/gtest.h>
 
 #include <algorithm>
@@ -13,6 +11,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include "./expectEq.hpp"
 #include "fznparser/parser/grammar.hpp"
 #include "fznparser/parser/grammarDef.hpp"
 
@@ -22,24 +21,32 @@ using namespace fznparser::parser;
 
 namespace x3 = boost::spirit::x3;
 
-void test_stub(std::string filename, parser::Model actual) {
+void test_stub(const std::string& filename, const parser::Model& actual) {
   parser::Model expected;
   std::string path = std::string(STUB_DIR) + "/" + filename;
-  std::ifstream input_file(path, std::ios_base::in);
-  if (!input_file.is_open()) {
-    FAIL() << "Could not open file: " << path;
-  }
-  std::string input{""};
-  input_file.unsetf(std::ios::skipws);  // No white space skipping!
-  std::copy(std::istream_iterator<char>(input_file),
-            std::istream_iterator<char>(), std::back_inserter(input));
-  input_file.close();
 
-  auto iter = input.begin();
-  EXPECT_TRUE(
-      x3::phrase_parse(iter, input.end(), model, x3::standard::space, expected))
-      << filename;
-  EXPECT_TRUE(iter == input.end());
+  std::ifstream input_file(path);
+  EXPECT_TRUE(input_file.is_open()) << "Could not open file: " << path;
+  boost::spirit::istream_iterator file_iterator(input_file >> std::noskipws),
+      eof;
+  EXPECT_TRUE(x3::phrase_parse(file_iterator, eof, parser::model,
+                               x3::standard::space, expected))
+      << path;
+  if (file_iterator != eof) {
+    size_t buffer_size = 200;
+    std::string buffer;
+    buffer.reserve(buffer_size);
+    for (size_t i = 0; i < buffer_size; ++i) {
+      if (file_iterator == eof || *file_iterator == '\n') {
+        break;
+      }
+      buffer += *file_iterator;
+      ++file_iterator;
+    }
+    input_file.close();
+    std::cout << buffer << std::endl;
+    FAIL() << path;
+  }
   expect_eq(expected, actual, filename);
 }
 
@@ -91,7 +98,7 @@ TEST(stubs, constraints) {
       parser::Model{
           std::vector<PredicateItem>{},
           std::vector<ParDeclItem>{ParDeclItem{
-              BasicParTypeArray{2, BasicParType::INT}, std::string{"coeffs"},
+              BasicParTypeArray{{2}, BasicParType::INT}, std::string{"coeffs"},
               ParExpr{ParArrayLiteral{int64_t{1}, int64_t{-1}}}}},
           std::vector<VarDeclItem>{
               BasicVarDecl{BasicVarIntTypeUnbounded{}, std::string{"v1"},
@@ -151,11 +158,11 @@ TEST(stubs, parameters) {
                           ParExpr{bool{false}}},
               ParDeclItem{BasicParType::BOOL, std::string{"bT"},
                           ParExpr{bool{true}}},
-              ParDeclItem{BasicParTypeArray{4, BasicParType::INT},
+              ParDeclItem{BasicParTypeArray{{4}, BasicParType::INT},
                           std::string{"nums"},
                           ParExpr{ParArrayLiteral{int64_t{1}, int64_t{2},
                                                   int64_t{3}, int64_t{4}}}},
-              ParDeclItem{BasicParTypeArray{3, BasicParType::BOOL},
+              ParDeclItem{BasicParTypeArray{{3}, BasicParType::BOOL},
                           std::string{"bools"},
                           ParExpr{ParArrayLiteral{bool{false}, bool{false},
                                                   bool{true}}}},
@@ -164,13 +171,32 @@ TEST(stubs, parameters) {
                   ParExpr{IntSetLiteralSet{std::vector<int64_t>{1, 4, 5}}}},
               ParDeclItem{BasicParType::SET_OF_INT, std::string{"intervalSet"},
                           ParExpr{IntSetLiteralBounded{1, 10}}},
-              ParDeclItem{BasicParTypeArray{2, BasicParType::SET_OF_INT},
+              ParDeclItem{BasicParTypeArray{{2}, BasicParType::SET_OF_INT},
                           std::string{"sets"},
                           ParExpr{ParArrayLiteral{
                               IntSetLiteralSet{std::vector<int64_t>{4, 50, 55}},
                               IntSetLiteralBounded{1, 10}}}}},
           std::vector<VarDeclItem>{}, std::vector<ConstraintItem>{},
           SolveSatisfy{}});
+}
+
+TEST(stubs, predicates) {
+  test_stub(
+      "predicates.fzn",
+      parser::Model{
+          std::vector<PredicateItem>{
+              PredicateItem{"pred", std::vector<PredParam>{}},
+              PredicateItem{"pred_1",
+                            std::vector<PredParam>{PredParam{
+                                BasicVarIntTypeUnbounded{}, std::string{"a"}}}},
+              PredicateItem{
+                  "int_eq_imp",
+                  std::vector<PredParam>{
+                      PredParam{BasicVarIntTypeUnbounded{}, std::string{"a"}},
+                      PredParam{BasicVarIntTypeUnbounded{}, std::string{"b"}},
+                      PredParam{BasicVarBoolType{}, std::string{"r"}}}}},
+          std::vector<ParDeclItem>{}, std::vector<VarDeclItem>{},
+          std::vector<ConstraintItem>{}, SolveSatisfy{}});
 }
 
 TEST(stubs, satisfy_empty) {
