@@ -4,22 +4,14 @@ import subprocess
 import logging
 
 
-def is_mzn(file: str) -> bool:
-    _, ext = os.path.splitext(file)
-    return ext == '.mzn'
+def get_mzn_files(input_root: str, files: List[str]) -> list:
+    return [os.path.join(input_root, f)
+            for f in files if os.path.splitext(f)[1] == '.mzn']
 
 
-def is_dzn(file: str) -> bool:
-    _, ext = os.path.splitext(file)
-    return ext == '.dzn'
-
-
-def get_mzn_files(files: List[str]) -> list:
-    return [f for f in files if is_mzn(f)]
-
-
-def get_dzn_files(files: List[str]) -> list:
-    return [f for f in files if is_dzn(f)]
+def get_data_files(input_root: str, files: List[str]) -> list:
+    return [os.path.join(input_root, f)
+            for f in files if os.path.splitext(f)[1] in {'.dzn', '.json'}]
 
 
 def find_minizinc() -> str:
@@ -53,27 +45,34 @@ class Flatten:
             self._output_dir, input_root[len(self._input_dir):].lstrip('/'))
 
     def flatten_file(self, input_root: str, mzn_file: str,
-                     dzn_file: Union[None, str], logging_suffix: str) -> None:
+                     data_file: Union[None, str], logging_suffix: str) -> None:
         params = [
-            self._minizinc_path, '-c', os.path.join(input_root, mzn_file),
+            self._minizinc_path, '-c', mzn_file,
             '--solver', self._solver]
         output_root = self.find_output_dir(input_root)
         self._logger.debug(f'output root: {output_root}')
         make_output_dir(output_root)
-        mzn_f, _ = os.path.splitext(mzn_file)
-        if dzn_file is not None:
-            params.append(os.path.join(input_root, dzn_file))
-            dzn_f, _ = os.path.splitext(dzn_file)
-            fzn_file_prefix = os.path.join(output_root, mzn_f + '_' + dzn_f)
-            fzn_file = fzn_file_prefix + '.fzn'
-            self._logger.debug(
-                f'flattening {mzn_file} with {dzn_file} into {fzn_file}')
+        mzn_filename, _ = os.path.splitext(mzn_file)
+        _, mzn_filename = os.path.split(mzn_filename)
+        if data_file is not None:
+            params.append(data_file)
+            data_file_name, _ = os.path.splitext(data_file)
+            _, data_file_name = os.path.split(data_file_name)
+            output_file_name = os.path.join(
+                output_root, mzn_filename + '_' + data_file_name)
+            fzn_file = output_file_name + '.fzn'
         else:
-            fzn_file_prefix = os.path.join(output_root, mzn_f)
-            fzn_file = fzn_file_prefix + '.fzn'
-            self._logger.debug(f'flattening {mzn_file} into  {fzn_file}')
-        params = params + ['--fzn', fzn_file, '--no-output-ozn']
-        log_file = fzn_file_prefix + '.log'
+            output_file_name = os.path.join(output_root, mzn_filename)
+            fzn_file = output_file_name + '.fzn'
+        if os.path.exists(fzn_file):
+            self._logger.debug(f'{fzn_file} already exists, skipping')
+            return
+        self._logger.debug(
+            f'flattening {mzn_file}' +
+            ("" if data_file is None else f'with {data_file}') +
+            f' into  {fzn_file}')
+        params.extend(['--fzn', fzn_file, '--no-output-ozn'])
+        log_file = output_file_name + '.log'
         try:
             result = subprocess.run(params, stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE, text=True)
@@ -81,7 +80,8 @@ class Flatten:
                 os.remove(log_file)
             result.check_returncode()
         except subprocess.CalledProcessError as e:
-            self._logger.error(f'failed to flatten {mzn_file} with {dzn_file}')
+            self._logger.error(
+                f'failed to flatten {mzn_file} with {data_file}')
             self._logger.error(f'error: {e}')
             if e.stdout is not None and len(e.stdout) > 0:
                 self._logger.error(f'stdout: {e.stdout}')
@@ -94,30 +94,38 @@ class Flatten:
     def flatten_all(self):
         inputs: List[Tuple[str, str, Union[str, None]]] = []
         for input_root, dirs, files in os.walk(self._input_dir, topdown=False):
-            mzn_files = get_mzn_files(files)
+            mzn_files = get_mzn_files(input_root, files)
             if len(mzn_files) == 0:
                 continue
             self._logger.debug(f'in root: {input_root}, found mzn files: '
                                f'{mzn_files}')
-            dzn_files = get_dzn_files(files)
-            self._logger.debug(f'in root: {input_root}, found fzn files: '
-                               f'{dzn_files}')
+            data_files = get_data_files(input_root, files)
+            if len(data_files) == 0 and len(dirs) > 0:
+                data_dir = (dirs[0] if len(dirs) == 1 else
+                            next((d for d in dirs if d == 'data'), None))
+                if data_dir is not None:
+                    data_files = get_data_files(
+                        os.path.join(input_root, data_dir),
+                        os.listdir(os.path.join(input_root, data_dir)))
+                
+            self._logger.debug(f'in root: {input_root}, found data files: '
+                               f'{data_files}')
             for mzn_f in mzn_files:
-                if len(dzn_files) == 0:
+                if len(data_files) == 0:
                     inputs.append((input_root, mzn_f, None))
                 else:
-                    for dzn_f in dzn_files:
-                        inputs.append((input_root, mzn_f, dzn_f))
+                    for data_f in data_files:
+                        inputs.append((input_root, mzn_f, data_f))
 
         inputs.sort()
-        for i, (input_root, mzn_f, dzn_f) in enumerate(inputs):
-            self.flatten_file(input_root, mzn_f, dzn_f,
+        for i, (input_root, mzn_f, data_file) in enumerate(inputs):
+            self.flatten_file(input_root, mzn_f, data_file,
                               f' ({i + 1} of {len(inputs)})')
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.WARNING)
     cur_path: str = os.path.dirname(os.path.realpath(__file__))
     flatten = Flatten(os.path.join(cur_path, 'mzn-challenge'),
-                      os.path.join(cur_path, 'flattened-mzn-challenge.new'))
+                      os.path.join(cur_path, 'flattened-mzn-challenge'))
     flatten.flatten_all()

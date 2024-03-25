@@ -121,11 +121,76 @@ TEST(generator, annotations) {
 }
 
 TEST(generator, constraints) {
-  IntVar v1("v1");
-  IntVar v2("v2");
   std::unordered_map<std::string, Var> vars;
-  vars.emplace("v1", Var{std::make_shared<IntVar>(std::move(v1))});
-  vars.emplace("v2", Var{std::make_shared<IntVar>(std::move(v2))});
+  std::shared_ptr<IntVar> v1 = std::get<std::shared_ptr<IntVar>>(
+      vars.emplace("v1", Var{std::make_shared<IntVar>("v1")}).first->second);
+  std::shared_ptr<IntVar> v2 = std::get<std::shared_ptr<IntVar>>(
+      vars.emplace("v2", Var{std::make_shared<IntVar>("v2")}).first->second);
+  std::shared_ptr<IntVar> X_INTRODUCED_2233_ =
+      std::get<std::shared_ptr<IntVar>>(
+          vars.emplace("X_INTRODUCED_2233_",
+                       Var{std::make_shared<IntVar>(
+                           0, 139, "X_INTRODUCED_2233_",
+                           std::vector<fznparser::Annotation>{
+                               Annotation{"var_is_introduced", {}},
+                               Annotation{"is_defined_var", {}}})})
+              .first->second);
+  std::shared_ptr<IntVar> X_INTRODUCED_1888_ =
+      std::get<std::shared_ptr<IntVar>>(
+          vars.emplace("X_INTRODUCED_1888_",
+                       Var{std::make_shared<IntVar>(
+                           0, 139, "X_INTRODUCED_1888_",
+                           std::vector<fznparser::Annotation>{
+                               Annotation{"var_is_introduced", {}},
+                               Annotation{"is_defined_var", {}}})})
+              .first->second);
+  std::shared_ptr<IntVar> X_INTRODUCED_1974_ =
+      std::get<std::shared_ptr<IntVar>>(
+          vars.emplace("X_INTRODUCED_1974_",
+                       Var{std::make_shared<IntVar>(
+                           0, 139, "X_INTRODUCED_1974_",
+                           std::vector<fznparser::Annotation>{
+                               Annotation{"var_is_introduced", {}},
+                               Annotation{"is_defined_var", {}}})})
+              .first->second);
+  std::shared_ptr<IntVar> X_INTRODUCED_2060_ =
+      std::get<std::shared_ptr<IntVar>>(
+          vars.emplace("X_INTRODUCED_2060_",
+                       Var{std::make_shared<IntVar>(
+                           0, 139, "X_INTRODUCED_2060_",
+                           std::vector<fznparser::Annotation>{
+                               Annotation{"var_is_introduced", {}},
+                               Annotation{"is_defined_var", {}}})})
+              .first->second);
+  std::shared_ptr<IntVar> X_INTRODUCED_2146_ =
+      std::get<std::shared_ptr<IntVar>>(
+          vars.emplace("X_INTRODUCED_2146_",
+                       Var{std::make_shared<IntVar>(
+                           0, 139, "X_INTRODUCED_2146_",
+                           std::vector<fznparser::Annotation>{
+                               Annotation{"var_is_introduced", {}},
+                               Annotation{"is_defined_var", {}}})})
+              .first->second);
+  std::shared_ptr<IntVar> X_INTRODUCED_2232_ =
+      std::get<std::shared_ptr<IntVar>>(
+          vars.emplace("X_INTRODUCED_2232_",
+                       Var{std::make_shared<IntVar>(
+                           0, 139, "X_INTRODUCED_2232_",
+                           std::vector<fznparser::Annotation>{
+                               Annotation{"var_is_introduced", {}},
+                               Annotation{"is_defined_var", {}}})})
+              .first->second);
+  std::shared_ptr<IntVarArray> information =
+      std::get<std::shared_ptr<IntVarArray>>(
+          vars.emplace("information",
+                       Var{std::make_shared<IntVarArray>("information")})
+              .first->second);
+
+  information->append(X_INTRODUCED_1888_);
+  information->append(X_INTRODUCED_1974_);
+  information->append(X_INTRODUCED_2060_);
+  information->append(X_INTRODUCED_2146_);
+  information->append(X_INTRODUCED_2232_);
 
   std::vector<Constraint> constraints;
 
@@ -134,8 +199,8 @@ TEST(generator, constraints) {
   coefs.append(-1);
 
   IntVarArray arr("");
-  arr.append(std::get<std::shared_ptr<IntVar>>(vars.at("v1")));
-  arr.append(std::get<std::shared_ptr<IntVar>>(vars.at("v2")));
+  arr.append(v1);
+  arr.append(v2);
 
   constraints.emplace_back(
       "int_lin_eq",
@@ -144,9 +209,12 @@ TEST(generator, constraints) {
                        IntArg{2}});
 
   constraints.emplace_back(
-      "set_in",
-      std::vector<Arg>{IntArg{std::get<std::shared_ptr<IntVar>>(vars.at("v1"))},
-                       IntSetArg{IntSet(std::vector<int64_t>{1, 4})}});
+      "set_in", std::vector<Arg>{
+                    IntArg{v1}, IntSetArg{IntSet(std::vector<int64_t>{1, 4})}});
+
+  constraints.emplace_back(
+      "array_int_minimum",
+      std::vector<Arg>{IntArg{X_INTRODUCED_2233_}, information});
 
   test_generator(
       "constraints.fzn",

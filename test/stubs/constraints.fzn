@@ -1,9 +1,14 @@
 array [1..2] of int: coeffs = [1, -1];
-
 var int: v1;
 var int: v2;
-
+var 0..139: X_INTRODUCED_2233_ ::var_is_introduced :: is_defined_var;
+var 0..139: X_INTRODUCED_1888_ ::var_is_introduced :: is_defined_var;
+var 0..139: X_INTRODUCED_1974_ ::var_is_introduced :: is_defined_var;
+var 0..139: X_INTRODUCED_2060_ ::var_is_introduced :: is_defined_var;
+var 0..139: X_INTRODUCED_2146_ ::var_is_introduced :: is_defined_var;
+var 0..139: X_INTRODUCED_2232_ ::var_is_introduced :: is_defined_var;
+array [1..5] of var int: information = [X_INTRODUCED_1888_,X_INTRODUCED_1974_,X_INTRODUCED_2060_,X_INTRODUCED_2146_,X_INTRODUCED_2232_];
 constraint int_lin_eq(coeffs, [v1, v2], 2);
 constraint set_in(v1, {1, 4});
-
+constraint array_int_minimum(X_INTRODUCED_2233_,information);
 solve satisfy;

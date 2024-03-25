@@ -29,7 +29,7 @@ void test_stub(const std::string& filename, const parser::Model& actual) {
   EXPECT_TRUE(input_file.is_open()) << "Could not open file: " << path;
   boost::spirit::istream_iterator file_iterator(input_file >> std::noskipws),
       eof;
-  EXPECT_TRUE(x3::phrase_parse(file_iterator, eof, parser::model,
+  ASSERT_TRUE(x3::phrase_parse(file_iterator, eof, parser::model,
                                x3::standard::space, expected))
       << path;
   if (file_iterator != eof) {
@@ -106,7 +106,47 @@ TEST(stubs, constraints) {
                            std::optional<BasicExpr>{std::nullopt}},
               BasicVarDecl{BasicVarIntTypeUnbounded{}, std::string{"v2"},
                            Annotations{},
-                           std::optional<BasicExpr>{std::nullopt}}},
+                           std::optional<BasicExpr>{std::nullopt}},
+              BasicVarDecl{BasicVarIntTypeBounded{0, 139},
+                           std::string{"X_INTRODUCED_2233_"},
+                           Annotations{Annotation{"var_is_introduced", {}},
+                                       Annotation{"is_defined_var", {}}},
+                           std::optional<BasicExpr>{std::nullopt}},
+              BasicVarDecl{BasicVarIntTypeBounded{0, 139},
+                           std::string{"X_INTRODUCED_1888_"},
+                           Annotations{Annotation{"var_is_introduced", {}},
+                                       Annotation{"is_defined_var", {}}},
+                           std::optional<BasicExpr>{std::nullopt}},
+              BasicVarDecl{BasicVarIntTypeBounded{0, 139},
+                           std::string{"X_INTRODUCED_1974_"},
+                           Annotations{Annotation{"var_is_introduced", {}},
+                                       Annotation{"is_defined_var", {}}},
+                           std::optional<BasicExpr>{std::nullopt}},
+              BasicVarDecl{BasicVarIntTypeBounded{0, 139},
+                           std::string{"X_INTRODUCED_2060_"},
+                           Annotations{Annotation{"var_is_introduced", {}},
+                                       Annotation{"is_defined_var", {}}},
+                           std::optional<BasicExpr>{std::nullopt}},
+              BasicVarDecl{
+                  BasicVarIntTypeBounded{0, 139},
+                  std::string{"X_INTRODUCED_2146_"},
+                  Annotations{Annotation{"var_is_introduced", {}},
+                              Annotation{"is_defined_var", {}}},
+                  std::optional<BasicExpr>{std::nullopt},
+              },
+              BasicVarDecl{BasicVarIntTypeBounded{0, 139},
+                           std::string{"X_INTRODUCED_2232_"},
+                           Annotations{Annotation{"var_is_introduced", {}},
+                                       Annotation{"is_defined_var", {}}},
+                           std::optional<BasicExpr>{std::nullopt}},
+              ArrayVarDecl{
+                  ArrayVarType{IndexSet{5}, BasicVarIntTypeUnbounded{}},
+                  std::string{"information"}, Annotations{},
+                  ArrayLiteral{std::string{"X_INTRODUCED_1888_"},
+                               std::string{"X_INTRODUCED_1974_"},
+                               std::string{"X_INTRODUCED_2060_"},
+                               std::string{"X_INTRODUCED_2146_"},
+                               std::string{"X_INTRODUCED_2232_"}}}},
           std::vector<ConstraintItem>{
               ConstraintItem{std::string{"int_lin_eq"},
                              std::vector<Expr>{std::string{"coeffs"},
@@ -118,7 +158,12 @@ TEST(stubs, constraints) {
                              std::vector<Expr>{
                                  std::string{"v1"},
                                  IntSetLiteralSet{std::vector<int64_t>{1, 4}}},
-                             Annotations{}}},
+                             Annotations{}},
+              ConstraintItem{
+                  std::string{"array_int_minimum"},
+                  std::vector<Expr>{std::string{"X_INTRODUCED_2233_"},
+                                    std::string{"information"}},
+                  Annotations{}}},
           SolveSatisfy{}});
 }
 
