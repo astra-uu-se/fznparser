@@ -21,11 +21,17 @@ std::vector<double> sortAndRemoveDuplicates(std::vector<double>& vals) {
 
 namespace fznparser {
 IntSet::IntSet(int64_t val) : _elements(std::make_pair(val, val)) {}
-IntSet::IntSet(int64_t lb, int64_t ub) : _elements(std::make_pair(lb, ub)) {
+IntSet::IntSet(int64_t lb, int64_t ub) {
   if (lb > ub) {
+    // the set 0..1 is the empty set in MiniZinc
+    if (ub == 0 && lb == 1) {
+      _elements = std::vector<int64_t>{};
+      return;
+    }
     throw FznException("Lower bound cannot be greater than upper bound (" +
                        std::to_string(lb) + " > " + std::to_string(ub) + ")");
   }
+  _elements = std::make_pair(lb, ub);
 }
 
 IntSet::IntSet(std::vector<int64_t>&& vals)
@@ -122,10 +128,17 @@ std::string IntSet::toString() const {
 }
 
 FloatSet::FloatSet(double val) : _elements(std::make_pair(val, val)) {}
-FloatSet::FloatSet(double lb, double ub) : _elements(std::make_pair(lb, ub)) {
+FloatSet::FloatSet(double lb, double ub) {
   if (lb > ub) {
-    throw FznException("Lower bound cannot be greater than upper bound");
+    // the set 0..1 is the empty set in MiniZinc
+    if (lb == 1 && ub == 0) {
+      _elements = std::vector<double>{};
+      return;
+    }
+    throw FznException("Lower bound cannot be greater than upper bound (" +
+                       std::to_string(lb) + " > " + std::to_string(ub) + ")");
   }
+  _elements = std::make_pair(lb, ub);
 }
 
 FloatSet::FloatSet(std::vector<double>&& vals)

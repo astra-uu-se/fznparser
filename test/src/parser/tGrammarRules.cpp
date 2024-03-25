@@ -28,10 +28,10 @@ namespace x3 = boost::spirit::x3;
         const std::string input = flatten(data.first, p);             \
         T actual;                                                     \
         auto iter = input.begin();                                    \
-        EXPECT_TRUE(x3::phrase_parse(iter, input.end(), rule,         \
+        ASSERT_TRUE(x3::phrase_parse(iter, input.end(), rule,         \
                                      x3::standard::space, actual))    \
             << ("\"" + input + "\"");                                 \
-        EXPECT_TRUE(iter == input.end()) << ("\"" + input + "\"");    \
+        ASSERT_TRUE(iter == input.end()) << ("\"" + input + "\"");    \
         expect_eq(actual, data.second, input);                        \
         if (data.first.size() == 1) {                                 \
           break;                                                      \
@@ -49,8 +49,19 @@ TEST(int_literal_test, test_data) { create_rule_test(int64_t, int_literal); }
 
 TEST(float_literal_test, test_data) { create_rule_test(double, float_literal); }
 TEST(identifier_test, test_data) { create_rule_test(std::string, identifier); }
-TEST(VarParIdentifier_test, test_data) {
+TEST(var_par_identifier_test, test_data) {
   create_rule_test(std::string, var_par_identifier);
+}
+TEST(var_par_identifier_test, manual) {
+  std::string input = "information";
+
+  std::string actual;
+  auto iter = input.begin();
+  ASSERT_TRUE(x3::phrase_parse(iter, input.end(), var_par_identifier,
+                               x3::standard::space, actual))
+      << ("\"" + input + "\"");
+  ASSERT_TRUE(iter == input.end()) << ("\"" + input + "\"");
+  expect_eq(actual, std::string{"information"}, input);
 }
 TEST(basic_par_type_test, test_data) {
   create_rule_test(BasicParType, basic_par_type);
@@ -140,10 +151,32 @@ TEST(basic_literal_expr_test, test_data) {
   create_rule_test(BasicLiteralExpr, basic_literal_expr);
 }
 TEST(basic_expr_test, test_data) { create_rule_test(BasicExpr, basic_expr); }
+TEST(basic_expr_test, manual) {
+  std::string input = "information";
+
+  BasicExpr actual;
+  auto iter = input.begin();
+  ASSERT_TRUE(x3::phrase_parse(iter, input.end(), basic_expr,
+                               x3::standard::space, actual))
+      << ("\"" + input + "\"");
+  ASSERT_TRUE(iter == input.end()) << ("\"" + input + "\"");
+  expect_eq(actual, BasicExpr{std::string{"information"}}, input);
+}
 TEST(array_literal_test, test_data) {
   create_rule_test(ArrayLiteral, array_literal);
 }
 TEST(expr_test, test_data) { create_rule_test(Expr, expr); }
+TEST(expr_test, manual) {
+  std::string input = " information ";
+
+  Expr actual;
+  auto iter = input.begin();
+  EXPECT_TRUE(
+      x3::phrase_parse(iter, input.end(), expr, x3::standard::space, actual))
+      << ("\"" + input + "\"");
+  ASSERT_TRUE(iter == input.end()) << ("\"" + input + "\"");
+  expect_eq(actual, Expr{std::string{"information"}}, input);
+}
 TEST(par_array_literal_test, test_data) {
   create_rule_test(ParArrayLiteral, par_array_literal);
 }
@@ -193,10 +226,10 @@ TEST(par_decl_item, manual) {
 
   ParDeclItem actual;
   auto iter = input.begin();
-  EXPECT_TRUE(x3::phrase_parse(iter, input.end(), par_decl_item,
+  ASSERT_TRUE(x3::phrase_parse(iter, input.end(), par_decl_item,
                                x3::standard::space, actual))
       << ("\"" + input + "\"");
-  EXPECT_TRUE(iter == input.end()) << ("\"" + input + "\"");
+  ASSERT_TRUE(iter == input.end()) << ("\"" + input + "\"");
   expect_eq(actual,
             ParDeclItem{BasicParTypeArray{IndexSet{2}, BasicParType::INT},
                         std::string{"coeffs"},
@@ -209,10 +242,10 @@ TEST(basic_var_decl, manual) {
 
   BasicVarDecl actual;
   auto iter = input.begin();
-  EXPECT_TRUE(x3::phrase_parse(iter, input.end(), basic_var_decl,
+  ASSERT_TRUE(x3::phrase_parse(iter, input.end(), basic_var_decl,
                                x3::standard::space, actual))
       << ("\"" + input + "\"");
-  EXPECT_TRUE(iter == input.end()) << ("\"" + input + "\"");
+  ASSERT_TRUE(iter == input.end()) << ("\"" + input + "\"");
   expect_eq(actual,
             BasicVarDecl{BasicVarIntTypeUnbounded{}, std::string{"a"},
                          Annotations{}, std::optional<BasicExpr>{}},
@@ -227,7 +260,7 @@ TEST(model, manual) {
   EXPECT_TRUE(
       x3::phrase_parse(iter, input.end(), model, x3::standard::space, actual))
       << ("\"" + input + "\"");
-  EXPECT_TRUE(iter == input.end()) << ("\"" + input + "\"");
+  ASSERT_TRUE(iter == input.end()) << ("\"" + input + "\"");
   expect_eq(
       actual,
       parser::Model{std::vector<PredicateItem>{}, std::vector<ParDeclItem>{},
@@ -244,10 +277,10 @@ TEST(pred_param, manual) {
 
   parser::PredParam actual;
   auto iter = input.begin();
-  EXPECT_TRUE(x3::phrase_parse(iter, input.end(), pred_param,
+  ASSERT_TRUE(x3::phrase_parse(iter, input.end(), pred_param,
                                x3::standard::space, actual))
       << ("\"" + input + "\"");
-  EXPECT_TRUE(iter == input.end()) << ("\"" + input + "\"");
+  ASSERT_TRUE(iter == input.end()) << ("\"" + input + "\"");
   expect_eq(
       actual,
       PredParam{PredParamType{BasicVarIntTypeUnbounded{}}, std::string{"a"}},
@@ -259,10 +292,10 @@ TEST(predicate_item, manual) {
 
   parser::PredicateItem actual;
   auto iter = input.begin();
-  EXPECT_TRUE(x3::phrase_parse(iter, input.end(), predicate_item,
+  ASSERT_TRUE(x3::phrase_parse(iter, input.end(), predicate_item,
                                x3::standard::space, actual))
       << ("\"" + input + "\"");
-  EXPECT_TRUE(iter == input.end()) << ("\"" + input + "\"");
+  ASSERT_TRUE(iter == input.end()) << ("\"" + input + "\"");
   expect_eq(actual,
             PredicateItem{std::string{"pred"},
                           std::vector<PredParam>{PredParam{
@@ -279,7 +312,7 @@ TEST(predicate_item, manual_model) {
   EXPECT_TRUE(
       x3::phrase_parse(iter, input.end(), model, x3::standard::space, actual))
       << ("\"" + input + "\"");
-  EXPECT_TRUE(iter == input.end()) << ("\"" + input + "\"");
+  ASSERT_TRUE(iter == input.end()) << ("\"" + input + "\"");
   expect_eq(actual,
             Model{std::vector<PredicateItem>{PredicateItem{
                       std::string{"pred"},

@@ -27,22 +27,28 @@ struct FznData {
   bool isSatisfactionProblem;
 };
 
+std::string ltrim(std::string s) {
+  s.erase(s.begin(), std::find_if(s.begin(), s.end(),
+                                  [](unsigned char ch) { return ch != '/'; }));
+  return s;
+}
+
+void logModelName(const std::string& modelPath, bool skipping, size_t index,
+                  size_t total) {
+  size_t padding = std::to_string(total).size();
+  std::cout << (skipping ? "\033[0;33m[ SKIPPING" : "\033[0;32m[  PARSING")
+            << " ] (" << std::setw(padding) << std::to_string(index + 1) << '/'
+            << std::to_string(total) << ")\033[0;0m "
+            << (modelPath.rfind(std::string{FZN_CHALLENGE_DIR}, 0) == 0
+                    ? ltrim(modelPath.substr(
+                          std::string{FZN_CHALLENGE_DIR}.size()))
+                    : modelPath)
+            << std::endl;
+}
+
 const inline std::unordered_set<std::string> modelsThatCrash{};
 
-const inline std::unordered_set<std::string> modelsThatFail{
-    std::string(FZN_CHALLENGE_DIR) +
-        "/2021/physician-scheduling/physician-scheduling_instance03_0.34.fzn",
-    std::string(FZN_CHALLENGE_DIR) +
-        "/2021/physician-scheduling/"
-        "physician-scheduling_instance10-duplicated_0.23.fzn",
-    std::string(FZN_CHALLENGE_DIR) +
-        "/2021/physician-scheduling/"
-        "physician-scheduling_instance13-duplicated_0.56.fzn",
-    std::string(FZN_CHALLENGE_DIR) +
-        "/2021/physician-scheduling/"
-        "physician-scheduling_instance17_oneweek_real.fzn",
-    std::string(FZN_CHALLENGE_DIR) +
-        "/2021/physician-scheduling/physician-scheduling_instance18_real.fzn"};
+const inline std::unordered_set<std::string> modelsThatFail{};
 
 void skipLine(std::istreambuf_iterator<char>& i_file,
               const std::istreambuf_iterator<char>& eof) {
@@ -309,7 +315,7 @@ void test_fzn_model(const std::string& path) {
   }
 }
 
-TEST(mzn_challange, erronous) {
+TEST(mzn_challenge, crashing) {
   std::vector<std::string> fznModels;
   fznModels.reserve(modelsThatCrash.size());
   for (const auto& fznModel : modelsThatCrash) {
@@ -322,17 +328,14 @@ TEST(mzn_challange, erronous) {
     if (!std::filesystem::exists(fznModel)) {
       EXPECT_TRUE(false) << fznModel;
     } else {
-      std::cout << "\033[0;32m"
-                << "[ PARSING  ] "
-                << "\033[0;0m" << fznModel << " (" << std::to_string(++i)
-                << " of " << std::to_string(fznModels.size()) << ')'
-                << std::endl;
+      logModelName(fznModel, false, i, fznModels.size());
       test_fzn_model(fznModel);
     }
+    ++i;
   }
 }
 
-TEST(mzn_challange, failing) {
+TEST(mzn_challenge, failing) {
   std::vector<std::string> fznModels;
   fznModels.reserve(modelsThatFail.size());
   for (const auto& fznModel : modelsThatFail) {
@@ -345,53 +348,41 @@ TEST(mzn_challange, failing) {
     if (!std::filesystem::exists(fznModel)) {
       EXPECT_TRUE(false) << fznModel;
     } else {
-      std::cout << "\033[0;32m"
-                << "[ PARSING  ] "
-                << "\033[0;0m" << fznModel << " (" << std::to_string(++i)
-                << " of " << std::to_string(fznModels.size()) << ')'
-                << std::endl;
+      logModelName(fznModel, false, i, fznModels.size());
       test_fzn_model_breakdown(fznModel);
     }
+    ++i;
   }
 }
 
 TEST(mzn_challenge, parse) {
-  std::vector<std::string> directories{std::string(FZN_CHALLENGE_DIR)};
   std::stack<std::string> stack;
   stack.emplace(FZN_CHALLENGE_DIR);
+  std::unordered_set<std::string> visited{std::string(FZN_CHALLENGE_DIR)};
   std::vector<std::string> fznModels;
-  std::unordered_set<std::string> visited{stack.top()};
 
   while (!stack.empty()) {
-    const std::string& root = stack.top();
-    for (const auto& entry : std::filesystem::directory_iterator(root)) {
+    const std::string dir = stack.top();
+    stack.pop();
+    for (const auto& entry : std::filesystem::directory_iterator(dir)) {
       if (entry.is_directory()) {
-        if (visited.contains(entry.path().string())) {
-          continue;
+        if (!visited.contains(entry.path().string())) {
+          stack.push(entry.path().string());
+          visited.insert(entry.path().string());
         }
-        stack.push(entry.path().string());
-        visited.insert(entry.path().string());
-      } else if (entry.path().extension() == ".fzn") {
+      } else if (entry.is_regular_file() &&
+                 entry.path().extension() == ".fzn") {
         fznModels.push_back(entry.path().string());
       }
     }
-    stack.pop();
   }
+
   std::sort(fznModels.begin(), fznModels.end());
-  for (size_t i = 0; i < fznModels.size(); ++i) {
-    if (modelsThatCrash.contains(fznModels.at(i)) ||
-        modelsThatFail.contains(fznModels.at(i))) {
-      std::cout << "\033[0;33m"
-                << "[ SKIPPING ] "
-                << "\033[0;0m" << fznModels.at(i) << " ("
-                << std::to_string(i + 1) << " of "
-                << std::to_string(fznModels.size()) << ')' << std::endl;
-    } else {
-      std::cout << "\033[0;32m"
-                << "[  PARSING ] "
-                << "\033[0;0m" << fznModels.at(i) << " ("
-                << std::to_string(i + 1) << " of "
-                << std::to_string(fznModels.size()) << ')' << std::endl;
+  for (size_t i = 1; i < fznModels.size(); ++i) {
+    bool skipping = modelsThatCrash.contains(fznModels.at(i)) ||
+                    modelsThatFail.contains(fznModels.at(i));
+    logModelName(fznModels.at(i), skipping, i, fznModels.size());
+    if (!skipping) {
       test_fzn_model(fznModels.at(i));
     }
   }
