@@ -364,6 +364,9 @@ TEST(mzn_challenge, parse) {
   while (!stack.empty()) {
     const std::string dir = stack.top();
     stack.pop();
+    if (!std::filesystem::exists(dir)) {
+      continue;
+    }
     for (const auto& entry : std::filesystem::directory_iterator(dir)) {
       if (entry.is_directory()) {
         if (!visited.contains(entry.path().string())) {
