@@ -23,13 +23,19 @@ const auto negative_int = [](const auto &ctx) {
   x3::_pass(ctx) = attribute >= 0;
 };
 
+const auto double_is_finite = [](const auto &ctx) {
+  double &attribute = x3::_attr(ctx);
+  x3::traits::move_to(attribute, x3::_val(ctx));
+  x3::_pass(ctx) = std::isfinite(attribute);
+};
+
 template <typename ValueType>
 struct strict_real_policies : x3::strict_real_policies<ValueType> {
   static bool const allow_leading_dot = false;
   static bool const allow_trailing_dot = false;
 };
 // TODO: parse exponents
-const x3::real_parser<double, strict_real_policies<double>> float_literal{};
+const x3::real_parser<double, strict_real_policies<double>> float_parser{};
 
 const auto neg_hex = rule<struct neg_hex, int64_t>{
     "neg_hex"} = lit("-0x") >> (hex[negative_int]);
@@ -40,6 +46,9 @@ const auto neg_oct = rule<struct neg_ocr, int64_t>{
 const auto int_literal = rule<struct int_literal, int64_t>{"int_literal"} =
     lexeme[(lit("0x") >> hex) | (lit("0o") >> oct) | neg_hex | neg_oct |
            x3::int64];
+
+const auto float_literal = rule<struct float_literal, double>{"float_literal"} =
+    float_parser[double_is_finite];
 
 /*
 <identifier> ::= [A-Za-z][A-Za-z0-9_]*
@@ -345,7 +354,7 @@ const auto basic_literal_expr =
 
 const auto var_par_identifier =
     rule<struct var_par_identifier, std::string>{"var_par_identifier"} =
-        lexeme[+(x3::alpha | x3::char_('_')) >> *(x3::alnum | x3::char_('_'))];
+        lexeme[(x3::alpha | x3::char_('_')) >> *(x3::alnum | x3::char_('_'))];
 
 /*
 <basic-expr> ::= <basic-literal-expr>
