@@ -238,6 +238,21 @@ bool Arg::isArray() const {
          holds_alternative<std::shared_ptr<FloatSetArray>>(*this);
 }
 
+bool Arg::isEmptyArray() const {
+  if (holds_alternative<std::shared_ptr<BoolVarArray>>(*this)) {
+    return get<std::shared_ptr<BoolVarArray>>(*this)->size() == 0;
+  } else if (holds_alternative<std::shared_ptr<IntVarArray>>(*this)) {
+    return get<std::shared_ptr<IntVarArray>>(*this)->size() == 0;
+  } else if (holds_alternative<std::shared_ptr<FloatVarArray>>(*this)) {
+    return get<std::shared_ptr<FloatVarArray>>(*this)->size() == 0;
+  } else if (holds_alternative<std::shared_ptr<SetVarArray>>(*this)) {
+    return get<std::shared_ptr<SetVarArray>>(*this)->size() == 0;
+  } else if (holds_alternative<std::shared_ptr<FloatSetArray>>(*this)) {
+    return get<std::shared_ptr<FloatSetArray>>(*this)->size() == 0;
+  }
+  return false;
+}
+
 bool Arg::isParameter() const {
   if (holds_alternative<BoolArg>(*this)) {
     return get<BoolArg>(*this).isParameter();

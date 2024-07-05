@@ -96,6 +96,7 @@ class Arg : public std::variant<
       std::shared_ptr<FloatSetArray>>::variant;
 
   [[nodiscard]] bool isArray() const;
+  [[nodiscard]] bool isEmptyArray() const;
   [[nodiscard]] bool isParameter() const;
   [[nodiscard]] bool isFixed() const;
 
