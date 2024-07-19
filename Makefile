@@ -9,7 +9,7 @@ MINIZINC=$(shell which minizinc)
 C_COMPILER=$(shell which gcc-11)
 CXX_COMPILER=$(shell which g++-11)
 GIT=$(shell which git)
-MZN_CHALLENGE_REPO="git@github.com:MiniZinc/mzn-challenge.git"
+MZN_CHALLENGE_REPO="git@github.com:MiniZinc/minizinc-benchmarks.git"
 MZN_CHALLENGE_DIR=${MKFILE_PATH}test/mzn-challenge
 
 .PHONY: fzn-sanity

@@ -2,6 +2,7 @@ import os
 from typing import Union, List, Tuple
 import subprocess
 import logging
+from pathlib import Path
 
 
 def get_mzn_files(input_root: str, files: List[str]) -> list:
@@ -9,9 +10,12 @@ def get_mzn_files(input_root: str, files: List[str]) -> list:
             for f in files if os.path.splitext(f)[1] == '.mzn']
 
 
-def get_data_files(input_root: str, files: List[str]) -> list:
-    return [os.path.join(input_root, f)
-            for f in files if os.path.splitext(f)[1] in {'.dzn', '.json'}]
+def get_data_files(input_root: str, dirs: List[str], root_files: List[str]) -> list:
+    dzn_files = [os.path.join(input_root, f) for f in root_files if os.path.splitext(f)[1] in {'.dzn', '.json'}]
+    for directory in dirs:
+        for input_root, dirs, files in os.walk(directory, topdown=False):
+            dzn_files = dzn_files + [os.path.join(input_root, f) for f in files if os.path.splitext(f)[1] in {'.dzn', '.json'}]
+    return dzn_files
 
 
 def find_minizinc() -> str:
@@ -38,6 +42,11 @@ class Flatten:
         self._logger.debug(f'input dir: {self._input_dir}')
         self._logger.debug(f'output dir: {self._input_dir}')
         self._logger.debug(f'minizinc path: {self._minizinc_path}')
+        atlantis_msc = os.path.join(str(Path.home()), 'cbls', 'build', 'atlantis.msc')
+        if os.path.isfile(atlantis_msc):
+            self._solver = atlantis_msc
+        else:
+            self._solver = 'gecode'
 
     def find_output_dir(self, input_root: str) -> str:
         assert input_root.startswith(self._input_dir)
@@ -48,7 +57,7 @@ class Flatten:
                      data_file: Union[None, str], logging_suffix: str) -> None:
         params = [
             self._minizinc_path, '-c', mzn_file,
-            '--solver', self._solver]
+            '--solver', self._solver, '--use-gecode']
         output_root = self.find_output_dir(input_root)
         self._logger.debug(f'output root: {output_root}')
         make_output_dir(output_root)
@@ -99,7 +108,7 @@ class Flatten:
                 continue
             self._logger.debug(f'in root: {input_root}, found mzn files: '
                                f'{mzn_files}')
-            data_files = get_data_files(input_root, files)
+            data_files = get_data_files(input_root, dirs, files)
             if len(data_files) == 0 and len(dirs) > 0:
                 data_dir = (dirs[0] if len(dirs) == 1 else
                             next((d for d in dirs if d == 'data'), None))
@@ -124,7 +133,7 @@ class Flatten:
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.WARNING)
+    logging.basicConfig(level=logging.DEBUG)
     cur_path: str = os.path.dirname(os.path.realpath(__file__))
     flatten = Flatten(os.path.join(cur_path, 'mzn-challenge'),
                       os.path.join(cur_path, 'flattened-mzn-challenge'))
