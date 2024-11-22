@@ -49,7 +49,8 @@ class Flatten:
         self._logger.debug(f'input dir: {self._input_dir}')
         self._logger.debug(f'output dir: {self._output_dir}')
         self._logger.debug(f'minizinc path: {self._minizinc_path}')
-        atlantis_msc = os.path.join(str(Path.home()), 'cbls', 'build', 'atlantis.msc')
+        atlantis_msc = os.path.join(str(Path.home()), 'cbls', 'build',
+                                    'atlantis.msc')
         if os.path.isfile(atlantis_msc):
             self._solver = atlantis_msc
         else:
@@ -73,7 +74,6 @@ class Flatten:
             self._minizinc_path, '-c', mzn_file,
             '--solver', self._solver, '--use-gecode']
         output_root = self.find_output_dir(input_root)
-        self._logger.debug(f'output root: {output_root}')
         make_output_dir(output_root)
         mzn_filename, _ = os.path.splitext(mzn_file)
         _, mzn_filename = os.path.split(mzn_filename)
@@ -88,13 +88,15 @@ class Flatten:
             output_file_name = os.path.join(output_root, mzn_filename)
             fzn_file = output_file_name + '.fzn'
         if os.path.exists(fzn_file):
-            self._logger.debug(f'{self.rel_path(fzn_file, self._output_dir)} '
-                               'already exists, skipping')
+            self._logger.debug(
+                f'{fzn_file.removeprefix(self._output_dir)} already '
+                'exists, skipping')
             return
         self._logger.debug(
-            f'flattening {self.rel_path(mzn_file)}' +
-            ("" if data_file is None else f' with {self.rel_path(data_file)}') +
-            f' into {self.rel_path(fzn_file, self._output_dir)}')
+            f'flattening {mzn_file.removeprefix(self._input_dir)}' +
+            ("" if data_file is None else
+             f' with {data_file.removeprefix(self._input_dir)}') +
+            f' into  {fzn_file.removeprefix(self._output_dir)}')
         params.extend(['--fzn', fzn_file, '--no-output-ozn'])
         log_file = output_file_name + '.log'
         try:
@@ -116,20 +118,9 @@ class Flatten:
                 with open(log_file, 'w') as f:
                     f.write(e.stderr)
             return
-        except subprocess.TimeoutExpired as e:
-            self._logger.error(
-                f'timeout when flattening {self.rel_path(mzn_file)} with '
-                f'{self.rel_path(data_file)}')
-            self._logger.error(f'error: {e}')
-            if e.stdout is not None and len(e.stdout) > 0:
-                self._logger.error(f'stdout: {e.stdout}')
-            if e.stderr is not None and len(e.stderr) > 0:
-                with open(log_file, 'w') as f:
-                    f.write(e.stderr)
-            return
         self._logger.info(
-          f'created {self.rel_path(fzn_file, self._output_dir)} '
-          f'{logging_suffix}')
+            f'created {fzn_file.removeprefix(self._output_dir)} ' +
+            logging_suffix)
 
     def flatten_all(self):
         inputs: List[Tuple[str, str, Union[str, None]]] = []
@@ -152,12 +143,9 @@ class Flatten:
                     data_files = get_data_files(
                         os.path.join(input_root, data_dir),
                         os.listdir(os.path.join(input_root, data_dir)))
-                
-            self._logger.debug(
-              f'in root: {self.rel_path(input_root)}, found ' + 
-              f'{len(data_files)} data file(s): ' +
-              ', '.join([self.rel_path(df, input_root) for df in data_files]))
 
+            self._logger.debug(f'in root: {input_root}, found data files: '
+                               f'{data_files}')
             for mzn_f in mzn_files:
                 if len(data_files) == 0:
                     inputs.append((input_root, mzn_f, None))
@@ -172,7 +160,7 @@ class Flatten:
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     cur_path: str = os.path.dirname(os.path.realpath(__file__))
     flatten = Flatten(os.path.join(cur_path, 'mzn-challenge'),
                       os.path.join(cur_path, 'flattened-mzn-challenge'))

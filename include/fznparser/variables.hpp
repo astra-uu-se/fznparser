@@ -169,8 +169,11 @@ class VarArrayBase : public VarBase {
   [[nodiscard]] const std::vector<int64_t>& outputIndexSetSizes() const;
 };
 
-template <typename ParType, typename VarType>
+template <typename ParType, class VarType>
 class VarArrayTemplate : public VarArrayBase {
+  static_assert(std::is_base_of<VarBase, VarType>::value,
+                "VarType must inherit VarBase");
+
  protected:
   std::vector<std::variant<ParType, std::shared_ptr<const VarType>>> _vars;
   VarArrayTemplate(const std::string& identifier,
@@ -187,16 +190,25 @@ class VarArrayTemplate : public VarArrayBase {
     });
   };
 
-  [[nodiscard]] bool isFixed() const override { return isParArray(); };
+  [[nodiscard]] bool isFixed() const override {
+    return std::all_of(_vars.begin(), _vars.end(), [&](const auto& var) {
+      return std::holds_alternative<ParType>(var) ||
+             std::get<std::shared_ptr<const VarType>>(var)->isFixed();
+    });
+  }
 
   [[nodiscard]] std::vector<ParType> toParVector() const {
     std::vector<ParType> parVector;
     parVector.reserve(_vars.size());
     for (const auto& var : _vars) {
-      if (!std::holds_alternative<ParType>(var)) {
+      if (std::holds_alternative<ParType>(var)) {
+        parVector.emplace_back(std::get<ParType>(var));
+      } else if (std::get<std::shared_ptr<const VarType>>(var)->isFixed()) {
+        parVector.emplace_back(
+            std::get<std::shared_ptr<const VarType>>(var)->lowerBound());
+      } else {
         throw FznException("Cannot convert to parameter array");
       }
-      parVector.push_back(std::get<ParType>(var));
     }
     return parVector;
   };
