@@ -39,6 +39,7 @@ class Flatten:
     _minizinc_path: str = None
     _logger: logging.Logger = None
     _solver: str = 'gecode'
+    _use_gecode: bool = False
     _timeout = 60  # timeout for the minizinc flattening in seconds
 
     def __init__(self, input_dir: str, output_dir: str):
@@ -57,7 +58,7 @@ class Flatten:
             self._solver = 'gecode'
 
     def rel_path(self, file_path: str,
-                 prefix_path: Union[str, None]=None) -> str:
+                 prefix_path: Union[str, None] = None) -> str:
         if prefix_path is None:
             prefix_path = self._input_dir
         assert file_path.startswith(prefix_path)
@@ -72,7 +73,9 @@ class Flatten:
                      data_file: Union[None, str], logging_suffix: str) -> None:
         params = [
             self._minizinc_path, '-c', mzn_file,
-            '--solver', self._solver, '--use-gecode']
+            '--solver', self._solver]
+        if (self._use_gecode):
+            params.append('--use-gecode')
         output_root = self.find_output_dir(input_root)
         make_output_dir(output_root)
         mzn_filename, _ = os.path.splitext(mzn_file)
@@ -106,6 +109,18 @@ class Flatten:
             if os.path.exists(log_file):
                 os.remove(log_file)
             result.check_returncode()
+        except subprocess.TimeoutExpired as e:
+            self._logger.error(
+              f'timeout when flattening {self.rel_path(mzn_file)} ' +
+              ("" if data_file is None else
+               f'with {self.rel_path(data_file)}'))
+            self._logger.error(f'error: {e}')
+            if e.stdout is not None and len(e.stdout) > 0:
+                self._logger.error(f'stdout: {e.stdout}')
+            if e.stderr is not None and len(e.stderr) > 0:
+                with open(log_file, 'w') as f:
+                    f.write(e.stderr)
+            return
         except subprocess.CalledProcessError as e:
             self._logger.error(
               f'failed to flatten {self.rel_path(mzn_file)} ' +
@@ -124,16 +139,17 @@ class Flatten:
 
     def flatten_all(self):
         inputs: List[Tuple[str, str, Union[str, None]]] = []
-        for input_root, dirs, files in sorted(os.walk(self._input_dir, topdown=False)):
+        for input_root, dirs, files in sorted(os.walk(self._input_dir,
+                                                      topdown=False)):
             dirs.sort()
             files.sort()
-            
+
             mzn_files = get_mzn_files(input_root, files)
             if len(mzn_files) == 0:
                 continue
             self._logger.debug(
               f'in root: {self.rel_path(input_root)}, found {len(mzn_files)}' +
-              ' mzn file(s): ' + 
+              ' mzn file(s): ' +
               ', '.join([self.rel_path(mf, input_root) for mf in mzn_files]))
             data_files = get_data_files(input_root, dirs, files)
             if len(data_files) == 0 and len(dirs) > 0:
