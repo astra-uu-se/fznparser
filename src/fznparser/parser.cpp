@@ -18,7 +18,7 @@ Model parseFznIstream(std::istream& fznStream) {
 
   parser::Model parserModel;
 
-  x3::phrase_parse(fileIterator, eof, parser::model, x3::standard::space,
+  x3::phrase_parse(fileIterator, eof, parser::model, parser::skipper,
                    parserModel);
 
   if (fileIterator != eof) {

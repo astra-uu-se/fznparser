@@ -282,7 +282,7 @@ void test_fzn_model(const std::string& path) {
   boost::spirit::istream_iterator file_iterator(input_file >> std::noskipws),
       eof;
   EXPECT_TRUE(x3::phrase_parse(file_iterator, eof, parser::model,
-                               x3::standard::space, resModel))
+                               parser::skipper, resModel))
       << path;
   if (file_iterator != eof) {
     size_t buffer_size = 200;

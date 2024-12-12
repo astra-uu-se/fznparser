@@ -29,8 +29,8 @@ void test_stub(const std::string& filename, const parser::Model& actual) {
   EXPECT_TRUE(input_file.is_open()) << "Could not open file: " << path;
   boost::spirit::istream_iterator file_iterator(input_file >> std::noskipws),
       eof;
-  ASSERT_TRUE(x3::phrase_parse(file_iterator, eof, parser::model,
-                               x3::standard::space, expected))
+  EXPECT_TRUE(x3::phrase_parse(file_iterator, eof, parser::model,
+                               parser::skipper, expected))
       << path;
   if (file_iterator != eof) {
     size_t buffer_size = 200;
@@ -44,7 +44,7 @@ void test_stub(const std::string& filename, const parser::Model& actual) {
       ++file_iterator;
     }
     input_file.close();
-    std::cout << buffer << std::endl;
+    std::cout << '"' << buffer << '"' << std::endl;
     FAIL() << path;
   }
   expect_eq(expected, actual, filename);
@@ -281,6 +281,33 @@ TEST(stubs, variable_arrays) {
 TEST(stubs, variables) {
   test_stub(
       "variables.fzn",
+      parser::Model{
+          std::vector<PredicateItem>{},
+          std::vector<ParDeclItem>{ParDeclItem{
+              BasicParType::INT, std::string{"n"}, ParExpr{int64_t{3}}}},
+          std::vector<VarDeclItem>{
+              BasicVarDecl{BasicVarBoolType{}, std::string{"v1"}, Annotations{},
+                           std::optional<BasicExpr>{std::nullopt}},
+              BasicVarDecl{BasicVarIntTypeBounded{0, 5}, std::string{"v2"},
+                           Annotations{},
+                           std::optional<BasicExpr>{std::nullopt}},
+              BasicVarDecl{BasicVarIntTypeSet{std::vector<int64_t>{3, 5, 10}},
+                           std::string{"v3"}, Annotations{},
+                           std::optional<BasicExpr>{std::nullopt}},
+              BasicVarDecl{BasicVarIntTypeBounded{1, 5}, std::string{"v4"},
+                           Annotations{}, std::optional<BasicExpr>{int64_t{5}}},
+              BasicVarDecl{BasicVarIntTypeBounded{1, 5}, std::string{"v5"},
+                           Annotations{},
+                           std::optional<BasicExpr>{std::string{"n"}}},
+              BasicVarDecl{BasicVarIntTypeUnbounded{}, std::string{"v6"},
+                           Annotations{},
+                           std::optional<BasicExpr>{std::nullopt}}},
+          std::vector<ConstraintItem>{}, SolveSatisfy{}});
+}
+
+TEST(stubs, comments) {
+  test_stub(
+      "comments.fzn",
       parser::Model{
           std::vector<PredicateItem>{},
           std::vector<ParDeclItem>{ParDeclItem{

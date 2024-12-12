@@ -9,7 +9,8 @@
 namespace fznparser::parser {
 
 namespace x3 = ::boost::spirit::x3;
-using x3::attr, x3::char_, x3::lit, x3::lexeme, x3::omit, x3::rule, x3::space;
+using x3::attr, x3::char_, x3::lit, x3::lexeme, x3::omit, x3::rule, x3::space,
+    x3::eol;
 
 typedef x3::uint_parser<int64_t, 8> octtype;
 constexpr octtype oct = octtype();
@@ -506,5 +507,11 @@ const auto solve_item = rule<struct solve_item, SolveItem>{"solve_item"} =
 const auto model = rule<struct model, Model>{"model"} =
     *(predicate_item) >> *(par_decl_item) >> *(var_decl_item) >>
     *(constraint_item) >> solve_item;
+
+// skipper for skipping whitespace and comments
+
+const auto comment = lexeme['%' >> *(x3::char_ - x3::eol) >> x3::eol];
+
+const auto skipper = x3::standard::space | comment;
 
 }  // namespace fznparser::parser
