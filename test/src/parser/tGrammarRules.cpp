@@ -20,29 +20,29 @@ using namespace fznparser::parser;
 
 namespace x3 = boost::spirit::x3;
 
-#define create_rule_test(T, rule)                                     \
-  do {                                                                \
-    for (const std::pair<std::vector<std::string>, T> data :          \
-         rule##_data_pos()) {                                         \
-      for (const std::string &p : padding()) {                        \
-        const std::string input = flatten(data.first, p);             \
-        T actual;                                                     \
-        auto iter = input.begin();                                    \
-        ASSERT_TRUE(x3::phrase_parse(iter, input.end(), rule,         \
-                                     x3::standard::space, actual))    \
-            << ("\"" + input + "\"");                                 \
-        ASSERT_TRUE(iter == input.end()) << ("\"" + input + "\"");    \
-        expect_eq(actual, data.second, input);                        \
-        if (data.first.size() == 1) {                                 \
-          break;                                                      \
-        }                                                             \
-      }                                                               \
-    }                                                                 \
-    for (const auto &input : rule##_data_neg()) {                     \
-      EXPECT_FALSE(x3::phrase_parse(input.begin(), input.end(), rule, \
-                                    x3::standard::space))             \
-          << ("\"" + input + "\"");                                   \
-    }                                                                 \
+#define create_rule_test(T, rule)                                              \
+  do {                                                                         \
+    for (const std::pair<std::vector<std::string>, T> data :                   \
+         rule##_data_pos()) {                                                  \
+      for (const std::string &p : padding()) {                                 \
+        const std::string input = flatten(data.first, p);                      \
+        T actual;                                                              \
+        auto iter = input.begin();                                             \
+        ASSERT_TRUE(x3::phrase_parse(iter, input.end(), rule, parser::skipper, \
+                                     actual))                                  \
+            << ("\"" + input + "\"");                                          \
+        ASSERT_TRUE(iter == input.end()) << ("\"" + input + "\"");             \
+        expect_eq(actual, data.second, input);                                 \
+        if (data.first.size() == 1) {                                          \
+          break;                                                               \
+        }                                                                      \
+      }                                                                        \
+    }                                                                          \
+    for (const auto &input : rule##_data_neg()) {                              \
+      EXPECT_FALSE(                                                            \
+          x3::phrase_parse(input.begin(), input.end(), rule, parser::skipper)) \
+          << ("\"" + input + "\"");                                            \
+    }                                                                          \
   } while (false)
 
 TEST(int_literal_test, test_data) { create_rule_test(int64_t, int_literal); }
@@ -58,7 +58,7 @@ TEST(var_par_identifier_test, manual) {
   std::string actual;
   auto iter = input.begin();
   ASSERT_TRUE(x3::phrase_parse(iter, input.end(), var_par_identifier,
-                               x3::standard::space, actual))
+                               parser::skipper, actual))
       << ("\"" + input + "\"");
   ASSERT_TRUE(iter == input.end()) << ("\"" + input + "\"");
   expect_eq(actual, std::string{"information"}, input);
@@ -156,8 +156,8 @@ TEST(basic_expr_test, manual) {
 
   BasicExpr actual;
   auto iter = input.begin();
-  ASSERT_TRUE(x3::phrase_parse(iter, input.end(), basic_expr,
-                               x3::standard::space, actual))
+  ASSERT_TRUE(
+      x3::phrase_parse(iter, input.end(), basic_expr, parser::skipper, actual))
       << ("\"" + input + "\"");
   ASSERT_TRUE(iter == input.end()) << ("\"" + input + "\"");
   expect_eq(actual, BasicExpr{std::string{"information"}}, input);
@@ -172,7 +172,7 @@ TEST(expr_test, manual) {
   Expr actual;
   auto iter = input.begin();
   EXPECT_TRUE(
-      x3::phrase_parse(iter, input.end(), expr, x3::standard::space, actual))
+      x3::phrase_parse(iter, input.end(), expr, parser::skipper, actual))
       << ("\"" + input + "\"");
   ASSERT_TRUE(iter == input.end()) << ("\"" + input + "\"");
   expect_eq(actual, Expr{std::string{"information"}}, input);
@@ -227,7 +227,7 @@ TEST(par_decl_item, manual) {
   ParDeclItem actual;
   auto iter = input.begin();
   ASSERT_TRUE(x3::phrase_parse(iter, input.end(), par_decl_item,
-                               x3::standard::space, actual))
+                               parser::skipper, actual))
       << ("\"" + input + "\"");
   ASSERT_TRUE(iter == input.end()) << ("\"" + input + "\"");
   expect_eq(actual,
@@ -243,7 +243,7 @@ TEST(basic_var_decl, manual) {
   BasicVarDecl actual;
   auto iter = input.begin();
   ASSERT_TRUE(x3::phrase_parse(iter, input.end(), basic_var_decl,
-                               x3::standard::space, actual))
+                               parser::skipper, actual))
       << ("\"" + input + "\"");
   ASSERT_TRUE(iter == input.end()) << ("\"" + input + "\"");
   expect_eq(actual,
@@ -258,7 +258,7 @@ TEST(model, manual) {
   parser::Model actual;
   auto iter = input.begin();
   EXPECT_TRUE(
-      x3::phrase_parse(iter, input.end(), model, x3::standard::space, actual))
+      x3::phrase_parse(iter, input.end(), model, parser::skipper, actual))
       << ("\"" + input + "\"");
   ASSERT_TRUE(iter == input.end()) << ("\"" + input + "\"");
   expect_eq(
@@ -277,8 +277,8 @@ TEST(pred_param, manual) {
 
   parser::PredParam actual;
   auto iter = input.begin();
-  ASSERT_TRUE(x3::phrase_parse(iter, input.end(), pred_param,
-                               x3::standard::space, actual))
+  ASSERT_TRUE(
+      x3::phrase_parse(iter, input.end(), pred_param, parser::skipper, actual))
       << ("\"" + input + "\"");
   ASSERT_TRUE(iter == input.end()) << ("\"" + input + "\"");
   expect_eq(
@@ -293,7 +293,7 @@ TEST(predicate_item, manual) {
   parser::PredicateItem actual;
   auto iter = input.begin();
   ASSERT_TRUE(x3::phrase_parse(iter, input.end(), predicate_item,
-                               x3::standard::space, actual))
+                               parser::skipper, actual))
       << ("\"" + input + "\"");
   ASSERT_TRUE(iter == input.end()) << ("\"" + input + "\"");
   expect_eq(actual,
@@ -310,7 +310,7 @@ TEST(predicate_item, manual_model) {
   parser::Model actual;
   auto iter = input.begin();
   EXPECT_TRUE(
-      x3::phrase_parse(iter, input.end(), model, x3::standard::space, actual))
+      x3::phrase_parse(iter, input.end(), model, parser::skipper, actual))
       << ("\"" + input + "\"");
   ASSERT_TRUE(iter == input.end()) << ("\"" + input + "\"");
   expect_eq(actual,

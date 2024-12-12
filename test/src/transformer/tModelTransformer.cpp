@@ -36,7 +36,7 @@ void test_transformer(const std::string& filename) {
 
   auto iter = input.begin();
   EXPECT_TRUE(x3::phrase_parse(iter, input.end(), parser::model,
-                               x3::standard::space, resModel))
+                               parser::skipper, resModel))
       << filename;
   EXPECT_TRUE(iter == input.end());
   ModelTransformer transformer(std::move(resModel));
@@ -58,7 +58,7 @@ void test_generator(const std::string& filename,
 
   auto iter = input.begin();
   EXPECT_TRUE(x3::phrase_parse(iter, input.end(), parser::model,
-                               x3::standard::space, resModel))
+                               parser::skipper, resModel))
       << filename;
   EXPECT_TRUE(iter == input.end());
   ModelTransformer transformer(std::move(resModel));
