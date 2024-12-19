@@ -1,11 +1,12 @@
-#include <functional>
-#include <numeric>
+#include "fznparser/constraint.hpp"
+
 #include <string>
-#include <unordered_set>
 #include <utility>
 #include <variant>
 
-#include "fznparser/constraint.hpp"
+#include "fznparser/annotation.hpp"
+#include "fznparser/arguments.hpp"
+#include "fznparser/except.hpp"
 #include "fznparser/model.hpp"
 
 namespace fznparser {
@@ -98,23 +99,6 @@ bool Constraint::operator==(const Constraint& other) const {
 
 bool Constraint::operator!=(const Constraint& other) const {
   return !operator==(other);
-}
-
-std::string Constraint::toString() const {
-  std::string s = _identifier + "(";
-  for (size_t i = 0; i < _arguments.size(); ++i) {
-    if (i != 0) {
-      s += ", ";
-    }
-    s += _arguments[i].toString();
-  }
-  s += ")";
-  if (!_annotations.empty()) {
-    for (const auto& annotation : _annotations) {
-      s += " :: " + annotation.toString();
-    }
-  }
-  return s;
 }
 
 }  // namespace fznparser

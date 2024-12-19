@@ -1,6 +1,5 @@
 #pragma once
 
-#include <algorithm>
 #include <array>
 #include <memory>
 #include <string>
@@ -9,14 +8,15 @@
 #include <vector>
 
 #include "fznparser/annotation.hpp"
-#include "fznparser/except.hpp"
 #include "fznparser/types.hpp"
 
 namespace fznparser {
 
-class Model;  // forward declaration
+class Model;
 class Var;
 class VarReference;
+class Annotation;
+class AnnotationExpression;
 
 class VarBase {
   std::string _identifier;
@@ -45,7 +45,6 @@ class VarBase {
   [[nodiscard]] bool isDefinedVar() const;
 
   [[nodiscard]] virtual bool isFixed() const = 0;
-  [[nodiscard]] virtual std::string toString() const = 0;
 };
 
 class BoolVar : public VarBase {
@@ -66,7 +65,6 @@ class BoolVar : public VarBase {
   bool operator!=(const BoolVar&) const;
 
   [[nodiscard]] bool isFixed() const override;
-  [[nodiscard]] std::string toString() const override;
 };
 
 class IntVar : public VarBase {
@@ -94,7 +92,6 @@ class IntVar : public VarBase {
   bool operator!=(const IntVar&) const;
 
   [[nodiscard]] bool isFixed() const override;
-  [[nodiscard]] std::string toString() const override;
 };
 
 class FloatVar : public VarBase {
@@ -123,7 +120,6 @@ class FloatVar : public VarBase {
   bool operator!=(const FloatVar&) const;
 
   [[nodiscard]] bool isFixed() const override;
-  [[nodiscard]] std::string toString() const override;
 };
 
 class SetVar : public VarBase {
@@ -150,13 +146,11 @@ class SetVar : public VarBase {
   bool operator!=(const SetVar&) const;
 
   [[nodiscard]] bool isFixed() const override;
-  [[nodiscard]] std::string toString() const override;
 };
 
 class Var;  // forward declaration
 
 class VarArrayBase : public VarBase {
- private:
   std::vector<int64_t> _outputIndexSetSizes{};
 
  public:
@@ -172,67 +166,40 @@ class VarArrayBase : public VarBase {
 
 template <typename ParType, class VarType>
 class VarArrayTemplate : public VarArrayBase {
-  static_assert(std::is_base_of<VarBase, VarType>::value,
+  static_assert(std::is_base_of_v<VarBase, VarType>,
                 "VarType must inherit VarBase");
 
  protected:
   std::vector<std::variant<ParType, std::shared_ptr<const VarType>>> _vars;
   VarArrayTemplate(const std::string& identifier,
-                   std::vector<Annotation>&& annotations)
-      : VarArrayBase(identifier, std::move(annotations)){};
+                   std::vector<Annotation>&& annotations);
 
  public:
   VarArrayTemplate(const VarArrayTemplate&) = default;
   VarArrayTemplate(VarArrayTemplate&&) = default;
 
-  [[nodiscard]] bool isParArray() const {
-    return std::all_of(_vars.begin(), _vars.end(), [&](const auto& var) {
-      return std::holds_alternative<ParType>(var);
-    });
-  };
+  [[nodiscard]] bool isParArray() const;
 
-  [[nodiscard]] bool isFixed() const override {
-    return std::all_of(_vars.begin(), _vars.end(), [&](const auto& var) {
-      return std::holds_alternative<ParType>(var) ||
-             std::get<std::shared_ptr<const VarType>>(var)->isFixed();
-    });
-  }
+  [[nodiscard]] bool isFixed() const override;
 
-  [[nodiscard]] std::vector<ParType> toParVector() const {
-    std::vector<ParType> parVector;
-    parVector.reserve(_vars.size());
-    for (const auto& var : _vars) {
-      if (std::holds_alternative<ParType>(var)) {
-        parVector.emplace_back(std::get<ParType>(var));
-      } else if (std::get<std::shared_ptr<const VarType>>(var)->isFixed()) {
-        parVector.emplace_back(
-            std::get<std::shared_ptr<const VarType>>(var)->lowerBound());
-      } else {
-        throw FznException("Cannot convert to parameter array");
-      }
-    }
-    return parVector;
-  };
+  [[nodiscard]] std::vector<ParType> toParVector() const;
 
   virtual std::vector<std::shared_ptr<const VarType>> toVarVector(
       fznparser::Model&) = 0;
 
-  void append(const ParType& par) { _vars.emplace_back(par); };
-  void append(std::shared_ptr<VarType> var) { _vars.emplace_back(var); };
-  void append(const VarType& var) {
-    _vars.emplace_back(std::make_shared<VarType>(var));
-  };
-  [[nodiscard]] std::string toString() const override = 0;
-  [[nodiscard]] size_t size() const { return _vars.size(); };
+  void append(const ParType& par);
+  void append(std::shared_ptr<VarType> var);
+  void append(const VarType& var);
+  [[nodiscard]] size_t size() const;
   std::variant<ParType, std::shared_ptr<const VarType>> operator[](
-      size_t index) const {
-    return _vars[index];
-  };
+      size_t index) const;
   [[nodiscard]] std::variant<ParType, std::shared_ptr<const VarType>> at(
-      size_t index) const {
-    return _vars.at(index);
-  };
+      size_t index) const;
 };
+template class VarArrayTemplate<bool, BoolVar>;
+template class VarArrayTemplate<int64_t, IntVar>;
+template class VarArrayTemplate<double, FloatVar>;
+template class VarArrayTemplate<IntSet, SetVar>;
 
 class BoolVarArray : public VarArrayTemplate<bool, BoolVar> {
  public:
@@ -246,7 +213,6 @@ class BoolVarArray : public VarArrayTemplate<bool, BoolVar> {
 
   bool operator==(const BoolVarArray&) const;
   bool operator!=(const BoolVarArray&) const;
-  [[nodiscard]] std::string toString() const override;
 };
 
 class IntVarArray : public VarArrayTemplate<int64_t, IntVar> {
@@ -261,7 +227,6 @@ class IntVarArray : public VarArrayTemplate<int64_t, IntVar> {
 
   bool operator==(const IntVarArray&) const;
   bool operator!=(const IntVarArray&) const;
-  [[nodiscard]] std::string toString() const override;
 };
 
 class FloatVarArray : public VarArrayTemplate<double, FloatVar> {
@@ -276,7 +241,6 @@ class FloatVarArray : public VarArrayTemplate<double, FloatVar> {
 
   bool operator==(const FloatVarArray&) const;
   bool operator!=(const FloatVarArray&) const;
-  [[nodiscard]] std::string toString() const override;
 };
 
 class SetVarArray : public VarArrayTemplate<IntSet, SetVar> {
@@ -291,7 +255,6 @@ class SetVarArray : public VarArrayTemplate<IntSet, SetVar> {
 
   bool operator==(const SetVarArray&) const;
   bool operator!=(const SetVarArray&) const;
-  [[nodiscard]] std::string toString() const override;
 };
 
 class Var : public std::variant<
@@ -310,16 +273,14 @@ class Var : public std::variant<
 
   [[nodiscard]] bool isOutput() const;
   [[nodiscard]] const std::string& identifier() const;
-  void interpretAnnotations(const std::unordered_map<std::string, Var>&);
+  void interpretAnnotations(const std::unordered_map<std::string, Var>&) const;
   [[nodiscard]] bool isArray() const;
   bool operator==(const Var&) const;
   bool operator!=(const Var&) const;
   [[nodiscard]] bool isFixed() const;
-  [[nodiscard]] std::string toString() const;
 };
 
 class VarReference : public VarBase {
- private:
   Var _source;
 
  public:
@@ -331,7 +292,6 @@ class VarReference : public VarBase {
   [[nodiscard]] bool isFixed() const override;
   [[nodiscard]] bool operator==(const VarReference&) const;
   [[nodiscard]] bool operator!=(const VarReference&) const;
-  [[nodiscard]] std::string toString() const override;
 };
 
 }  // namespace fznparser

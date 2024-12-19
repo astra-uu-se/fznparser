@@ -12,9 +12,9 @@ namespace fznparser::parser {
 using boost::get;
 using std::to_string;
 
-std::string toString(bool b) { return to_string(b); }
-std::string toString(int64_t i) { return to_string(i); }
-std::string toString(double f) { return to_string(f); }
+std::string toString(const bool b) { return to_string(b); }
+std::string toString(const int64_t i) { return to_string(i); }
+std::string toString(const double f) { return to_string(f); }
 
 template <class T>
 std::string vecToString(const std::vector<T>& vec) {  // NOLINT(*-no-recursion)
@@ -36,7 +36,7 @@ std::string toString(const FloatRange& range) {
   return to_string(range.lowerBound) + ".." + to_string(range.upperBound);
 }
 
-std::string toString(BasicParType basicParType) {
+std::string toString(const BasicParType basicParType) {
   switch (basicParType) {
     case BasicParType::BOOL:
       return "bool";
@@ -93,19 +93,26 @@ std::string toString(const BasicVarSetTypeSet& var) {
 std::string toString(const BasicVarType& type) {
   if (type.type() == typeid(BasicVarBoolType)) {
     return toString(get<BasicVarBoolType>(type));
-  } else if (type.type() == typeid(BasicVarIntTypeUnbounded)) {
+  }
+  if (type.type() == typeid(BasicVarIntTypeUnbounded)) {
     return toString(get<BasicVarIntTypeUnbounded>(type));
-  } else if (type.type() == typeid(BasicVarIntTypeBounded)) {
+  }
+  if (type.type() == typeid(BasicVarIntTypeBounded)) {
     return toString(get<BasicVarIntTypeBounded>(type));
-  } else if (type.type() == typeid(BasicVarIntTypeSet)) {
+  }
+  if (type.type() == typeid(BasicVarIntTypeSet)) {
     return toString(get<BasicVarIntTypeSet>(type));
-  } else if (type.type() == typeid(BasicVarFloatTypeBounded)) {
+  }
+  if (type.type() == typeid(BasicVarFloatTypeBounded)) {
     return toString(get<BasicVarFloatTypeBounded>(type));
-  } else if (type.type() == typeid(BasicVarFloatTypeUnbounded)) {
+  }
+  if (type.type() == typeid(BasicVarFloatTypeUnbounded)) {
     return toString(get<BasicVarFloatTypeUnbounded>(type));
-  } else if (type.type() == typeid(BasicVarSetTypeBounded)) {
+  }
+  if (type.type() == typeid(BasicVarSetTypeBounded)) {
     return toString(get<BasicVarSetTypeBounded>(type));
-  } else if (type.type() == typeid(BasicVarSetTypeSet)) {
+  }
+  if (type.type() == typeid(BasicVarSetTypeSet)) {
     return toString(get<BasicVarSetTypeSet>(type));
   }
   return "";
@@ -140,19 +147,26 @@ std::string toString(const FloatSetLiteralSet& set) {
 std::string toString(const BasicLiteralExpr& expr) {
   if (expr.type() == typeid(bool)) {
     return to_string(get<bool>(expr));
-  } else if (expr.type() == typeid(int64_t)) {
+  }
+  if (expr.type() == typeid(int64_t)) {
     return to_string(get<int64_t>(expr));
-  } else if (expr.type() == typeid(double)) {
+  }
+  if (expr.type() == typeid(double)) {
     return to_string(get<double>(expr));
-  } else if (expr.type() == typeid(SetLiteralEmpty)) {
+  }
+  if (expr.type() == typeid(SetLiteralEmpty)) {
     return toString(get<SetLiteralEmpty>(expr));
-  } else if (expr.type() == typeid(IntSetLiteralBounded)) {
+  }
+  if (expr.type() == typeid(IntSetLiteralBounded)) {
     return toString(get<IntSetLiteralBounded>(expr));
-  } else if (expr.type() == typeid(IntSetLiteralSet)) {
+  }
+  if (expr.type() == typeid(IntSetLiteralSet)) {
     return toString(get<IntSetLiteralSet>(expr));
-  } else if (expr.type() == typeid(FloatSetLiteralBounded)) {
+  }
+  if (expr.type() == typeid(FloatSetLiteralBounded)) {
     return toString(get<FloatSetLiteralBounded>(expr));
-  } else if (expr.type() == typeid(FloatSetLiteralSet)) {
+  }
+  if (expr.type() == typeid(FloatSetLiteralSet)) {
     return toString(get<FloatSetLiteralSet>(expr));
   }
   return "";
@@ -160,21 +174,29 @@ std::string toString(const BasicLiteralExpr& expr) {
 std::string toString(const BasicExpr& expr) {
   if (expr.type() == typeid(bool)) {
     return to_string(get<bool>(expr));
-  } else if (expr.type() == typeid(int64_t)) {
+  }
+  if (expr.type() == typeid(int64_t)) {
     return to_string(get<int64_t>(expr));
-  } else if (expr.type() == typeid(double)) {
+  }
+  if (expr.type() == typeid(double)) {
     return to_string(get<double>(expr));
-  } else if (expr.type() == typeid(SetLiteralEmpty)) {
+  }
+  if (expr.type() == typeid(SetLiteralEmpty)) {
     return toString(get<SetLiteralEmpty>(expr));
-  } else if (expr.type() == typeid(IntSetLiteralBounded)) {
+  }
+  if (expr.type() == typeid(IntSetLiteralBounded)) {
     return toString(get<IntSetLiteralBounded>(expr));
-  } else if (expr.type() == typeid(IntSetLiteralSet)) {
+  }
+  if (expr.type() == typeid(IntSetLiteralSet)) {
     return toString(get<IntSetLiteralSet>(expr));
-  } else if (expr.type() == typeid(FloatSetLiteralBounded)) {
+  }
+  if (expr.type() == typeid(FloatSetLiteralBounded)) {
     return toString(get<FloatSetLiteralBounded>(expr));
-  } else if (expr.type() == typeid(FloatSetLiteralSet)) {
+  }
+  if (expr.type() == typeid(FloatSetLiteralSet)) {
     return toString(get<FloatSetLiteralSet>(expr));
-  } else if (expr.type() == typeid(std::string)) {
+  }
+  if (expr.type() == typeid(std::string)) {
     return get<std::string>(expr);
   }
   return "";
@@ -185,23 +207,32 @@ std::string toString(const ArrayLiteral& array) {
 std::string toString(const Expr& expr) {
   if (expr.type() == typeid(bool)) {
     return to_string(get<bool>(expr));
-  } else if (expr.type() == typeid(int64_t)) {
+  }
+  if (expr.type() == typeid(int64_t)) {
     return to_string(get<int64_t>(expr));
-  } else if (expr.type() == typeid(double)) {
+  }
+  if (expr.type() == typeid(double)) {
     return to_string(get<double>(expr));
-  } else if (expr.type() == typeid(SetLiteralEmpty)) {
+  }
+  if (expr.type() == typeid(SetLiteralEmpty)) {
     return toString(get<SetLiteralEmpty>(expr));
-  } else if (expr.type() == typeid(IntSetLiteralBounded)) {
+  }
+  if (expr.type() == typeid(IntSetLiteralBounded)) {
     return toString(get<IntSetLiteralBounded>(expr));
-  } else if (expr.type() == typeid(IntSetLiteralSet)) {
+  }
+  if (expr.type() == typeid(IntSetLiteralSet)) {
     return toString(get<IntSetLiteralSet>(expr));
-  } else if (expr.type() == typeid(FloatSetLiteralBounded)) {
+  }
+  if (expr.type() == typeid(FloatSetLiteralBounded)) {
     return toString(get<FloatSetLiteralBounded>(expr));
-  } else if (expr.type() == typeid(FloatSetLiteralSet)) {
+  }
+  if (expr.type() == typeid(FloatSetLiteralSet)) {
     return toString(get<FloatSetLiteralSet>(expr));
-  } else if (expr.type() == typeid(std::string)) {
+  }
+  if (expr.type() == typeid(std::string)) {
     return get<std::string>(expr);
-  } else if (expr.type() == typeid(ArrayLiteral)) {
+  }
+  if (expr.type() == typeid(ArrayLiteral)) {
     return toString(get<ArrayLiteral>(expr));
   }
   return "";
@@ -212,21 +243,29 @@ std::string toString(const ParArrayLiteral& array) {
 std::string toString(const ParExpr& expr) {
   if (expr.type() == typeid(bool)) {
     return to_string(get<bool>(expr));
-  } else if (expr.type() == typeid(int64_t)) {
+  }
+  if (expr.type() == typeid(int64_t)) {
     return to_string(get<int64_t>(expr));
-  } else if (expr.type() == typeid(double)) {
+  }
+  if (expr.type() == typeid(double)) {
     return to_string(get<double>(expr));
-  } else if (expr.type() == typeid(SetLiteralEmpty)) {
+  }
+  if (expr.type() == typeid(SetLiteralEmpty)) {
     return toString(get<SetLiteralEmpty>(expr));
-  } else if (expr.type() == typeid(IntSetLiteralBounded)) {
+  }
+  if (expr.type() == typeid(IntSetLiteralBounded)) {
     return toString(get<IntSetLiteralBounded>(expr));
-  } else if (expr.type() == typeid(IntSetLiteralSet)) {
+  }
+  if (expr.type() == typeid(IntSetLiteralSet)) {
     return toString(get<IntSetLiteralSet>(expr));
-  } else if (expr.type() == typeid(FloatSetLiteralBounded)) {
+  }
+  if (expr.type() == typeid(FloatSetLiteralBounded)) {
     return toString(get<FloatSetLiteralBounded>(expr));
-  } else if (expr.type() == typeid(FloatSetLiteralSet)) {
+  }
+  if (expr.type() == typeid(FloatSetLiteralSet)) {
     return toString(get<FloatSetLiteralSet>(expr));
-  } else if (expr.type() == typeid(ParArrayLiteral)) {
+  }
+  if (expr.type() == typeid(ParArrayLiteral)) {
     return toString(get<ParArrayLiteral>(expr));
   }
   return "";
@@ -235,23 +274,32 @@ std::string toString(const ParDeclItem&) { return ""; }
 std::string toString(const BasicAnnExpr& expr) {  // NOLINT(*-no-recursion)
   if (expr.type() == typeid(bool)) {
     return to_string(get<bool>(expr));
-  } else if (expr.type() == typeid(int64_t)) {
+  }
+  if (expr.type() == typeid(int64_t)) {
     return to_string(get<int64_t>(expr));
-  } else if (expr.type() == typeid(double)) {
+  }
+  if (expr.type() == typeid(double)) {
     return to_string(get<double>(expr));
-  } else if (expr.type() == typeid(SetLiteralEmpty)) {
+  }
+  if (expr.type() == typeid(SetLiteralEmpty)) {
     return toString(get<SetLiteralEmpty>(expr));
-  } else if (expr.type() == typeid(IntSetLiteralBounded)) {
+  }
+  if (expr.type() == typeid(IntSetLiteralBounded)) {
     return toString(get<IntSetLiteralBounded>(expr));
-  } else if (expr.type() == typeid(IntSetLiteralSet)) {
+  }
+  if (expr.type() == typeid(IntSetLiteralSet)) {
     return toString(get<IntSetLiteralSet>(expr));
-  } else if (expr.type() == typeid(FloatSetLiteralBounded)) {
+  }
+  if (expr.type() == typeid(FloatSetLiteralBounded)) {
     return toString(get<FloatSetLiteralBounded>(expr));
-  } else if (expr.type() == typeid(FloatSetLiteralSet)) {
+  }
+  if (expr.type() == typeid(FloatSetLiteralSet)) {
     return toString(get<FloatSetLiteralSet>(expr));
-  } else if (expr.type() == typeid(std::string)) {
+  }
+  if (expr.type() == typeid(std::string)) {
     return get<std::string>(expr);
-  } else if (expr.type() == typeid(x3::forward_ast<Annotation>)) {
+  }
+  if (expr.type() == typeid(x3::forward_ast<Annotation>)) {
     return toString(get<x3::forward_ast<Annotation>>(expr).get());
   }
   return "";

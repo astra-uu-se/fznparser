@@ -7,12 +7,9 @@
 #include <fstream>
 #include <regex>
 #include <string>
-#include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
 #include "./expectEq.hpp"
-#include "fznparser/parser/grammar.hpp"
 #include "fznparser/parser/grammarDef.hpp"
 
 namespace fznparser::testing {
@@ -152,7 +149,7 @@ TEST(stubs, constraints) {
                              std::vector<Expr>{std::string{"coeffs"},
                                                ArrayLiteral{std::string{"v1"},
                                                             std::string{"v2"}},
-                                               int64_t(2)},
+                                               int64_t{2}},
                              Annotations{}},
               ConstraintItem{std::string{"set_in"},
                              std::vector<Expr>{

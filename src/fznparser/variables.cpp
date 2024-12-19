@@ -1,10 +1,10 @@
 #include "fznparser/variables.hpp"
 
+#include <algorithm>
 #include <functional>
 #include <limits>
-#include <stdexcept>
-#include <utility>
 
+#include "fznparser/annotation.hpp"
 #include "fznparser/except.hpp"
 #include "fznparser/model.hpp"
 
@@ -63,7 +63,7 @@ BoolVar::BoolVar(const std::string& identifier,
                  std::vector<Annotation>&& annotations)
     : VarBase(identifier, std::move(annotations)), _domain(2) {}
 
-BoolVar::BoolVar(bool b, const std::string& identifier,
+BoolVar::BoolVar(const bool b, const std::string& identifier,
                  std::vector<Annotation>&& annotations)
     : VarBase(identifier, std::move(annotations)),
       _domain(static_cast<signed char>(b)) {}
@@ -93,32 +93,18 @@ bool BoolVar::operator!=(const BoolVar& other) const {
 
 bool BoolVar::isFixed() const { return _domain != 2; }
 
-std::string BoolVar::toString() const {
-  std::string s = "var bool: " + identifier();
-  if (_domain == 1) {
-    s += " = true";
-  } else if (_domain == 0) {
-    s += " = false";
-  }
-  if (!annotations().empty()) {
-    for (const auto& annotation : annotations()) {
-      s += " :: " + annotation.toString();
-    }
-  }
-  return s;
-}
-
 IntVar::IntVar(const std::string& identifier,
                std::vector<Annotation>&& annotations)
     : VarBase(identifier, std::move(annotations)),
       _domain(IntSet(std::numeric_limits<int64_t>::min(),
                      std::numeric_limits<int64_t>::max())) {}
 
-IntVar::IntVar(int64_t val, const std::string& identifier,
+IntVar::IntVar(const int64_t val, const std::string& identifier,
                std::vector<Annotation>&& annotations)
     : VarBase(identifier, std::move(annotations)), _domain(val) {}
 
-IntVar::IntVar(int64_t lb, int64_t ub, const std::string& identifier,
+IntVar::IntVar(const int64_t lb, const int64_t ub,
+               const std::string& identifier,
                std::vector<Annotation>&& annotations)
     : VarBase(identifier, std::move(annotations)), _domain(lb, ub) {}
 
@@ -154,27 +140,18 @@ bool IntVar::operator!=(const IntVar& other) const {
 
 bool IntVar::isFixed() const { return _domain.size() == 1; }
 
-std::string IntVar::toString() const {
-  std::string s = "var " + _domain.toString() + ": " + identifier();
-  if (!annotations().empty()) {
-    for (const auto& annotation : annotations()) {
-      s += " :: " + annotation.toString();
-    }
-  }
-  return s;
-}
-
 FloatVar::FloatVar(const std::string& identifier,
                    std::vector<Annotation>&& annotations)
     : VarBase(identifier, std::move(annotations)),
       _domain(FloatSet(std::numeric_limits<double>::min(),
                        std::numeric_limits<double>::max())) {}
 
-FloatVar::FloatVar(double val, const std::string& identifier,
+FloatVar::FloatVar(const double val, const std::string& identifier,
                    std::vector<Annotation>&& annotations)
     : VarBase(identifier, std::move(annotations)), _domain(val) {}
 
-FloatVar::FloatVar(double lb, double ub, const std::string& identifier,
+FloatVar::FloatVar(const double lb, const double ub,
+                   const std::string& identifier,
                    std::vector<Annotation>&& annotations)
     : VarBase(identifier, std::move(annotations)), _domain(lb, ub) {}
 
@@ -212,17 +189,8 @@ bool FloatVar::isFixed() const {
   return _domain.lowerBound() == _domain.upperBound();
 }
 
-std::string FloatVar::toString() const {
-  std::string s = "var " + _domain.toString() + ": " + identifier();
-  if (!annotations().empty()) {
-    for (const auto& annotation : annotations()) {
-      s += " :: " + annotation.toString();
-    }
-  }
-  return s;
-}
-
-SetVar::SetVar(int64_t lb, int64_t ub, const std::string& identifier,
+SetVar::SetVar(const int64_t lb, const int64_t ub,
+               const std::string& identifier,
                std::vector<Annotation>&& annotations)
     : VarBase(identifier, std::move(annotations)), _domain(lb, ub) {}
 
@@ -263,16 +231,6 @@ bool SetVar::operator!=(const SetVar& other) const {
 
 bool SetVar::isFixed() const { return false; }
 
-std::string SetVar::toString() const {
-  std::string s = "var " + _domain.toString() + ": " + identifier();
-  if (!annotations().empty()) {
-    for (const auto& annotation : annotations()) {
-      s += " :: " + annotation.toString();
-    }
-  }
-  return s;
-}
-
 VarArrayBase::VarArrayBase(const std::string& identifier,
                            std::vector<Annotation>&& annotations)
     : VarBase(identifier, std::move(annotations)) {}
@@ -286,8 +244,7 @@ void VarArrayBase::interpretAnnotations(
             "output_array annotation must define exactly one "
             "variable");
       }
-      const auto& expressions = annotation.expressions().front();
-      for (const auto& element : expressions) {
+      for (const auto& element : annotation.expressions().front()) {
         if (!std::holds_alternative<IntSet>(element)) {
           throw FznException(
               "output_array annotation argument must be an array of int sets");
@@ -306,6 +263,71 @@ void VarArrayBase::interpretAnnotations(
 
 const std::vector<int64_t>& VarArrayBase::outputIndexSetSizes() const {
   return _outputIndexSetSizes;
+}
+
+template <typename ParType, class VarType>
+VarArrayTemplate<ParType, VarType>::VarArrayTemplate(
+    const std::string& identifier, std::vector<Annotation>&& annotations)
+    : VarArrayBase(identifier, std::move(annotations)) {}
+
+template <typename ParType, class VarType>
+bool VarArrayTemplate<ParType, VarType>::isParArray() const {
+  return std::all_of(_vars.begin(), _vars.end(), [&](const auto& var) {
+    return std::holds_alternative<ParType>(var);
+  });
+}
+
+template <typename ParType, class VarType>
+bool VarArrayTemplate<ParType, VarType>::isFixed() const {
+  return std::all_of(_vars.begin(), _vars.end(), [&](const auto& var) {
+    return std::holds_alternative<ParType>(var) ||
+           std::get<std::shared_ptr<const VarType>>(var)->isFixed();
+  });
+}
+
+template <typename ParType, class VarType>
+std::vector<ParType> VarArrayTemplate<ParType, VarType>::toParVector() const {
+  std::vector<ParType> parVector;
+  parVector.reserve(_vars.size());
+  for (const auto& var : _vars) {
+    if (std::holds_alternative<ParType>(var)) {
+      parVector.emplace_back(std::get<ParType>(var));
+    } else if (std::get<std::shared_ptr<const VarType>>(var)->isFixed()) {
+      parVector.emplace_back(
+          std::get<std::shared_ptr<const VarType>>(var)->lowerBound());
+    } else {
+      throw FznException("Cannot convert to parameter array");
+    }
+  }
+  return parVector;
+}
+
+template <typename ParType, class VarType>
+void VarArrayTemplate<ParType, VarType>::append(const ParType& par) {
+  _vars.emplace_back(par);
+}
+template <typename ParType, class VarType>
+void VarArrayTemplate<ParType, VarType>::append(std::shared_ptr<VarType> var) {
+  _vars.emplace_back(var);
+}
+template <typename ParType, class VarType>
+void VarArrayTemplate<ParType, VarType>::append(const VarType& var) {
+  _vars.emplace_back(std::make_shared<VarType>(var));
+}
+template <typename ParType, class VarType>
+size_t VarArrayTemplate<ParType, VarType>::size() const {
+  return _vars.size();
+}
+
+template <typename ParType, class VarType>
+std::variant<ParType, std::shared_ptr<const VarType>>
+VarArrayTemplate<ParType, VarType>::operator[](size_t index) const {
+  return _vars[index];
+}
+template <typename ParType, class VarType>
+std::variant<ParType, std::shared_ptr<const VarType>>
+VarArrayTemplate<ParType, VarType>::at(size_t index) const {
+  return _vars.at(index);
 }
 
 BoolVarArray::BoolVarArray(const std::string& identifier,
@@ -359,31 +381,6 @@ bool BoolVarArray::operator!=(const BoolVarArray& other) const {
   return !operator==(other);
 }
 
-std::string BoolVarArray::toString() const {
-  std::string s =
-      identifier().empty()
-          ? "["
-          : ("array[1.." + std::to_string(size()) + "] of" +
-             (isParArray() ? "" : " var") + " bool: " + identifier() + " = [");
-  for (size_t i = 0; i < size(); ++i) {
-    if (i != 0) {
-      s += ", ";
-    }
-    if (std::holds_alternative<bool>(at(i))) {
-      s += get<bool>(at(i)) ? "true" : "false";
-    } else {
-      s += get<shared_ptr<const BoolVar>>(at(i))->identifier();
-    }
-  }
-  s += "]";
-  if (!annotations().empty()) {
-    for (const auto& annotation : annotations()) {
-      s += " :: " + annotation.toString();
-    }
-  }
-  return s;
-}
-
 IntVarArray::IntVarArray(const std::string& identifier,
                          std::vector<Annotation>&& annotations)
     : VarArrayTemplate<int64_t, IntVar>(identifier, std::move(annotations)) {}
@@ -433,31 +430,6 @@ bool IntVarArray::operator==(const IntVarArray& other) const {
 
 bool IntVarArray::operator!=(const IntVarArray& other) const {
   return !operator==(other);
-}
-
-std::string IntVarArray::toString() const {
-  std::string s =
-      identifier().empty()
-          ? "["
-          : ("array[1.." + std::to_string(size()) + "] of" +
-             (isParArray() ? "" : " var") + " int: " + identifier() + " = [");
-  for (size_t i = 0; i < size(); ++i) {
-    if (i != 0) {
-      s += ", ";
-    }
-    if (std::holds_alternative<int64_t>(at(i))) {
-      s += std::to_string(get<int64_t>(at(i)));
-    } else {
-      s += get<shared_ptr<const IntVar>>(at(i))->identifier();
-    }
-  }
-  s += "]";
-  if (!annotations().empty()) {
-    for (const auto& annotation : annotations()) {
-      s += " :: " + annotation.toString();
-    }
-  }
-  return s;
 }
 
 FloatVarArray::FloatVarArray(const std::string& identifier,
@@ -511,31 +483,6 @@ bool FloatVarArray::operator!=(const FloatVarArray& other) const {
   return !operator==(other);
 }
 
-std::string FloatVarArray::toString() const {
-  std::string s =
-      identifier().empty()
-          ? "["
-          : ("array[1.." + std::to_string(size()) + "] of" +
-             (isParArray() ? "" : " var") + " float: " + identifier() + " = [");
-  for (size_t i = 0; i < size(); ++i) {
-    if (i != 0) {
-      s += ", ";
-    }
-    if (std::holds_alternative<double>(at(i))) {
-      s += std::to_string(get<double>(at(i)));
-    } else {
-      s += get<shared_ptr<const FloatVar>>(at(i))->identifier();
-    }
-  }
-  s += "]";
-  if (!annotations().empty()) {
-    for (const auto& annotation : annotations()) {
-      s += " :: " + annotation.toString();
-    }
-  }
-  return s;
-}
-
 SetVarArray::SetVarArray(const std::string& identifier,
                          std::vector<Annotation>&& annotations)
     : VarArrayTemplate<IntSet, SetVar>(identifier, std::move(annotations)) {}
@@ -587,49 +534,32 @@ bool SetVarArray::operator!=(const SetVarArray& other) const {
   return !operator==(other);
 }
 
-std::string SetVarArray::toString() const {
-  std::string s = identifier().empty()
-                      ? "["
-                      : ("array[1.." + std::to_string(size()) + "] of" +
-                         (isParArray() ? " int set" : " var set") + ": " +
-                         identifier() + " = [");
-  for (size_t i = 0; i < size(); ++i) {
-    if (i != 0) {
-      s += ", ";
-    }
-    if (std::holds_alternative<IntSet>(_vars.at(i))) {
-      s += get<IntSet>(_vars.at(i)).toString();
-    } else {
-      s += get<shared_ptr<const SetVar>>(_vars.at(i))->identifier();
-    }
-  }
-  s += "]";
-  if (!annotations().empty()) {
-    for (const auto& annotation : annotations()) {
-      s += " :: " + annotation.toString();
-    }
-  }
-  return s;
-}
-
 const std::string& Var::identifier() const {
   if (std::holds_alternative<std::shared_ptr<BoolVar>>(*this)) {
     return get<std::shared_ptr<BoolVar>>(*this)->identifier();
-  } else if (std::holds_alternative<std::shared_ptr<IntVar>>(*this)) {
+  }
+  if (std::holds_alternative<std::shared_ptr<IntVar>>(*this)) {
     return get<std::shared_ptr<IntVar>>(*this)->identifier();
-  } else if (std::holds_alternative<std::shared_ptr<FloatVar>>(*this)) {
+  }
+  if (std::holds_alternative<std::shared_ptr<FloatVar>>(*this)) {
     return get<std::shared_ptr<FloatVar>>(*this)->identifier();
-  } else if (std::holds_alternative<std::shared_ptr<SetVar>>(*this)) {
+  }
+  if (std::holds_alternative<std::shared_ptr<SetVar>>(*this)) {
     return get<std::shared_ptr<SetVar>>(*this)->identifier();
-  } else if (std::holds_alternative<std::shared_ptr<BoolVarArray>>(*this)) {
+  }
+  if (std::holds_alternative<std::shared_ptr<BoolVarArray>>(*this)) {
     return get<std::shared_ptr<BoolVarArray>>(*this)->identifier();
-  } else if (std::holds_alternative<std::shared_ptr<IntVarArray>>(*this)) {
+  }
+  if (std::holds_alternative<std::shared_ptr<IntVarArray>>(*this)) {
     return get<std::shared_ptr<IntVarArray>>(*this)->identifier();
-  } else if (std::holds_alternative<std::shared_ptr<FloatVarArray>>(*this)) {
+  }
+  if (std::holds_alternative<std::shared_ptr<FloatVarArray>>(*this)) {
     return get<std::shared_ptr<FloatVarArray>>(*this)->identifier();
-  } else if (std::holds_alternative<std::shared_ptr<SetVarArray>>(*this)) {
+  }
+  if (std::holds_alternative<std::shared_ptr<SetVarArray>>(*this)) {
     return get<std::shared_ptr<SetVarArray>>(*this)->identifier();
-  } else if (std::holds_alternative<std::shared_ptr<VarReference>>(*this)) {
+  }
+  if (std::holds_alternative<std::shared_ptr<VarReference>>(*this)) {
     return get<std::shared_ptr<VarReference>>(*this)->identifier();
   }
   throw FznException("Unknown variable type");
@@ -647,36 +577,44 @@ bool Var::operator==(const Var& other) const {
       std::holds_alternative<std::shared_ptr<BoolVar>>(other)) {
     return get<std::shared_ptr<BoolVar>>(*this)->operator==(
         *get<std::shared_ptr<BoolVar>>(other));
-  } else if (std::holds_alternative<std::shared_ptr<IntVar>>(*this) &&
-             std::holds_alternative<std::shared_ptr<IntVar>>(other)) {
+  }
+  if (std::holds_alternative<std::shared_ptr<IntVar>>(*this) &&
+      std::holds_alternative<std::shared_ptr<IntVar>>(other)) {
     return get<std::shared_ptr<IntVar>>(*this)->operator==(
         *get<std::shared_ptr<IntVar>>(other));
-  } else if (std::holds_alternative<std::shared_ptr<FloatVar>>(*this) &&
-             std::holds_alternative<std::shared_ptr<FloatVar>>(other)) {
+  }
+  if (std::holds_alternative<std::shared_ptr<FloatVar>>(*this) &&
+      std::holds_alternative<std::shared_ptr<FloatVar>>(other)) {
     return get<std::shared_ptr<FloatVar>>(*this)->operator==(
         *get<std::shared_ptr<FloatVar>>(other));
-  } else if (std::holds_alternative<std::shared_ptr<SetVar>>(*this) &&
-             std::holds_alternative<std::shared_ptr<SetVar>>(other)) {
+  }
+  if (std::holds_alternative<std::shared_ptr<SetVar>>(*this) &&
+      std::holds_alternative<std::shared_ptr<SetVar>>(other)) {
     return get<std::shared_ptr<SetVar>>(*this)->operator==(
         *get<std::shared_ptr<SetVar>>(other));
-  } else if (std::holds_alternative<std::shared_ptr<BoolVarArray>>(*this) &&
-             std::holds_alternative<std::shared_ptr<BoolVarArray>>(other)) {
+  }
+  if (std::holds_alternative<std::shared_ptr<BoolVarArray>>(*this) &&
+      std::holds_alternative<std::shared_ptr<BoolVarArray>>(other)) {
     return get<std::shared_ptr<BoolVarArray>>(*this)->operator==(
         *get<std::shared_ptr<BoolVarArray>>(other));
-  } else if (std::holds_alternative<std::shared_ptr<IntVarArray>>(*this) &&
-             std::holds_alternative<std::shared_ptr<IntVarArray>>(other)) {
+  }
+  if (std::holds_alternative<std::shared_ptr<IntVarArray>>(*this) &&
+      std::holds_alternative<std::shared_ptr<IntVarArray>>(other)) {
     return get<std::shared_ptr<IntVarArray>>(*this)->operator==(
         *get<std::shared_ptr<IntVarArray>>(other));
-  } else if (std::holds_alternative<std::shared_ptr<FloatVarArray>>(*this) &&
-             std::holds_alternative<std::shared_ptr<FloatVarArray>>(other)) {
+  }
+  if (std::holds_alternative<std::shared_ptr<FloatVarArray>>(*this) &&
+      std::holds_alternative<std::shared_ptr<FloatVarArray>>(other)) {
     return get<std::shared_ptr<FloatVarArray>>(*this)->operator==(
         *get<std::shared_ptr<FloatVarArray>>(other));
-  } else if (std::holds_alternative<std::shared_ptr<SetVarArray>>(*this) &&
-             std::holds_alternative<std::shared_ptr<SetVarArray>>(other)) {
+  }
+  if (std::holds_alternative<std::shared_ptr<SetVarArray>>(*this) &&
+      std::holds_alternative<std::shared_ptr<SetVarArray>>(other)) {
     return get<std::shared_ptr<SetVarArray>>(*this)->operator==(
         *get<std::shared_ptr<SetVarArray>>(other));
-  } else if (std::holds_alternative<std::shared_ptr<VarReference>>(*this) &&
-             std::holds_alternative<std::shared_ptr<VarReference>>(other)) {
+  }
+  if (std::holds_alternative<std::shared_ptr<VarReference>>(*this) &&
+      std::holds_alternative<std::shared_ptr<VarReference>>(other)) {
     return get<std::shared_ptr<VarReference>>(*this)->operator==(
         *get<std::shared_ptr<VarReference>>(other));
   }
@@ -685,31 +623,8 @@ bool Var::operator==(const Var& other) const {
 
 bool Var::operator!=(const Var& other) const { return !operator==(other); }
 
-std::string Var::toString() const {
-  if (std::holds_alternative<std::shared_ptr<BoolVar>>(*this)) {
-    return get<std::shared_ptr<BoolVar>>(*this)->toString();
-  } else if (std::holds_alternative<std::shared_ptr<IntVar>>(*this)) {
-    return get<std::shared_ptr<IntVar>>(*this)->toString();
-  } else if (std::holds_alternative<std::shared_ptr<FloatVar>>(*this)) {
-    return get<std::shared_ptr<FloatVar>>(*this)->toString();
-  } else if (std::holds_alternative<std::shared_ptr<SetVar>>(*this)) {
-    return get<std::shared_ptr<SetVar>>(*this)->toString();
-  } else if (std::holds_alternative<std::shared_ptr<BoolVarArray>>(*this)) {
-    return get<std::shared_ptr<BoolVarArray>>(*this)->toString();
-  } else if (std::holds_alternative<std::shared_ptr<IntVarArray>>(*this)) {
-    return get<std::shared_ptr<IntVarArray>>(*this)->toString();
-  } else if (std::holds_alternative<std::shared_ptr<FloatVarArray>>(*this)) {
-    return get<std::shared_ptr<FloatVarArray>>(*this)->toString();
-  } else if (std::holds_alternative<std::shared_ptr<SetVarArray>>(*this)) {
-    return get<std::shared_ptr<SetVarArray>>(*this)->toString();
-  } else if (std::holds_alternative<std::shared_ptr<VarReference>>(*this)) {
-    return get<std::shared_ptr<VarReference>>(*this)->toString();
-  }
-  return "";
-}
-
 void Var::interpretAnnotations(
-    const std::unordered_map<std::string, Var>& varMapping) {
+    const std::unordered_map<std::string, Var>& varMapping) const {
   if (std::holds_alternative<std::shared_ptr<BoolVar>>(*this)) {
     get<std::shared_ptr<BoolVar>>(*this)->interpretAnnotations(varMapping);
   } else if (std::holds_alternative<std::shared_ptr<IntVar>>(*this)) {
@@ -735,21 +650,29 @@ void Var::interpretAnnotations(
 bool Var::isFixed() const {
   if (std::holds_alternative<std::shared_ptr<BoolVar>>(*this)) {
     return get<std::shared_ptr<BoolVar>>(*this)->isFixed();
-  } else if (std::holds_alternative<std::shared_ptr<IntVar>>(*this)) {
+  }
+  if (std::holds_alternative<std::shared_ptr<IntVar>>(*this)) {
     return get<std::shared_ptr<IntVar>>(*this)->isFixed();
-  } else if (std::holds_alternative<std::shared_ptr<FloatVar>>(*this)) {
+  }
+  if (std::holds_alternative<std::shared_ptr<FloatVar>>(*this)) {
     return get<std::shared_ptr<FloatVar>>(*this)->isFixed();
-  } else if (std::holds_alternative<std::shared_ptr<SetVar>>(*this)) {
+  }
+  if (std::holds_alternative<std::shared_ptr<SetVar>>(*this)) {
     return get<std::shared_ptr<SetVar>>(*this)->isFixed();
-  } else if (std::holds_alternative<std::shared_ptr<BoolVarArray>>(*this)) {
+  }
+  if (std::holds_alternative<std::shared_ptr<BoolVarArray>>(*this)) {
     return get<std::shared_ptr<BoolVarArray>>(*this)->isFixed();
-  } else if (std::holds_alternative<std::shared_ptr<IntVarArray>>(*this)) {
+  }
+  if (std::holds_alternative<std::shared_ptr<IntVarArray>>(*this)) {
     return get<std::shared_ptr<IntVarArray>>(*this)->isFixed();
-  } else if (std::holds_alternative<std::shared_ptr<FloatVarArray>>(*this)) {
+  }
+  if (std::holds_alternative<std::shared_ptr<FloatVarArray>>(*this)) {
     return get<std::shared_ptr<FloatVarArray>>(*this)->isFixed();
-  } else if (std::holds_alternative<std::shared_ptr<SetVarArray>>(*this)) {
+  }
+  if (std::holds_alternative<std::shared_ptr<SetVarArray>>(*this)) {
     return get<std::shared_ptr<SetVarArray>>(*this)->isFixed();
-  } else if (std::holds_alternative<std::shared_ptr<VarReference>>(*this)) {
+  }
+  if (std::holds_alternative<std::shared_ptr<VarReference>>(*this)) {
     return get<std::shared_ptr<VarReference>>(*this)->isFixed();
   }
   return false;
@@ -758,21 +681,29 @@ bool Var::isFixed() const {
 bool Var::isOutput() const {
   if (std::holds_alternative<std::shared_ptr<BoolVar>>(*this)) {
     return get<std::shared_ptr<BoolVar>>(*this)->isOutput();
-  } else if (std::holds_alternative<std::shared_ptr<IntVar>>(*this)) {
+  }
+  if (std::holds_alternative<std::shared_ptr<IntVar>>(*this)) {
     return get<std::shared_ptr<IntVar>>(*this)->isOutput();
-  } else if (std::holds_alternative<std::shared_ptr<FloatVar>>(*this)) {
+  }
+  if (std::holds_alternative<std::shared_ptr<FloatVar>>(*this)) {
     return get<std::shared_ptr<FloatVar>>(*this)->isOutput();
-  } else if (std::holds_alternative<std::shared_ptr<SetVar>>(*this)) {
+  }
+  if (std::holds_alternative<std::shared_ptr<SetVar>>(*this)) {
     return get<std::shared_ptr<SetVar>>(*this)->isOutput();
-  } else if (std::holds_alternative<std::shared_ptr<BoolVarArray>>(*this)) {
+  }
+  if (std::holds_alternative<std::shared_ptr<BoolVarArray>>(*this)) {
     return get<std::shared_ptr<BoolVarArray>>(*this)->isOutput();
-  } else if (std::holds_alternative<std::shared_ptr<IntVarArray>>(*this)) {
+  }
+  if (std::holds_alternative<std::shared_ptr<IntVarArray>>(*this)) {
     return get<std::shared_ptr<IntVarArray>>(*this)->isOutput();
-  } else if (std::holds_alternative<std::shared_ptr<FloatVarArray>>(*this)) {
+  }
+  if (std::holds_alternative<std::shared_ptr<FloatVarArray>>(*this)) {
     return get<std::shared_ptr<FloatVarArray>>(*this)->isOutput();
-  } else if (std::holds_alternative<std::shared_ptr<SetVarArray>>(*this)) {
+  }
+  if (std::holds_alternative<std::shared_ptr<SetVarArray>>(*this)) {
     return get<std::shared_ptr<SetVarArray>>(*this)->isOutput();
-  } else if (std::holds_alternative<std::shared_ptr<VarReference>>(*this)) {
+  }
+  if (std::holds_alternative<std::shared_ptr<VarReference>>(*this)) {
     return get<std::shared_ptr<VarReference>>(*this)->isOutput();
   }
   return false;
@@ -801,15 +732,6 @@ bool VarReference::operator==(const fznparser::VarReference& other) const {
 
 bool VarReference::operator!=(const fznparser::VarReference& other) const {
   return !operator==(other);
-}
-
-std::string VarReference::toString() const {
-  std::string s = "var: " + identifier() + " = " + _source.identifier();
-  for (const auto& annotation : annotations()) {
-    s += " :: " + annotation.toString();
-  }
-  s += ";";
-  return s;
 }
 
 }  // namespace fznparser

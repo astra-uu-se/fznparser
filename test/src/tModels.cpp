@@ -2,16 +2,11 @@
 
 #include <algorithm>
 #include <boost/spirit/home/x3.hpp>
-#include <boost/spirit/include/support_istream_iterator.hpp>
-#include <filesystem>
 #include <fstream>
-#include <regex>
 #include <string>
-#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
-#include "fznparser/parser/grammar.hpp"
 #include "fznparser/parser/grammarDef.hpp"
 #include "fznparser/transformer/modelTransformer.hpp"
 

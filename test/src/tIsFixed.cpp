@@ -10,12 +10,12 @@ TEST(BoolVarArrayTest, isFixed) {
   auto array = BoolVarArray("array");
   array.append(false);
 
-  auto par = std::make_shared<BoolVar>(false, "par");
+  const auto par = std::make_shared<BoolVar>(false, "par");
   array.append(par);
 
   EXPECT_TRUE(array.isFixed());
 
-  auto var = std::make_shared<BoolVar>("var");
+  const auto var = std::make_shared<BoolVar>("var");
   array.append(var);
 
   EXPECT_FALSE(array.isFixed());
@@ -25,12 +25,12 @@ TEST(IntVarArrayTest, isFixed) {
   auto array = IntVarArray("array");
   array.append(0);
 
-  auto par = std::make_shared<IntVar>(1, "par");
+  const auto par = std::make_shared<IntVar>(1, "par");
   array.append(par);
 
   EXPECT_TRUE(array.isFixed());
 
-  auto var = std::make_shared<IntVar>(2, 3, "var");
+  const auto var = std::make_shared<IntVar>(2, 3, "var");
   array.append(var);
 
   EXPECT_FALSE(array.isFixed());

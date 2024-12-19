@@ -4,10 +4,8 @@
 #include <boost/spirit/home/x3.hpp>
 #include <boost/spirit/home/x3/support/ast/variant.hpp>
 #include <string>
-#include <vector>
 
 #include "fznparser/parser/grammarAst.hpp"
-#include "fznparser/parser/toString.hpp"
 
 namespace fznparser::testing {
 
@@ -120,8 +118,7 @@ void expect_eq(const ParExpr &, const ParExpr &, const std::string &);
 
 void expect_eq(const ParDeclItem &, const ParDeclItem &, const std::string &);
 
-void expect_eq(const parser::Annotation &, const parser::Annotation &,
-               const std::string &);
+void expect_eq(const Annotation &, const Annotation &, const std::string &);
 
 void expect_eq(const BasicAnnExpr &, const BasicAnnExpr &, const std::string &);
 
@@ -151,7 +148,6 @@ void expect_eq(const SolveItem &, const SolveItem &, const std::string &);
 void expect_eq(const PredicateItem &, const PredicateItem &,
                const std::string &);
 
-void expect_eq(const parser::Model &, const parser::Model &,
-               const std::string &);
+void expect_eq(const Model &, const Model &, const std::string &);
 
 }  // namespace fznparser::testing

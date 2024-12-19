@@ -1,7 +1,6 @@
 #pragma once
 
 #include <optional>
-#include <string>
 #include <vector>
 
 #include "fznparser/annotation.hpp"
@@ -35,7 +34,6 @@ class SolveType {
 
   bool operator==(const SolveType&) const;
   bool operator!=(const SolveType&) const;
-  [[nodiscard]] std::string toString() const;
 };
 
 }  // namespace fznparser

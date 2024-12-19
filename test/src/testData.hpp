@@ -4,10 +4,8 @@
 
 #include <string>
 #include <utility>
-#include <variant>
 #include <vector>
 
-#include "fznparser/parser/grammar.hpp"
 #include "fznparser/parser/grammarDef.hpp"
 
 namespace fznparser::testing {
@@ -20,7 +18,7 @@ vector<std::string> padding();
 
 bool isalnum_us_minus(char c);
 
-std::string flatten(const vector<std::string> &str_v, const std::string &p);
+std::string flatten(const vector<std::string> &, const std::string &);
 
 bool contains(const std::string &str, const std::string &needle);
 

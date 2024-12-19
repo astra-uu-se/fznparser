@@ -1,17 +1,18 @@
 #pragma once
 
-#include <memory>
 #include <optional>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
-#include "fznparser/annotation.hpp"
-#include "fznparser/arguments.hpp"
 #include "fznparser/variables.hpp"
 
 namespace fznparser {
 
-class Model;  // forward declaration
+class Annotation;
+class Arg;
+class AnnotationExpression;
+class Model;
 
 class Constraint {
   std::string _identifier;
@@ -39,7 +40,6 @@ class Constraint {
 
   bool operator==(const Constraint&) const;
   bool operator!=(const Constraint&) const;
-  [[nodiscard]] std::string toString() const;
 };
 
 }  // namespace fznparser

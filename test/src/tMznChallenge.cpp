@@ -11,7 +11,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include "fznparser/parser/grammar.hpp"
+#include "fznparser/except.hpp"
 #include "fznparser/parser/grammarDef.hpp"
 #include "fznparser/transformer/modelTransformer.hpp"
 
@@ -28,14 +28,16 @@ struct FznData {
 };
 
 std::string ltrim(std::string s) {
-  s.erase(s.begin(), std::find_if(s.begin(), s.end(),
-                                  [](unsigned char ch) { return ch != '/'; }));
+  s.erase(s.begin(),
+          std::ranges::find_if(s.begin(), s.end(), [](const unsigned char ch) {
+            return ch != '/';
+          }));
   return s;
 }
 
-void logModelName(const std::string& modelPath, bool skipping, size_t index,
-                  size_t total) {
-  size_t padding = std::to_string(total).size();
+void logModelName(const std::string& modelPath, const bool skipping,
+                  const size_t index, const size_t total) {
+  const int padding = static_cast<int>(std::to_string(total).size());
   std::cout << (skipping ? "\033[0;33m[ SKIPPING" : "\033[0;32m[  PARSING")
             << " ] (" << std::setw(padding) << std::to_string(index + 1) << '/'
             << std::to_string(total) << ")\033[0;0m "
@@ -129,15 +131,18 @@ FznData get_fzn_data(const std::string& path) {
           ++data.numVars;
           skipLine(i_file, eof);
           break;
-        } else if (word == "constraint") {
+        }
+        if (word == "constraint") {
           ++data.numConstraints;
           skipLine(i_file, eof);
           break;
-        } else if (word == "solve") {
-          data.isSatisfactionProblem = (lastWord(i_file, eof) == "satisfy;");
+        }
+        if (word == "solve") {
+          data.isSatisfactionProblem = lastWord(i_file, eof) == "satisfy;";
           skipLine(i_file, eof);
           break;
-        } else if (word != "array") {
+        }
+        if (word != "array") {
           skipLine(i_file, eof);
           break;
         }
@@ -259,12 +264,12 @@ void test_fzn_model_breakdown(const std::string& path) {
   try {
     ModelTransformer transformer(std::move(resModel));
     fznparser::Model model = transformer.generateModel();
-    const auto fznData = get_fzn_data(path);
+    const auto [numVars, numConstraints, isSatisfactionProblem] =
+        get_fzn_data(path);
 
-    EXPECT_EQ(model.vars().size(), fznData.numVars) << path;
-    EXPECT_EQ(model.constraints().size(), fznData.numConstraints) << path;
-    EXPECT_EQ(model.isSatisfactionProblem(), fznData.isSatisfactionProblem)
-        << path;
+    EXPECT_EQ(model.vars().size(), numVars) << path;
+    EXPECT_EQ(model.constraints().size(), numConstraints) << path;
+    EXPECT_EQ(model.isSatisfactionProblem(), isSatisfactionProblem) << path;
   } catch (const FznException& e) {
     EXPECT_TRUE(false) << "could not transform model: " << path
                        << "\nFznException: " << e.what();
@@ -303,12 +308,12 @@ void test_fzn_model(const std::string& path) {
   try {
     ModelTransformer transformer(std::move(resModel));
     fznparser::Model model = transformer.generateModel();
-    const auto fznData = get_fzn_data(path);
+    const auto [numVars, numConstraints, isSatisfactionProblem] =
+        get_fzn_data(path);
 
-    EXPECT_EQ(model.vars().size(), fznData.numVars) << path;
-    EXPECT_EQ(model.constraints().size(), fznData.numConstraints) << path;
-    EXPECT_EQ(model.isSatisfactionProblem(), fznData.isSatisfactionProblem)
-        << path;
+    EXPECT_EQ(model.vars().size(), numVars) << path;
+    EXPECT_EQ(model.constraints().size(), numConstraints) << path;
+    EXPECT_EQ(model.isSatisfactionProblem(), isSatisfactionProblem) << path;
   } catch (const FznException& e) {
     EXPECT_TRUE(false) << "could not transform model: " << path
                        << "\nFznException: " << e.what();
@@ -321,7 +326,7 @@ TEST(mzn_challenge, crashing) {
   for (const auto& fznModel : modelsThatCrash) {
     fznModels.push_back(fznModel);
   }
-  std::sort(fznModels.begin(), fznModels.end());
+  std::ranges::sort(fznModels.begin(), fznModels.end());
 
   size_t i = 0;
   for (const auto& fznModel : fznModels) {
@@ -341,7 +346,7 @@ TEST(mzn_challenge, failing) {
   for (const auto& fznModel : modelsThatFail) {
     fznModels.push_back(fznModel);
   }
-  std::sort(fznModels.begin(), fznModels.end());
+  std::ranges::sort(fznModels.begin(), fznModels.end());
 
   size_t i = 0;
   for (const auto& fznModel : fznModels) {
@@ -380,10 +385,10 @@ TEST(mzn_challenge, parse) {
     }
   }
 
-  std::sort(fznModels.begin(), fznModels.end());
+  std::ranges::sort(fznModels.begin(), fznModels.end());
   for (size_t i = 1; i < fznModels.size(); ++i) {
-    bool skipping = modelsThatCrash.contains(fznModels.at(i)) ||
-                    modelsThatFail.contains(fznModels.at(i));
+    const bool skipping = modelsThatCrash.contains(fznModels.at(i)) ||
+                          modelsThatFail.contains(fznModels.at(i));
     logModelName(fznModels.at(i), skipping, i, fznModels.size());
     if (!skipping) {
       test_fzn_model(fznModels.at(i));

@@ -37,7 +37,7 @@ IntSet::IntSet(int64_t lb, int64_t ub) {
 IntSet::IntSet(std::vector<int64_t>&& vals)
     : _elements(sortAndRemoveDuplicates(vals)) {}
 
-bool IntSet::contains(int64_t val) const {
+bool IntSet::contains(const int64_t val) const {
   if (holds_alternative<std::pair<int64_t, int64_t>>(_elements)) {
     auto [lb, ub] = get<std::pair<int64_t, int64_t>>(_elements);
     return lb <= val && val <= ub;
@@ -112,21 +112,6 @@ bool IntSet::operator!=(const IntSet& other) const {
   return !operator==(other);
 }
 
-std::string IntSet::toString() const {
-  if (holds_alternative<std::pair<int64_t, int64_t>>(_elements)) {
-    auto [lb, ub] = get<std::pair<int64_t, int64_t>>(_elements);
-    return std::to_string(lb) + ".." + std::to_string(ub);
-  }
-  std::string str = "{";
-  for (size_t i = 0; i < get<std::vector<int64_t>>(_elements).size(); ++i) {
-    if (i != 0) {
-      str += ", ";
-    }
-    str += std::to_string(get<std::vector<int64_t>>(_elements)[i]);
-  }
-  return str + "}";
-}
-
 FloatSet::FloatSet(double val) : _elements(std::make_pair(val, val)) {}
 FloatSet::FloatSet(double lb, double ub) {
   if (lb > ub) {
@@ -144,7 +129,7 @@ FloatSet::FloatSet(double lb, double ub) {
 FloatSet::FloatSet(std::vector<double>&& vals)
     : _elements(sortAndRemoveDuplicates(vals)) {}
 
-bool FloatSet::contains(double val) const {
+bool FloatSet::contains(const double val) const {
   if (holds_alternative<std::pair<double, double>>(_elements)) {
     auto [lb, ub] = get<std::pair<double, double>>(_elements);
     return lb <= val && val <= ub;
@@ -195,21 +180,6 @@ bool FloatSet::operator!=(const FloatSet& other) const {
   return !operator==(other);
 }
 
-std::string FloatSet::toString() const {
-  if (holds_alternative<std::pair<double, double>>(_elements)) {
-    auto [lb, ub] = get<std::pair<double, double>>(_elements);
-    return std::to_string(lb) + ".." + std::to_string(ub);
-  }
-  std::string str = "{";
-  for (size_t i = 0; i < get<std::vector<double>>(_elements).size(); ++i) {
-    if (i != 0) {
-      str += ", ";
-    }
-    str += std::to_string(get<std::vector<double>>(_elements)[i]);
-  }
-  return str + "}";
-}
-
 const std::vector<double>& FloatSet::elements() const {
   if (holds_alternative<std::pair<double, double>>(_elements)) {
     throw FznException("Cannot get elements from interval");
@@ -231,17 +201,6 @@ bool FloatSetArray::operator==(const FloatSetArray& other) const {
 
 bool FloatSetArray::operator!=(const FloatSetArray& other) const {
   return !operator==(other);
-}
-
-std::string FloatSetArray::toString() const {
-  std::string s = "[";
-  for (size_t i = 0; i < size(); ++i) {
-    if (i != 0) {
-      s += ", ";
-    }
-    s += at(i).toString();
-  }
-  return s + "]";
 }
 
 }  // namespace fznparser

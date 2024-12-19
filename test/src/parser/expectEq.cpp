@@ -1,10 +1,13 @@
 #include "expectEq.hpp"
 
+#include "fznparser/parser/toString.hpp"
+#include "fznparser/types.hpp"
+
 namespace fznparser::testing {
 
 using namespace fznparser::parser;
 
-namespace x3 = ::boost::spirit::x3;
+namespace x3 = boost::spirit::x3;
 
 template <class T>
 void expect_eq_type(const T &actual, const T &expected,
@@ -88,12 +91,12 @@ void expect_eq(const ParType &actual, const ParType &expected,
   if (actual.type() == typeid(BasicParType)) {
     return expect_eq(get<BasicParType>(actual), get<BasicParType>(expected),
                      input);
-  } else if (actual.type() == typeid(BasicParTypeArray)) {
+  }
+  if (actual.type() == typeid(BasicParTypeArray)) {
     return expect_eq(get<BasicParTypeArray>(actual),
                      get<BasicParTypeArray>(expected), newInput);
-  } else {
-    FAIL() << newInput;
   }
+  FAIL() << newInput;
 }
 
 void expect_eq(const BasicVarBoolType &, const BasicVarBoolType &,
@@ -149,30 +152,36 @@ void expect_eq(const BasicVarType &actual, const BasicVarType &expected,
   if (actual.type() == typeid(BasicVarBoolType)) {
     return expect_eq(get<BasicVarBoolType>(actual),
                      get<BasicVarBoolType>(expected), newInput);
-  } else if (actual.type() == typeid(BasicVarIntTypeUnbounded)) {
+  }
+  if (actual.type() == typeid(BasicVarIntTypeUnbounded)) {
     return expect_eq(get<BasicVarIntTypeUnbounded>(actual),
                      get<BasicVarIntTypeUnbounded>(expected), newInput);
-  } else if (actual.type() == typeid(BasicVarIntTypeBounded)) {
+  }
+  if (actual.type() == typeid(BasicVarIntTypeBounded)) {
     return expect_eq(get<BasicVarIntTypeBounded>(actual),
                      get<BasicVarIntTypeBounded>(expected), newInput);
-  } else if (actual.type() == typeid(BasicVarIntTypeSet)) {
+  }
+  if (actual.type() == typeid(BasicVarIntTypeSet)) {
     return expect_eq(get<BasicVarIntTypeSet>(actual),
                      get<BasicVarIntTypeSet>(expected), newInput);
-  } else if (actual.type() == typeid(BasicVarFloatTypeBounded)) {
+  }
+  if (actual.type() == typeid(BasicVarFloatTypeBounded)) {
     return expect_eq(get<BasicVarFloatTypeBounded>(actual),
                      get<BasicVarFloatTypeBounded>(expected), newInput);
-  } else if (actual.type() == typeid(BasicVarFloatTypeUnbounded)) {
+  }
+  if (actual.type() == typeid(BasicVarFloatTypeUnbounded)) {
     return expect_eq(get<BasicVarFloatTypeUnbounded>(actual),
                      get<BasicVarFloatTypeUnbounded>(expected), newInput);
-  } else if (actual.type() == typeid(BasicVarSetTypeBounded)) {
+  }
+  if (actual.type() == typeid(BasicVarSetTypeBounded)) {
     return expect_eq(get<BasicVarSetTypeBounded>(actual),
                      get<BasicVarSetTypeBounded>(expected), newInput);
-  } else if (actual.type() == typeid(BasicVarSetTypeSet)) {
+  }
+  if (actual.type() == typeid(BasicVarSetTypeSet)) {
     return expect_eq(get<BasicVarSetTypeSet>(actual),
                      get<BasicVarSetTypeSet>(expected), newInput);
-  } else {
-    FAIL() << newInput;
   }
+  FAIL() << newInput;
 }
 
 void expect_eq(const ArrayVarType &actual, const ArrayVarType &expected,
@@ -265,48 +274,60 @@ void expect_eq(const BasicPredParamType &actual,
   if (actual.type() == typeid(BasicParType)) {
     return expect_eq(get<BasicParType>(expected), get<BasicParType>(actual),
                      input);
-  } else if (actual.type() == typeid(BasicVarBoolType)) {
+  }
+  if (actual.type() == typeid(BasicVarBoolType)) {
     return expect_eq(get<BasicVarBoolType>(expected),
                      get<BasicVarBoolType>(actual), newInput);
-  } else if (actual.type() == typeid(BasicVarIntTypeUnbounded)) {
+  }
+  if (actual.type() == typeid(BasicVarIntTypeUnbounded)) {
     return expect_eq(get<BasicVarIntTypeUnbounded>(expected),
                      get<BasicVarIntTypeUnbounded>(actual), newInput);
-  } else if (actual.type() == typeid(BasicVarIntTypeBounded)) {
+  }
+  if (actual.type() == typeid(BasicVarIntTypeBounded)) {
     return expect_eq(get<BasicVarIntTypeBounded>(expected),
                      get<BasicVarIntTypeBounded>(actual), newInput);
-  } else if (actual.type() == typeid(BasicVarIntTypeSet)) {
+  }
+  if (actual.type() == typeid(BasicVarIntTypeSet)) {
     return expect_eq(get<BasicVarIntTypeSet>(expected),
                      get<BasicVarIntTypeSet>(actual), newInput);
-  } else if (actual.type() == typeid(BasicVarFloatTypeUnbounded)) {
+  }
+  if (actual.type() == typeid(BasicVarFloatTypeUnbounded)) {
     return expect_eq(get<BasicVarFloatTypeUnbounded>(expected),
                      get<BasicVarFloatTypeUnbounded>(actual), newInput);
-  } else if (actual.type() == typeid(BasicVarFloatTypeBounded)) {
+  }
+  if (actual.type() == typeid(BasicVarFloatTypeBounded)) {
     return expect_eq(get<BasicVarFloatTypeBounded>(expected),
                      get<BasicVarFloatTypeBounded>(actual), newInput);
-  } else if (actual.type() == typeid(BasicVarSetTypeBounded)) {
+  }
+  if (actual.type() == typeid(BasicVarSetTypeBounded)) {
     return expect_eq(get<BasicVarSetTypeBounded>(expected),
                      get<BasicVarSetTypeBounded>(actual), newInput);
-  } else if (actual.type() == typeid(BasicVarSetTypeSet)) {
+  }
+  if (actual.type() == typeid(BasicVarSetTypeSet)) {
     return expect_eq(get<BasicVarSetTypeSet>(expected),
                      get<BasicVarSetTypeSet>(actual), newInput);
-  } else if (actual.type() == typeid(BasicPredParamTypeIntBounded)) {
+  }
+  if (actual.type() == typeid(BasicPredParamTypeIntBounded)) {
     return expect_eq(get<BasicPredParamTypeIntBounded>(expected),
                      get<BasicPredParamTypeIntBounded>(actual), newInput);
-  } else if (actual.type() == typeid(BasicPredParamTypeFloatBounded)) {
+  }
+  if (actual.type() == typeid(BasicPredParamTypeFloatBounded)) {
     return expect_eq(get<BasicPredParamTypeFloatBounded>(expected),
                      get<BasicPredParamTypeFloatBounded>(actual), newInput);
-  } else if (actual.type() == typeid(BasicPredParamTypeIntSet)) {
+  }
+  if (actual.type() == typeid(BasicPredParamTypeIntSet)) {
     return expect_eq(get<BasicPredParamTypeIntSet>(expected),
                      get<BasicPredParamTypeIntSet>(actual), newInput);
-  } else if (actual.type() == typeid(BasicPredParamTypeSetBounded)) {
+  }
+  if (actual.type() == typeid(BasicPredParamTypeSetBounded)) {
     return expect_eq(get<BasicPredParamTypeSetBounded>(expected),
                      get<BasicPredParamTypeSetBounded>(actual), newInput);
-  } else if (actual.type() == typeid(BasicPredParamTypeSetSet)) {
+  }
+  if (actual.type() == typeid(BasicPredParamTypeSetSet)) {
     return expect_eq(get<BasicPredParamTypeSetSet>(expected),
                      get<BasicPredParamTypeSetSet>(actual), newInput);
-  } else {
-    FAIL() << newInput;
   }
+  FAIL() << newInput;
 }
 
 void expect_eq(const PredParamType &actual, const PredParamType &expected,
@@ -597,8 +618,8 @@ void expect_eq(const PredParamArrayType &actual,
   expect_eq(actual.type, expected.type, newInput);
 }
 
-void expect_eq(const parser::Annotation &actual,  // NOLINT(*-no-recursion)
-               const parser::Annotation &expected, const std::string &input) {
+void expect_eq(const Annotation &actual,  // NOLINT(*-no-recursion)
+               const Annotation &expected, const std::string &input) {
   const std::string newInput = input + "\nAnnotation:\nactual: \n" +
                                toString(actual) + "\nexpected:\n" +
                                toString(expected);
@@ -636,10 +657,9 @@ void expect_eq(const BasicAnnExpr &actual,
               get<FloatSetLiteralSet>(expected), newInput);
   } else if (actual.type() == typeid(std::string)) {
     EXPECT_EQ(get<std::string>(actual), get<std::string>(expected)) << newInput;
-  } else if (actual.type() == typeid(x3::forward_ast<parser::Annotation>)) {
-    expect_eq(get<x3::forward_ast<parser::Annotation>>(actual).get(),
-              get<x3::forward_ast<parser::Annotation>>(expected).get(),
-              newInput);
+  } else if (actual.type() == typeid(x3::forward_ast<Annotation>)) {
+    expect_eq(get<x3::forward_ast<Annotation>>(actual).get(),
+              get<x3::forward_ast<Annotation>>(expected).get(), newInput);
   } else {
     FAIL() << newInput;
   }
@@ -753,7 +773,7 @@ void expect_eq(const PredicateItem &actual, const PredicateItem &expected,
   expect_eq_vector(actual.params, expected.params, newInput);
 }
 
-void expect_eq(const parser::Model &actual, const parser::Model &expected,
+void expect_eq(const Model &actual, const Model &expected,
                const std::string &input) {
   const std::string newInput = input + "\nModel:\nactual: \n" +
                                toString(actual) + "\nexpected:\n" +

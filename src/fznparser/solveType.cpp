@@ -2,19 +2,19 @@
 
 #include <functional>
 #include <numeric>
-#include <stdexcept>
 
+#include "fznparser/annotation.hpp"
 #include "fznparser/except.hpp"
 
 namespace fznparser {
 
-SolveType::SolveType(std::vector<fznparser::Annotation>&& annotations)
+SolveType::SolveType(std::vector<Annotation>&& annotations)
     : _annotations(std::move(annotations)),
       _problemType(ProblemType::SATISFY),
       _objective(std::nullopt) {}
 
-SolveType::SolveType(ProblemType problemType, const Var& var,
-                     std::vector<fznparser::Annotation>&& annotations)
+SolveType::SolveType(const ProblemType problemType, const Var& var,
+                     std::vector<Annotation>&& annotations)
     : _annotations(std::move(annotations)),
       _problemType(problemType),
       _objective(var) {}
@@ -64,24 +64,6 @@ bool SolveType::operator==(const SolveType& other) const {
 
 bool SolveType::operator!=(const SolveType& other) const {
   return !operator==(other);
-}
-
-std::string SolveType::toString() const {
-  std::string s = "solve ";
-  if (_problemType == ProblemType::SATISFY) {
-    s += "satisfy";
-  } else {
-    s += (_problemType == ProblemType::MINIMIZE ? "minimize" : "maximize");
-    if (hasObjective()) {
-      s += std::string(objective().identifier());
-    }
-  }
-  if (!_annotations.empty()) {
-    for (const auto& annotation : _annotations) {
-      s += " :: " + annotation.toString();
-    }
-  }
-  return s;
 }
 
 }  // namespace fznparser

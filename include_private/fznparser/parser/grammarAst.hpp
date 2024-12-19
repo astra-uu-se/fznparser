@@ -3,13 +3,12 @@
 #include <boost/fusion/include/adapt_struct.hpp>
 #include <boost/spirit/home/x3.hpp>
 #include <boost/spirit/home/x3/support/ast/variant.hpp>
-#include <boost/variant/apply_visitor.hpp>
 #include <optional>
 #include <string>
 #include <vector>
 
 namespace fznparser::parser {
-namespace x3 = ::boost::spirit::x3;
+namespace x3 = boost::spirit::x3;
 
 struct IntRange {
   int64_t lowerBound;
@@ -58,10 +57,10 @@ struct BasicVarBoolType {};
 struct BasicVarIntTypeUnbounded {};
 
 // "var" <int-literal> ".." <int-literal>
-struct BasicVarIntTypeBounded : public IntRange {};
+struct BasicVarIntTypeBounded : IntRange {};
 
 // "var" "{" <int-literal> "," ... "}"
-struct BasicVarIntTypeSet : public std::vector<int64_t> {};
+struct BasicVarIntTypeSet : std::vector<int64_t> {};
 
 /*
 | "var" "float"
@@ -71,16 +70,16 @@ struct BasicVarFloatTypeUnbounded {};
 /*
 | "var" <float-literal> ".." <float-literal>
 */
-struct BasicVarFloatTypeBounded : public FloatRange {};
+struct BasicVarFloatTypeBounded : FloatRange {};
 
 /*
 | "{" <int-literal> "," ... "}"
 | "set" "of" <int-literal> .. <int-literal>
 | "set" "of" "{" [  <int-literal> "," ... ] "}"
 */
-struct BasicVarSetTypeBounded : public IntRange {};
+struct BasicVarSetTypeBounded : IntRange {};
 
-struct BasicVarSetTypeSet : public std::vector<int64_t> {};
+struct BasicVarSetTypeSet : std::vector<int64_t> {};
 
 struct BasicVarSetTypeUnbounded {};
 
@@ -102,15 +101,15 @@ struct ArrayVarType {
 struct IndexSetUnbounded {};
 using PredIndexSet = boost::variant<IndexSet, IndexSetUnbounded>;
 
-struct BasicPredParamTypeIntBounded : public IntRange {};
+struct BasicPredParamTypeIntBounded : IntRange {};
 
-struct BasicPredParamTypeFloatBounded : public FloatRange {};
+struct BasicPredParamTypeFloatBounded : FloatRange {};
 
-struct BasicPredParamTypeIntSet : public std::vector<int64_t> {};
+struct BasicPredParamTypeIntSet : std::vector<int64_t> {};
 
-struct BasicPredParamTypeSetBounded : public IntRange {};
+struct BasicPredParamTypeSetBounded : IntRange {};
 
-struct BasicPredParamTypeSetSet : public std::vector<int64_t> {};
+struct BasicPredParamTypeSetSet : std::vector<int64_t> {};
 /*
 <basic-pred-param-type> ::= <basic-par-type>
                           | <basic-var-type>
@@ -155,10 +154,10 @@ struct PredParam {
 };
 
 struct SetLiteralEmpty {};
-struct IntSetLiteralBounded : public IntRange {};
-struct IntSetLiteralSet : public std::vector<int64_t> {};
-struct FloatSetLiteralBounded : public FloatRange {};
-struct FloatSetLiteralSet : public std::vector<double> {};
+struct IntSetLiteralBounded : IntRange {};
+struct IntSetLiteralSet : std::vector<int64_t> {};
+struct FloatSetLiteralBounded : FloatRange {};
+struct FloatSetLiteralSet : std::vector<double> {};
 
 /*
 <basic-literal-expr> ::= <bool-literal>

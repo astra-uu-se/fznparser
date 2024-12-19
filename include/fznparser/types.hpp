@@ -1,13 +1,12 @@
 #pragma once
 
-#include <string>
+#include <cstdint>
 #include <variant>
 #include <vector>
 
 namespace fznparser {
 
 class IntSet {
- private:
   std::variant<std::pair<int64_t, int64_t>, std::vector<int64_t>> _elements;
 
  public:
@@ -21,10 +20,8 @@ class IntSet {
   IntSet(int64_t lb, int64_t ub);
   /**
    * @brief Sorts and removes duplicates from the vector
-   *
-   * @param elems the elements of the set
    */
-  explicit IntSet(std::vector<int64_t>&& elems);
+  explicit IntSet(std::vector<int64_t>&&);
 
   [[nodiscard]] bool contains(int64_t) const;
   [[nodiscard]] size_t size() const;
@@ -39,12 +36,9 @@ class IntSet {
 
   bool operator==(const IntSet&) const;
   bool operator!=(const IntSet&) const;
-
-  [[nodiscard]] std::string toString() const;
 };
 
 class FloatSet {
- private:
   std::variant<std::pair<double, double>, std::vector<double>> _elements;
 
  public:
@@ -56,10 +50,8 @@ class FloatSet {
   FloatSet(double lb, double ub);
   /**
    * @brief Sorts and removes duplicates from the vector
-   *
-   * @param elems the elements of the set
    */
-  explicit FloatSet(std::vector<double>&& elems);
+  explicit FloatSet(std::vector<double>&&);
 
   [[nodiscard]] bool contains(double) const;
   [[nodiscard]] double lowerBound() const;
@@ -70,15 +62,12 @@ class FloatSet {
 
   bool operator==(const FloatSet&) const;
   bool operator!=(const FloatSet&) const;
-
-  [[nodiscard]] std::string toString() const;
 };
 
 class FloatSetArray : public std::vector<FloatSet> {
  public:
   bool operator==(const FloatSetArray&) const;
   bool operator!=(const FloatSetArray&) const;
-  [[nodiscard]] std::string toString() const;
 };
 
 }  // namespace fznparser

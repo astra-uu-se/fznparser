@@ -14,20 +14,20 @@ bool isalnum_us_minus(const char c) {
   return std::isalnum(c) || c == '_' || c == '-';
 }
 
-std::string flatten(const vector<std::string> &str_vec, const std::string &p) {
-  if (str_vec.empty()) {
+std::string flatten(const vector<std::string> &strVec, const std::string &p) {
+  if (strVec.empty()) {
     return "";
   }
-  std::string str = str_vec.front();
-  for (size_t i = 1; i < str_vec.size(); ++i) {
-    if (str.empty() || str_vec.at(i).empty()) {
+  std::string str = strVec.front();
+  for (size_t i = 1; i < strVec.size(); ++i) {
+    if (str.empty() || strVec.at(i).empty()) {
       continue;
     }
     if (!p.empty() || !isalnum_us_minus(str.back()) ||
-        !isalnum_us_minus(str_vec.at(i).front())) {
-      str += p + str_vec.at(i);
+        !isalnum_us_minus(strVec.at(i).front())) {
+      str += p + strVec.at(i);
     } else {
-      str += " " + str_vec.at(i);
+      str += " " + strVec.at(i);
     }
   }
   return str;
@@ -149,7 +149,7 @@ vector<pair<vector<std::string>, T>> float_bounded(
 template <typename T>
 vector<pair<vector<std::string>, T>> int_set(
     const vector<std::string> &prefix, const vector<std::string> &separator,
-    const vector<std::string> &suffix, bool includeEmpty = true) {
+    const vector<std::string> &suffix, const bool includeEmpty = true) {
   const auto &ild = int_literal_data_pos();
   vector<pair<vector<std::string>, T>> good_inputs{};
   if (includeEmpty) {
@@ -169,7 +169,7 @@ vector<pair<vector<std::string>, T>> int_set(
 template <typename T>
 vector<pair<vector<std::string>, T>> float_set(
     const vector<std::string> &prefix, const vector<std::string> &separator,
-    const vector<std::string> &suffix, bool includeEmpty = true) {
+    const vector<std::string> &suffix, const bool includeEmpty = true) {
   const auto &fld = float_literal_data_pos();
   vector<pair<vector<std::string>, T>> good_inputs{};
   if (includeEmpty) {
@@ -674,7 +674,7 @@ vector<pair<vector<std::string>, PredicateItem>> predicate_item_data_pos() {
 
 vector<pair<vector<std::string>, BasicAnnExpr>>
 basic_ann_expr_data_pos(  // NOLINT(*-no-recursion)
-    int64_t recursion) {
+    const int64_t recursion) {
   vector<pair<vector<std::string>, BasicAnnExpr>> good_inputs{};
   if (recursion < 0) {
     return good_inputs;
@@ -698,7 +698,7 @@ basic_ann_expr_data_pos(  // NOLINT(*-no-recursion)
 
 vector<pair<vector<std::string>, AnnExpr>>
 ann_expr_data_pos(  // NOLINT(*-no-recursion)
-    int64_t recursion) {
+    const int64_t recursion) {
   vector<pair<vector<std::string>, AnnExpr>> good_inputs{};
   if (recursion < 0) {
     return good_inputs;
@@ -728,7 +728,7 @@ ann_expr_data_pos(  // NOLINT(*-no-recursion)
 
 vector<pair<vector<std::string>, parser::Annotation>>
 annotation_data_pos(  // NOLINT(*-no-recursion)
-    int64_t recursion) {
+    const int64_t recursion) {
   vector<pair<vector<std::string>, parser::Annotation>> good_inputs{};
   if (recursion < 0) {
     return good_inputs;
@@ -742,7 +742,7 @@ annotation_data_pos(  // NOLINT(*-no-recursion)
   if (ae.empty()) {
     return good_inputs;
   }
-  for (size_t i : vector<size_t>{1, ae.size()}) {
+  for (const size_t i : vector<size_t>{1, ae.size()}) {
     vector<std::string> str_vec(id.front().first);
     str_vec.emplace_back("(");
     vector<AnnExpr> expressions{};
@@ -768,7 +768,7 @@ vector<pair<vector<std::string>, Annotations>> annotations_data_pos() {
 
   const auto ad = annotation_data_pos(1);
 
-  for (size_t i : vector<size_t>{0, 1, ad.size()}) {
+  for (const size_t i : vector<size_t>{0, 1, ad.size()}) {
     vector<std::string> str_vec{};
     Annotations annotations{};
     for (size_t j = 0; j < i; ++j) {
@@ -882,7 +882,7 @@ vector<pair<vector<std::string>, ConstraintItem>> constraint_item_data_pos() {
   const auto ed = expr_data_pos();
 
   for (const auto &[id_str_vec, id] : identifier_data_pos()) {
-    for (size_t i : vector<size_t>{0, 1, ed.size()}) {
+    for (const size_t i : vector<size_t>{0, 1, ed.size()}) {
       for (const auto &[a_str_vec, a] : annotations_data_pos()) {
         vector<std::string> str_vec{"constraint"};
         extend(str_vec, id_str_vec);
@@ -915,7 +915,7 @@ vector<pair<vector<std::string>, SolveSatisfy>> solve_satisfy_data_pos() {
 
   const auto ad = annotations_data_pos();
 
-  for (size_t i : vector<size_t>{0, 1, ad.size() - 1}) {
+  for (const size_t i : vector<size_t>{0, 1, ad.size() - 1}) {
     vector<std::string> str_vec{"solve"};
     extend(str_vec, ad.at(i).first);
     str_vec.emplace_back("satisfy");
@@ -933,7 +933,7 @@ vector<pair<vector<std::string>, SolveOptimize>> solve_optimize_data_pos() {
   for (const auto &[st_str, st] : vector<pair<std::string, OptimizationType>>{
            {"minimize", OptimizationType::MINIMIZE},
            {"maximize", OptimizationType::MAXIMIZE}}) {
-    for (size_t i : vector<size_t>{0, 1, ad.size() - 1}) {
+    for (const size_t i : vector<size_t>{0, 1, ad.size() - 1}) {
       for (const auto &[be_str_vec, be] : basic_expr_data_pos()) {
         vector<std::string> str_vec{"solve"};
         extend(str_vec, ad.at(i).first);

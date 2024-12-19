@@ -1,9 +1,9 @@
 #include "fznparser/parser.hpp"
 
-#include <boost/fusion/adapted/std_tuple.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/spirit/home/x3.hpp>
 #include <boost/spirit/include/support_istream_iterator.hpp>
+#include <fstream>
 #include <istream>
 
 #include "fznparser/except.hpp"
@@ -11,7 +11,7 @@
 #include "fznparser/transformer/modelTransformer.hpp"
 
 namespace fznparser {
-namespace x3 = ::boost::spirit::x3;
+namespace x3 = boost::spirit::x3;
 
 Model parseFznIstream(std::istream& fznStream) {
   boost::spirit::istream_iterator fileIterator(fznStream >> std::noskipws), eof;

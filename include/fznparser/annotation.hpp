@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include <variant>
 #include <vector>
 
@@ -32,7 +33,6 @@ class Annotation {
 
   bool operator==(const Annotation&) const;
   bool operator!=(const Annotation&) const;
-  [[nodiscard]] std::string toString() const;
 };
 
 class AnnotationExpression
@@ -43,7 +43,6 @@ class AnnotationExpression
                      Annotation>::variant;
   bool operator==(const AnnotationExpression&) const;
   bool operator!=(const AnnotationExpression&) const;
-  [[nodiscard]] std::string toString() const;
 };
 
 }  // namespace fznparser

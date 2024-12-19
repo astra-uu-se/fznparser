@@ -1,14 +1,21 @@
 #pragma once
 
 #include <memory>
-#include <string>
 #include <variant>
 
-#include "fznparser/except.hpp"
 #include "fznparser/types.hpp"
-#include "fznparser/variables.hpp"
 
 namespace fznparser {
+
+class BoolVar;
+class BoolVarArray;
+class Model;
+class IntVar;
+class FloatVar;
+class SetVar;
+class IntVarArray;
+class SetVarArray;
+class FloatVarArray;
 
 class BoolArg : public std::variant<bool, std::shared_ptr<const BoolVar>> {
  public:
@@ -21,10 +28,9 @@ class BoolArg : public std::variant<bool, std::shared_ptr<const BoolVar>> {
   [[nodiscard]] bool parameter() const;
 
   [[nodiscard]] bool toParameter() const;
-  std::shared_ptr<const BoolVar> toVar(fznparser::Model&) const;
+  std::shared_ptr<const BoolVar> toVar(Model&) const;
   bool operator==(const BoolArg&) const;
   bool operator!=(const BoolArg&) const;
-  [[nodiscard]] std::string toString() const;
 };
 
 class IntArg : public std::variant<int64_t, std::shared_ptr<const IntVar>> {
@@ -38,11 +44,10 @@ class IntArg : public std::variant<int64_t, std::shared_ptr<const IntVar>> {
   [[nodiscard]] int64_t parameter() const;
 
   [[nodiscard]] int64_t toParameter() const;
-  [[nodiscard]] std::shared_ptr<const IntVar> toVar(fznparser::Model&) const;
+  [[nodiscard]] std::shared_ptr<const IntVar> toVar(Model&) const;
 
   bool operator==(const IntArg&) const;
   bool operator!=(const IntArg&) const;
-  [[nodiscard]] std::string toString() const;
 };
 
 class FloatArg : public std::variant<double, std::shared_ptr<const FloatVar>> {
@@ -56,7 +61,7 @@ class FloatArg : public std::variant<double, std::shared_ptr<const FloatVar>> {
   [[nodiscard]] double parameter() const;
 
   [[nodiscard]] double toParameter() const;
-  std::shared_ptr<const FloatVar> toVar(fznparser::Model&) const;
+  std::shared_ptr<const FloatVar> toVar(Model&) const;
 
   bool operator==(const FloatArg&) const;
   bool operator!=(const FloatArg&) const;
@@ -64,7 +69,6 @@ class FloatArg : public std::variant<double, std::shared_ptr<const FloatVar>> {
 };
 
 class IntSetArg : public std::variant<IntSet, std::shared_ptr<const SetVar>> {
- private:
   std::shared_ptr<const SetVar> _setVar{nullptr};
 
  public:
@@ -77,10 +81,9 @@ class IntSetArg : public std::variant<IntSet, std::shared_ptr<const SetVar>> {
   [[nodiscard]] const IntSet& parameter() const;
 
   [[nodiscard]] const IntSet& toParameter() const;
-  std::shared_ptr<const SetVar> toVar(fznparser::Model&);
+  std::shared_ptr<const SetVar> toVar(Model&);
   bool operator==(const IntSetArg&) const;
   bool operator!=(const IntSetArg&) const;
-  [[nodiscard]] std::string toString() const;
 };
 
 class Arg : public std::variant<
@@ -102,7 +105,6 @@ class Arg : public std::variant<
 
   bool operator==(const Arg&) const;
   bool operator!=(const Arg&) const;
-  [[nodiscard]] std::string toString() const;
 };
 
 }  // namespace fznparser

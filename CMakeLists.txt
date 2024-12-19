@@ -70,7 +70,10 @@ file(GLOB_RECURSE
 add_library(${PROJECT_NAME}
   ${SOURCES}
   ${HEADERS_PUBLIC}
-  ${HEADERS_PRIVATE})
+  ${HEADERS_PRIVATE}
+        src/fznparser/transformer/replaceParameters.cpp
+        include/fznparser/toString.hpp
+        src/fznparser/toString.cpp)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
 

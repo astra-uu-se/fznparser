@@ -1,21 +1,15 @@
 #pragma once
 
-#include <optional>
-#include <stdexcept>
 #include <string>
 
-#include "fznparser/annotation.hpp"
 #include "fznparser/arguments.hpp"
-#include "fznparser/constraint.hpp"
 #include "fznparser/model.hpp"
 #include "fznparser/parser/grammarAst.hpp"
 #include "fznparser/solveType.hpp"
-#include "fznparser/variables.hpp"
 
 namespace fznparser {
 
 class ModelTransformer {
- private:
   parser::Model _model;
   std::unordered_map<std::string, parser::PredicateItem> _predDeclItems;
   std::unordered_map<std::string, parser::ParDeclItem> _parDeclItems;
@@ -28,9 +22,9 @@ class ModelTransformer {
   void replaceParameters(parser::ConstraintItem&);
 
   void validate(const parser::VarDeclItem&) const;
-  void validate(const parser::BasicVarDecl&) const;
+  static void validate(const parser::BasicVarDecl&);
   void validate(const parser::ArrayVarDecl&) const;
-  void validate(const parser::Annotation&) const;
+  static void validate(const parser::Annotation&);
 
   const std::type_info& arrayType(
       const std::unordered_map<std::string, Var>& vars,
@@ -43,9 +37,9 @@ class ModelTransformer {
   static Var transformVarArray(const std::unordered_map<std::string, Var>&,
                                const parser::ArrayVarDecl&);
   Arg transformArgument(const std::unordered_map<std::string, Var>&,
-                        const parser::Expr&);
+                        const parser::Expr&) const;
   Arg transformArgArray(const std::unordered_map<std::string, Var>&,
-                        const parser::ArrayLiteral&);
+                        const parser::ArrayLiteral&) const;
   Constraint transform(const std::unordered_map<std::string, Var>&,
                        const parser::ConstraintItem&);
   SolveType transform(const std::unordered_map<std::string, Var>&,
@@ -57,7 +51,7 @@ class ModelTransformer {
   ModelTransformer(ModelTransformer&&) = delete;
   explicit ModelTransformer(parser::Model&& model);
 
-  fznparser::Model generateModel();
+  Model generateModel();
 };
 
 }  // namespace fznparser

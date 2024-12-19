@@ -1,18 +1,24 @@
 #pragma once
 
 #include <array>
+#include <memory>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
-#include "fznparser/constraint.hpp"
+#include "constraint.hpp"
 #include "fznparser/solveType.hpp"
 #include "fznparser/types.hpp"
-#include "fznparser/variables.hpp"
 
 namespace fznparser {
 
+class Var;
+class BoolVar;
+class IntVar;
+class FloatVar;
+class SetVar;
+
 class Model {
- private:
   std::unordered_map<std::string, Var> _vars;
   std::vector<Constraint> _constraints;
   SolveType _solveType;
@@ -46,7 +52,7 @@ class Model {
 
   bool hasIdentifier(const std::string& var) const;
 
-  bool hasVar(const std::string& var) const;
+  bool hasVar(const std::string&) const;
   Var var(const std::string& identifier) const;
 
   const std::unordered_map<std::string, Var>& vars() const;
@@ -62,6 +68,5 @@ class Model {
 
   bool operator==(const Model&) const;
   bool operator!=(const Model&) const;
-  std::string toString() const;
 };
 }  // namespace fznparser
