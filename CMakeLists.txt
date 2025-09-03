@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20.. FATAL_ERROR)
 
 set(META_LIBRARY_NAME "fznparser")
-set(META_PROJECT_VERSION_FULL "0.2")
+set(META_PROJECT_VERSION_FULL "1.2.0")
 set(META_PROJECT_DESCRIPTION "FlatZinc parser")
 
 # ---- Project ----
@@ -11,7 +11,7 @@ project(
   LANGUAGES CXX
 )
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # ---- Include guards ----
@@ -22,7 +22,18 @@ if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
   )
 endif()
 
-include(cmake/CPM.cmake)
+if (COMMAND CPMAddPackage)
+  message("CPM already included, skipping")
+  else()
+  message("Downloading and including CPM")
+  file(
+    DOWNLOAD
+    https://github.com/cpm-cmake/CPM.cmake/releases/download/v0.42.0/CPM.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/cmake/CPM.cmake
+    EXPECTED_HASH SHA256=2020b4fc42dba44817983e06342e682ecfc3d2f484a581f11cc5731fbe4dce8a
+  )
+  include(${CMAKE_CURRENT_BINARY_DIR}/cmake/CPM.cmake)
+endif()
 
 # PackageProject.cmake will be used to make our target installable
 option(BUILD_SHARED_LIBS "Build shared libraries" NO)
@@ -51,9 +62,9 @@ CPMAddPackage(
 
 CPMAddPackage(
   NAME PackageProject.cmake
-  VERSION 1.10.0
+  VERSION 1.9.0
   GITHUB_REPOSITORY "TheLartians/PackageProject.cmake"
-  GIT_TAG "v1.10.0"
+  GIT_TAG "v1.9.0"
 )
 
 # ---- Add source files ----
@@ -130,5 +141,5 @@ packageProject(
   INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include
   INCLUDE_DESTINATION include/${PROJECT_NAME}-${PROJECT_VERSION}
   VERSION_HEADER "${VERSION_HEADER_LOCATION}"
-  DEPENDENCIES "Boost 1.79"
+  DEPENDENCIES "Boost 1.80"
 )

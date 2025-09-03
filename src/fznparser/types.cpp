@@ -1,5 +1,6 @@
 #include "fznparser/types.hpp"
 
+#include <algorithm>
 #include <functional>
 #include <numeric>
 
@@ -8,13 +9,13 @@
 using std::get;
 
 std::vector<int64_t> sortAndRemoveDuplicates(std::vector<int64_t>& vals) {
-  std::sort(vals.begin(), vals.end());
+  std::ranges::sort(vals);
   vals.erase(std::unique(vals.begin(), vals.end()), vals.end());
   return vals;
 }
 
 std::vector<double> sortAndRemoveDuplicates(std::vector<double>& vals) {
-  std::sort(vals.begin(), vals.end());
+  std::ranges::sort(vals);
   vals.erase(std::unique(vals.begin(), vals.end()), vals.end());
   return vals;
 }
@@ -42,8 +43,7 @@ bool IntSet::contains(int64_t val) const {
     auto [lb, ub] = get<std::pair<int64_t, int64_t>>(_elements);
     return lb <= val && val <= ub;
   }
-  return std::binary_search(get<std::vector<int64_t>>(_elements).begin(),
-                            get<std::vector<int64_t>>(_elements).end(), val);
+  return std::ranges::binary_search(get<std::vector<int64_t>>(_elements), val);
 }
 
 size_t IntSet::size() const {
@@ -149,8 +149,7 @@ bool FloatSet::contains(double val) const {
     auto [lb, ub] = get<std::pair<double, double>>(_elements);
     return lb <= val && val <= ub;
   }
-  return std::binary_search(get<std::vector<double>>(_elements).begin(),
-                            get<std::vector<double>>(_elements).end(), val);
+  return std::ranges::binary_search(get<std::vector<double>>(_elements), val);
 }
 
 double FloatSet::lowerBound() const {
