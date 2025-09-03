@@ -5,18 +5,27 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(PROJECT_NAME fznparserTests)
 project(${PROJECT_NAME} LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 enable_testing()
 
 # ---- Dependencies ----
-include(../cmake/CPM.cmake)
+message("Downloading CPM")
+file(
+  DOWNLOAD
+  https://github.com/cpm-cmake/CPM.cmake/releases/download/v0.42.0/CPM.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/cmake/CPM.cmake
+  EXPECTED_HASH SHA256=2020b4fc42dba44817983e06342e682ecfc3d2f484a581f11cc5731fbe4dce8a
+)
+message("Including CPM ${CMAKE_CURRENT_BINARY_DIR}/cmake/CPM.cmake")
+include(${CMAKE_CURRENT_BINARY_DIR}/cmake/CPM.cmake)
 
+message("CPM adding googletest")
 CPMAddPackage(
   NAME googletest
   GITHUB_REPOSITORY google/googletest
-  GIT_TAG release-1.11.0
+  GIT_TAG v1.17.0
 )
 
 CPMAddPackage(NAME fznparser SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/..)
