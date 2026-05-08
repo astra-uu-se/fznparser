@@ -7,7 +7,6 @@
 namespace fznparser {
 
 class IntSet {
- private:
   std::variant<std::pair<int64_t, int64_t>, std::vector<int64_t>> _elements;
 
  public:
@@ -44,7 +43,6 @@ class IntSet {
 };
 
 class FloatSet {
- private:
   std::variant<std::pair<double, double>, std::vector<double>> _elements;
 
  public:

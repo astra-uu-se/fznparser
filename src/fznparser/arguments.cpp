@@ -3,6 +3,7 @@
 #include <array>
 #include <unordered_set>
 
+#include "fznparser/except.hpp"
 #include "fznparser/model.hpp"
 
 namespace fznparser {
@@ -49,7 +50,8 @@ shared_ptr<const BoolVar> BoolArg::toVar(Model& model) const {
 bool BoolArg::operator==(const BoolArg& other) const {
   if (isParameter() != other.isParameter()) {
     return false;
-  } else if (isParameter() && other.isParameter()) {
+  }
+  if (isParameter() && other.isParameter()) {
     return parameter() == other.parameter();
   }
   return var()->operator==(*(other.var()));
@@ -101,7 +103,8 @@ shared_ptr<const IntVar> IntArg::toVar(Model& model) const {
 bool IntArg::operator==(const IntArg& other) const {
   if (isParameter() != other.isParameter()) {
     return false;
-  } else if (isParameter() && other.isParameter()) {
+  }
+  if (isParameter() && other.isParameter()) {
     return parameter() == other.parameter();
   }
   return var()->operator==(*(other.var()));
@@ -156,7 +159,8 @@ shared_ptr<const FloatVar> FloatArg::toVar(Model& model) const {
 bool FloatArg::operator==(const FloatArg& other) const {
   if (isParameter() != other.isParameter()) {
     return false;
-  } else if (isParameter() && other.isParameter()) {
+  }
+  if (isParameter() && other.isParameter()) {
     return parameter() == other.parameter();
   }
   return var()->operator==(*(other.var()));
@@ -212,7 +216,8 @@ shared_ptr<const SetVar> IntSetArg::toVar(Model& model) {
 bool IntSetArg::operator==(const IntSetArg& other) const {
   if (isParameter() != other.isParameter()) {
     return false;
-  } else if (isParameter() && other.isParameter()) {
+  }
+  if (isParameter() && other.isParameter()) {
     return parameter() == other.parameter();
   }
   return var()->operator==(*(other.var()));
@@ -240,13 +245,17 @@ bool Arg::isArray() const {
 bool Arg::isEmptyArray() const {
   if (holds_alternative<std::shared_ptr<BoolVarArray>>(*this)) {
     return get<std::shared_ptr<BoolVarArray>>(*this)->size() == 0;
-  } else if (holds_alternative<std::shared_ptr<IntVarArray>>(*this)) {
+  }
+  if (holds_alternative<std::shared_ptr<IntVarArray>>(*this)) {
     return get<std::shared_ptr<IntVarArray>>(*this)->size() == 0;
-  } else if (holds_alternative<std::shared_ptr<FloatVarArray>>(*this)) {
+  }
+  if (holds_alternative<std::shared_ptr<FloatVarArray>>(*this)) {
     return get<std::shared_ptr<FloatVarArray>>(*this)->size() == 0;
-  } else if (holds_alternative<std::shared_ptr<SetVarArray>>(*this)) {
+  }
+  if (holds_alternative<std::shared_ptr<SetVarArray>>(*this)) {
     return get<std::shared_ptr<SetVarArray>>(*this)->size() == 0;
-  } else if (holds_alternative<std::shared_ptr<FloatSetArray>>(*this)) {
+  }
+  if (holds_alternative<std::shared_ptr<FloatSetArray>>(*this)) {
     return get<std::shared_ptr<FloatSetArray>>(*this)->empty();
   }
   return false;
@@ -255,11 +264,14 @@ bool Arg::isEmptyArray() const {
 bool Arg::isParameter() const {
   if (holds_alternative<BoolArg>(*this)) {
     return get<BoolArg>(*this).isParameter();
-  } else if (holds_alternative<IntArg>(*this)) {
+  }
+  if (holds_alternative<IntArg>(*this)) {
     return get<IntArg>(*this).isParameter();
-  } else if (holds_alternative<FloatArg>(*this)) {
+  }
+  if (holds_alternative<FloatArg>(*this)) {
     return get<FloatArg>(*this).isParameter();
-  } else if (holds_alternative<IntSetArg>(*this)) {
+  }
+  if (holds_alternative<IntSetArg>(*this)) {
     return get<IntSetArg>(*this).isParameter();
   }
   return false;
@@ -268,11 +280,14 @@ bool Arg::isParameter() const {
 bool Arg::isFixed() const {
   if (holds_alternative<BoolArg>(*this)) {
     return get<BoolArg>(*this).isFixed();
-  } else if (holds_alternative<IntArg>(*this)) {
+  }
+  if (holds_alternative<IntArg>(*this)) {
     return get<IntArg>(*this).isFixed();
-  } else if (holds_alternative<FloatArg>(*this)) {
+  }
+  if (holds_alternative<FloatArg>(*this)) {
     return get<FloatArg>(*this).isFixed();
-  } else if (holds_alternative<IntSetArg>(*this)) {
+  }
+  if (holds_alternative<IntSetArg>(*this)) {
     return get<IntSetArg>(*this).isFixed();
   }
   return false;
@@ -281,36 +296,44 @@ bool Arg::isFixed() const {
 bool Arg::operator==(const Arg& other) const {
   if (holds_alternative<BoolArg>(*this) && holds_alternative<BoolArg>(other)) {
     return get<BoolArg>(*this).operator==(get<BoolArg>(other));
-  } else if (holds_alternative<IntArg>(*this) &&
-             holds_alternative<IntArg>(other)) {
+  }
+  if (holds_alternative<IntArg>(*this) && holds_alternative<IntArg>(other)) {
     return get<IntArg>(*this).operator==(get<IntArg>(other));
-  } else if (holds_alternative<FloatArg>(*this) &&
-             holds_alternative<FloatArg>(other)) {
+  }
+  if (holds_alternative<FloatArg>(*this) &&
+      holds_alternative<FloatArg>(other)) {
     return get<FloatArg>(*this).operator==(get<FloatArg>(other));
-  } else if (holds_alternative<IntSetArg>(*this) &&
-             holds_alternative<IntSetArg>(other)) {
+  }
+  if (holds_alternative<IntSetArg>(*this) &&
+      holds_alternative<IntSetArg>(other)) {
     return get<IntSetArg>(*this).operator==(get<IntSetArg>(other));
-  } else if (holds_alternative<FloatSet>(*this) &&
-             holds_alternative<FloatSet>(other)) {
+  }
+  if (holds_alternative<FloatSet>(*this) &&
+      holds_alternative<FloatSet>(other)) {
     return get<FloatSet>(*this).operator==(get<FloatSet>(other));
-  } else if (holds_alternative<std::shared_ptr<BoolVarArray>>(*this) &&
-             holds_alternative<std::shared_ptr<BoolVarArray>>(other)) {
+  }
+  if (holds_alternative<std::shared_ptr<BoolVarArray>>(*this) &&
+      holds_alternative<std::shared_ptr<BoolVarArray>>(other)) {
     return get<std::shared_ptr<BoolVarArray>>(*this)->operator==(
         *get<std::shared_ptr<BoolVarArray>>(other));
-  } else if (holds_alternative<std::shared_ptr<IntVarArray>>(*this) &&
-             holds_alternative<std::shared_ptr<IntVarArray>>(other)) {
+  }
+  if (holds_alternative<std::shared_ptr<IntVarArray>>(*this) &&
+      holds_alternative<std::shared_ptr<IntVarArray>>(other)) {
     return get<std::shared_ptr<IntVarArray>>(*this)->operator==(
         *get<std::shared_ptr<IntVarArray>>(other));
-  } else if (holds_alternative<std::shared_ptr<FloatVarArray>>(*this) &&
-             holds_alternative<std::shared_ptr<FloatVarArray>>(other)) {
+  }
+  if (holds_alternative<std::shared_ptr<FloatVarArray>>(*this) &&
+      holds_alternative<std::shared_ptr<FloatVarArray>>(other)) {
     return get<std::shared_ptr<FloatVarArray>>(*this)->operator==(
         *get<std::shared_ptr<FloatVarArray>>(other));
-  } else if (holds_alternative<std::shared_ptr<SetVarArray>>(*this) &&
-             holds_alternative<std::shared_ptr<SetVarArray>>(other)) {
+  }
+  if (holds_alternative<std::shared_ptr<SetVarArray>>(*this) &&
+      holds_alternative<std::shared_ptr<SetVarArray>>(other)) {
     return get<std::shared_ptr<SetVarArray>>(*this)->operator==(
         *get<std::shared_ptr<SetVarArray>>(other));
-  } else if (holds_alternative<std::shared_ptr<FloatSetArray>>(*this) &&
-             holds_alternative<std::shared_ptr<FloatSetArray>>(other)) {
+  }
+  if (holds_alternative<std::shared_ptr<FloatSetArray>>(*this) &&
+      holds_alternative<std::shared_ptr<FloatSetArray>>(other)) {
     return get<std::shared_ptr<FloatSetArray>>(*this)->operator==(
         *get<std::shared_ptr<FloatSetArray>>(other));
   }
@@ -322,23 +345,32 @@ bool Arg::operator!=(const Arg& other) const { return !operator==(other); }
 std::string Arg::toString() const {
   if (holds_alternative<BoolArg>(*this)) {
     return get<BoolArg>(*this).toString();
-  } else if (holds_alternative<IntArg>(*this)) {
+  }
+  if (holds_alternative<IntArg>(*this)) {
     return get<IntArg>(*this).toString();
-  } else if (holds_alternative<FloatArg>(*this)) {
+  }
+  if (holds_alternative<FloatArg>(*this)) {
     return get<FloatArg>(*this).toString();
-  } else if (holds_alternative<IntSetArg>(*this)) {
+  }
+  if (holds_alternative<IntSetArg>(*this)) {
     return get<IntSetArg>(*this).toString();
-  } else if (holds_alternative<FloatSet>(*this)) {
+  }
+  if (holds_alternative<FloatSet>(*this)) {
     return get<FloatSet>(*this).toString();
-  } else if (holds_alternative<std::shared_ptr<BoolVarArray>>(*this)) {
+  }
+  if (holds_alternative<std::shared_ptr<BoolVarArray>>(*this)) {
     return get<std::shared_ptr<BoolVarArray>>(*this)->toString();
-  } else if (holds_alternative<std::shared_ptr<IntVarArray>>(*this)) {
+  }
+  if (holds_alternative<std::shared_ptr<IntVarArray>>(*this)) {
     return get<std::shared_ptr<IntVarArray>>(*this)->toString();
-  } else if (holds_alternative<std::shared_ptr<FloatVarArray>>(*this)) {
+  }
+  if (holds_alternative<std::shared_ptr<FloatVarArray>>(*this)) {
     return get<std::shared_ptr<FloatVarArray>>(*this)->toString();
-  } else if (holds_alternative<std::shared_ptr<SetVarArray>>(*this)) {
+  }
+  if (holds_alternative<std::shared_ptr<SetVarArray>>(*this)) {
     return get<std::shared_ptr<SetVarArray>>(*this)->toString();
-  } else if (holds_alternative<std::shared_ptr<FloatSetArray>>(*this)) {
+  }
+  if (holds_alternative<std::shared_ptr<FloatSetArray>>(*this)) {
     return get<std::shared_ptr<FloatSetArray>>(*this)->toString();
   }
   return "";

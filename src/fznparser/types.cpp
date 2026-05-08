@@ -39,7 +39,7 @@ IntSet::IntSet(int64_t lb, int64_t ub) {
 IntSet::IntSet(std::vector<int64_t>&& elems)
     : _elements(sortAndRemoveDuplicates(elems)) {}
 
-bool IntSet::contains(int64_t val) const {
+bool IntSet::contains(const int64_t val) const {
   if (holds_alternative<std::pair<int64_t, int64_t>>(_elements)) {
     auto [lb, ub] = get<std::pair<int64_t, int64_t>>(_elements);
     return lb <= val && val <= ub;
@@ -145,7 +145,7 @@ FloatSet::FloatSet(double lb, double ub) {
 FloatSet::FloatSet(std::vector<double>&& elems)
     : _elements(sortAndRemoveDuplicates(elems)) {}
 
-bool FloatSet::contains(double val) const {
+bool FloatSet::contains(const double val) const {
   if (holds_alternative<std::pair<double, double>>(_elements)) {
     auto [lb, ub] = get<std::pair<double, double>>(_elements);
     return lb <= val && val <= ub;

@@ -32,9 +32,8 @@ Var varInMap(const std::unordered_map<std::string, Var>& vars) {
   throw FznException("Invalid initialization: expected exactly one variable");
 }
 
-Model::Model(Var&& objective, ProblemType problemType)
+Model::Model(Var&& objective, const ProblemType problemType)
     : _vars(varToMap(std::move(objective))),
-      _constraints(),
       _solveType(problemType, varInMap(_vars)),
       _boolVarPars{std::make_shared<BoolVar>(BoolVar(false, "")),
                    std::make_shared<BoolVar>(BoolVar(true, ""))} {}
@@ -55,7 +54,7 @@ Model::Model(std::vector<Var>&& vars, std::vector<Constraint>&& constraints,
     : Model(varVectorToMap(std::move(vars)), std::move(constraints),
             std::move(solveType)) {}
 
-std::shared_ptr<BoolVar> Model::boolVarPar(bool b) {
+std::shared_ptr<BoolVar> Model::boolVarPar(const bool b) {
   return _boolVarPars.at(b ? 1 : 0);
 }
 

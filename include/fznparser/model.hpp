@@ -12,7 +12,6 @@
 namespace fznparser {
 
 class Model {
- private:
   std::unordered_map<std::string, Var> _vars;
   std::vector<Constraint> _constraints;
   SolveType _solveType;
@@ -44,9 +43,7 @@ class Model {
   size_t numVars() const;
   size_t numConstraints() const;
 
-  bool hasIdentifier(const std::string& var) const;
-
-  bool hasVar(const std::string& var) const;
+  bool hasVar(const std::string& identifier) const;
   Var var(const std::string& identifier) const;
 
   const std::unordered_map<std::string, Var>& vars() const;

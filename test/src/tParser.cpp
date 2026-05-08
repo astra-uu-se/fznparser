@@ -46,7 +46,7 @@ TEST(parser, magic_square) {
 }
 
 TEST(parser, n_queens) {
-  std::string filename = std::string(FZN_DIR) + "/n_queens.fzn";
+  const std::string filename = std::string(FZN_DIR) + "/n_queens.fzn";
   const fznparser::Model resModel = parseFznFile(filename);
   EXPECT_EQ(resModel.numVars(), 99);
   EXPECT_EQ(resModel.numConstraints(), 67);

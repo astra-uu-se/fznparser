@@ -13,13 +13,13 @@ using x3::attr, x3::char_, x3::lit, x3::lexeme, x3::omit, x3::rule, x3::space,
     x3::eol;
 
 typedef x3::uint_parser<int64_t, 8> octtype;
-constexpr octtype oct = octtype();
+constexpr auto oct = octtype();
 
 typedef x3::uint_parser<int64_t, 16> hextype;
-constexpr hextype hex = hextype();
+constexpr auto hex = hextype();
 
 const auto negative_int = [](const auto &ctx) {
-  int64_t &attribute = x3::_attr(ctx);
+  const int64_t &attribute = x3::_attr(ctx);
   x3::traits::move_to(-attribute, x3::_val(ctx));
   x3::_pass(ctx) = attribute >= 0;
 };

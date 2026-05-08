@@ -11,7 +11,7 @@ namespace fznparser {
 using std::get;
 
 Annotation::Annotation(std::string identifier)
-    : _identifier(std::move(identifier)), _expressions() {}
+    : _identifier(std::move(identifier)) {}
 
 Annotation::Annotation(
     std::string identifier,
@@ -77,23 +77,26 @@ std::string Annotation::toString() const {
 bool AnnotationExpression::operator==(const AnnotationExpression& other) const {
   if (holds_alternative<bool>(*this) && holds_alternative<bool>(other)) {
     return get<bool>(*this) == get<bool>(other);
-  } else if (holds_alternative<int64_t>(*this) &&
-             holds_alternative<int64_t>(other)) {
+  }
+  if (holds_alternative<int64_t>(*this) && holds_alternative<int64_t>(other)) {
     return get<int64_t>(*this) == get<int64_t>(other);
-  } else if (holds_alternative<double>(*this) &&
-             holds_alternative<double>(other)) {
+  }
+  if (holds_alternative<double>(*this) && holds_alternative<double>(other)) {
     return get<double>(*this) == get<double>(other);
-  } else if (holds_alternative<IntSet>(*this) &&
-             holds_alternative<IntSet>(other)) {
+  }
+  if (holds_alternative<IntSet>(*this) && holds_alternative<IntSet>(other)) {
     return get<IntSet>(*this).operator==(get<IntSet>(other));
-  } else if (holds_alternative<FloatSet>(*this) &&
-             holds_alternative<FloatSet>(other)) {
+  }
+  if (holds_alternative<FloatSet>(*this) &&
+      holds_alternative<FloatSet>(other)) {
     return get<FloatSet>(*this).operator==(get<FloatSet>(other));
-  } else if (holds_alternative<std::string>(*this) &&
-             holds_alternative<std::string>(other)) {
+  }
+  if (holds_alternative<std::string>(*this) &&
+      holds_alternative<std::string>(other)) {
     return get<std::string>(*this) == get<std::string>(other);
-  } else if (holds_alternative<Annotation>(*this) &&
-             holds_alternative<Annotation>(other)) {
+  }
+  if (holds_alternative<Annotation>(*this) &&
+      holds_alternative<Annotation>(other)) {
     return get<Annotation>(*this).operator==(get<Annotation>(other));
   }
   return false;
@@ -106,17 +109,23 @@ bool AnnotationExpression::operator!=(const AnnotationExpression& other) const {
 std::string AnnotationExpression::toString() const {
   if (holds_alternative<bool>(*this)) {
     return get<bool>(*this) ? "true" : "false";
-  } else if (holds_alternative<int64_t>(*this)) {
+  }
+  if (holds_alternative<int64_t>(*this)) {
     return std::to_string(get<int64_t>(*this));
-  } else if (holds_alternative<double>(*this)) {
+  }
+  if (holds_alternative<double>(*this)) {
     return std::to_string(get<double>(*this));
-  } else if (holds_alternative<IntSet>(*this)) {
+  }
+  if (holds_alternative<IntSet>(*this)) {
     return get<IntSet>(*this).toString();
-  } else if (holds_alternative<FloatSet>(*this)) {
+  }
+  if (holds_alternative<FloatSet>(*this)) {
     return get<FloatSet>(*this).toString();
-  } else if (holds_alternative<std::string>(*this)) {
+  }
+  if (holds_alternative<std::string>(*this)) {
     return get<std::string>(*this);
-  } else if (holds_alternative<Annotation>(*this)) {
+  }
+  if (holds_alternative<Annotation>(*this)) {
     return get<Annotation>(*this).toString();
   }
   return "";

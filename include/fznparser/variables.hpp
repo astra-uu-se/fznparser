@@ -153,10 +153,7 @@ class SetVar : public VarBase {
   [[nodiscard]] std::string toString() const override;
 };
 
-class Var;  // forward declaration
-
 class VarArrayBase : public VarBase {
- private:
   std::vector<int64_t> _outputIndexSetSizes{};
 
  public:
@@ -172,14 +169,14 @@ class VarArrayBase : public VarBase {
 
 template <typename ParType, class VarType>
 class VarArrayTemplate : public VarArrayBase {
-  static_assert(std::is_base_of<VarBase, VarType>::value,
+  static_assert(std::is_base_of_v<VarBase, VarType>,
                 "VarType must inherit VarBase");
 
  protected:
   std::vector<std::variant<ParType, std::shared_ptr<const VarType>>> _vars;
   VarArrayTemplate(const std::string& identifier,
                    std::vector<Annotation>&& annotations)
-      : VarArrayBase(identifier, std::move(annotations)){};
+      : VarArrayBase(identifier, std::move(annotations)) {}
 
  public:
   VarArrayTemplate(const VarArrayTemplate&) = default;
@@ -189,7 +186,7 @@ class VarArrayTemplate : public VarArrayBase {
     return std::all_of(_vars.begin(), _vars.end(), [&](const auto& var) {
       return std::holds_alternative<ParType>(var);
     });
-  };
+  }
 
   [[nodiscard]] bool isFixed() const override {
     return std::all_of(_vars.begin(), _vars.end(), [&](const auto& var) {
@@ -212,26 +209,26 @@ class VarArrayTemplate : public VarArrayBase {
       }
     }
     return parVector;
-  };
+  }
 
   virtual std::vector<std::shared_ptr<const VarType>> toVarVector(
       fznparser::Model&) = 0;
 
-  void append(const ParType& par) { _vars.emplace_back(par); };
-  void append(std::shared_ptr<VarType> var) { _vars.emplace_back(var); };
+  void append(const ParType& par) { _vars.emplace_back(par); }
+  void append(std::shared_ptr<VarType> var) { _vars.emplace_back(var); }
   void append(const VarType& var) {
     _vars.emplace_back(std::make_shared<VarType>(var));
-  };
+  }
   [[nodiscard]] std::string toString() const override = 0;
-  [[nodiscard]] size_t size() const { return _vars.size(); };
+  [[nodiscard]] size_t size() const { return _vars.size(); }
   std::variant<ParType, std::shared_ptr<const VarType>> operator[](
       size_t index) const {
     return _vars[index];
-  };
+  }
   [[nodiscard]] std::variant<ParType, std::shared_ptr<const VarType>> at(
       size_t index) const {
     return _vars.at(index);
-  };
+  }
 };
 
 class BoolVarArray : public VarArrayTemplate<bool, BoolVar> {
@@ -319,7 +316,6 @@ class Var : public std::variant<
 };
 
 class VarReference : public VarBase {
- private:
   Var _source;
 
  public:

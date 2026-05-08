@@ -1,10 +1,11 @@
 #include "fznparser/parser.hpp"
 
-#include <boost/fusion/adapted/std_tuple.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/spirit/home/x3.hpp>
 #include <boost/spirit/include/support_istream_iterator.hpp>
+#include <fstream>
 #include <istream>
+#include <memory>
 
 #include "fznparser/except.hpp"
 #include "fznparser/parser/grammarDef.hpp"

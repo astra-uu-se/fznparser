@@ -1,5 +1,6 @@
 #include "fznparser/constraint.hpp"
 
+#include <memory>
 #include <string>
 #include <utility>
 #include <variant>

@@ -18,7 +18,7 @@ vector<std::string> padding();
 
 bool isalnum_us_minus(char c);
 
-std::string flatten(const vector<std::string> &str_v, const std::string &p);
+std::string flatten(const vector<std::string> &str_vec, const std::string &p);
 
 bool contains(const std::string &str, const std::string &needle);
 
@@ -175,8 +175,8 @@ void extend_should_fail(
 #define extend_should_succeed(good_inputs, sub_rule_inputs, data_type) \
   do {                                                                 \
     size_t i = 0;                                                      \
-    for (const auto &[input_str_vec, expected] : sub_rule_inputs) {    \
-      good_inputs.emplace_back(input_str_vec, data_type{expected});    \
+    for (const auto &[input_str_vec, expected] : (sub_rule_inputs)) {  \
+      (good_inputs).emplace_back(input_str_vec, data_type{expected});  \
       if (++i > 2) {                                                   \
         break;                                                         \
       }                                                                \

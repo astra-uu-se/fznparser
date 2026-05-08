@@ -32,8 +32,8 @@ std::string ltrim(std::string s) {
   return s;
 }
 
-void logModelName(const std::string& modelPath, bool skipping, size_t index,
-                  const size_t total) {
+void logModelName(const std::string& modelPath, const bool skipping,
+                  const size_t index, const size_t total) {
   const int padding = static_cast<int>(std::to_string(total).size());
   std::cout << (skipping ? "\033[0;33m[ SKIPPING" : "\033[0;32m[  PARSING")
             << " ] (" << std::setw(padding) << std::to_string(index + 1) << '/'
@@ -128,15 +128,18 @@ FznData get_fzn_data(const std::string& path) {
           ++data.numVars;
           skipLine(i_file, eof);
           break;
-        } else if (word == "constraint") {
+        }
+        if (word == "constraint") {
           ++data.numConstraints;
           skipLine(i_file, eof);
           break;
-        } else if (word == "solve") {
-          data.isSatisfactionProblem = (lastWord(i_file, eof) == "satisfy;");
+        }
+        if (word == "solve") {
+          data.isSatisfactionProblem = lastWord(i_file, eof) == "satisfy;";
           skipLine(i_file, eof);
           break;
-        } else if (word != "array") {
+        }
+        if (word != "array") {
           skipLine(i_file, eof);
           break;
         }
@@ -258,12 +261,12 @@ void test_fzn_model_breakdown(const std::string& path) {
   try {
     ModelTransformer transformer(std::move(resModel));
     fznparser::Model model = transformer.generateModel();
-    const auto fznData = get_fzn_data(path);
+    const auto [numVars, numConstraints, isSatisfactionProblem] =
+        get_fzn_data(path);
 
-    EXPECT_EQ(model.vars().size(), fznData.numVars) << path;
-    EXPECT_EQ(model.constraints().size(), fznData.numConstraints) << path;
-    EXPECT_EQ(model.isSatisfactionProblem(), fznData.isSatisfactionProblem)
-        << path;
+    EXPECT_EQ(model.vars().size(), numVars) << path;
+    EXPECT_EQ(model.constraints().size(), numConstraints) << path;
+    EXPECT_EQ(model.isSatisfactionProblem(), isSatisfactionProblem) << path;
   } catch (const FznException& e) {
     EXPECT_TRUE(false) << "could not transform model: " << path
                        << "\nFznException: " << e.what();
@@ -302,12 +305,12 @@ void test_fzn_model(const std::string& path) {
   try {
     ModelTransformer transformer(std::move(resModel));
     fznparser::Model model = transformer.generateModel();
-    const auto fznData = get_fzn_data(path);
+    const auto [numVars, numConstraints, isSatisfactionProblem] =
+        get_fzn_data(path);
 
-    EXPECT_EQ(model.vars().size(), fznData.numVars) << path;
-    EXPECT_EQ(model.constraints().size(), fznData.numConstraints) << path;
-    EXPECT_EQ(model.isSatisfactionProblem(), fznData.isSatisfactionProblem)
-        << path;
+    EXPECT_EQ(model.vars().size(), numVars) << path;
+    EXPECT_EQ(model.constraints().size(), numConstraints) << path;
+    EXPECT_EQ(model.isSatisfactionProblem(), isSatisfactionProblem) << path;
   } catch (const FznException& e) {
     EXPECT_TRUE(false) << "could not transform model: " << path
                        << "\nFznException: " << e.what();

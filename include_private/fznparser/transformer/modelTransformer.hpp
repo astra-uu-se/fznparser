@@ -1,10 +1,7 @@
 #pragma once
 
-#include <optional>
-#include <stdexcept>
 #include <string>
 
-#include "fznparser/annotation.hpp"
 #include "fznparser/arguments.hpp"
 #include "fznparser/constraint.hpp"
 #include "fznparser/model.hpp"
@@ -15,7 +12,6 @@
 namespace fznparser {
 
 class ModelTransformer {
- private:
   parser::Model _model;
   std::unordered_map<std::string, parser::PredicateItem> _predDeclItems;
   std::unordered_map<std::string, parser::ParDeclItem> _parDeclItems;
@@ -45,11 +41,11 @@ class ModelTransformer {
   Arg transformArgument(const std::unordered_map<std::string, Var>&,
                         const parser::Expr&);
   Arg transformArgArray(const std::unordered_map<std::string, Var>&,
-                        const parser::ArrayLiteral&);
+                        const parser::ArrayLiteral&) const;
   Constraint transform(const std::unordered_map<std::string, Var>&,
                        const parser::ConstraintItem&);
   SolveType transform(const std::unordered_map<std::string, Var>&,
-                      const parser::SolveItem&);
+                      const parser::SolveItem&) const;
 
  public:
   ModelTransformer(const ModelTransformer&) = delete;

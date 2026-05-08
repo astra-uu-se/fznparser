@@ -4,7 +4,6 @@
 #include <string>
 #include <variant>
 
-#include "fznparser/except.hpp"
 #include "fznparser/types.hpp"
 #include "fznparser/variables.hpp"
 
@@ -64,7 +63,6 @@ class FloatArg : public std::variant<double, std::shared_ptr<const FloatVar>> {
 };
 
 class IntSetArg : public std::variant<IntSet, std::shared_ptr<const SetVar>> {
- private:
   std::shared_ptr<const SetVar> _setVar{nullptr};
 
  public:
