@@ -50,6 +50,12 @@ if(NOT EXISTS ${CPM_SOURCE_CACHE})
   file(MAKE_DIRECTORY ${CPM_SOURCE_CACHE})
 endif()
 
+if(APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
+  # Boost 1.80 still references std::unary_function unless this compatibility define is enabled.
+  set(CMAKE_CXX_FLAGS
+          "${CMAKE_CXX_FLAGS} -DBOOST_NO_CXX98_FUNCTION_BASE")
+endif()
+
 if(NOT DEFINED ${FETCHCONTENT_SOURCE_DIR_BOOST})
   set(_fznparser_boost_source_dir ${CPM_SOURCE_CACHE}/boost_1_80_0)
   if(NOT EXISTS "${_atlantis_boost_source_dir}/boost/version.hpp")
@@ -155,6 +161,21 @@ target_include_directories(${PROJECT_NAME}
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
   PRIVATE
   ${PROJECT_SOURCE_DIR}/include_private)
+
+if(APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
+  target_include_directories(${PROJECT_LIB} SYSTEM PRIVATE "${CPM_SOURCE_CACHE}/boost_1_80_0")
+endif()
+
+if(APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" AND TARGET fznparser)
+  # Boost Spirit warnings originate in vendored Boost code on Apple
+  # Clang. Keep the suppression scoped to that external target.
+  target_compile_options(
+          fznparser PRIVATE
+          -Wno-deprecated-builtins
+          -Wno-deprecated-copy
+          -Wno-deprecated-copy-with-user-provided-copy
+  )
+endif()
 
 target_link_libraries(${PROJECT_NAME}
   PUBLIC
