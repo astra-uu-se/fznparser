@@ -8,36 +8,34 @@ project(${PROJECT_NAME} LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-set(ENV{CPM_SOURCE_CACHE} "${CMAKE_BINARY_DIR}/_deps")
-message("CPM_SOURCE_CACHE $ENV{CPM_SOURCE_CACHE}")
-
 enable_testing()
 
 # ---- Dependencies ----
-message("Downloading CPM")
-file(
-  DOWNLOAD
-  https://github.com/cpm-cmake/CPM.cmake/releases/download/v0.42.0/CPM.cmake
-  ${CMAKE_CURRENT_BINARY_DIR}/cmake/CPM.cmake
-  EXPECTED_HASH SHA256=2020b4fc42dba44817983e06342e682ecfc3d2f484a581f11cc5731fbe4dce8a
-)
-message("Including CPM ${CMAKE_CURRENT_BINARY_DIR}/cmake/CPM.cmake")
-include(${CMAKE_CURRENT_BINARY_DIR}/cmake/CPM.cmake)
-
-message("CPM_SOURCE_CACHE $ENV{CPM_SOURCE_CACHE}")
-
-message("CPM adding googletest")
+include(FetchContent)
 FetchContent_Declare(
     googletest
     GIT_REPOSITORY https://github.com/google/googletest.git
     GIT_TAG v1.17.0
 )
-
 FetchContent_MakeAvailable(googletest)
 
-CPMAddPackage(NAME fznparser SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/..)
+if (COMMAND CPMAddPackage)
+  message("CPM already included, skipping")
+else()
+  message(STATUS "Downloading and including CPM")
+  file(DOWNLOAD
+       https://github.com/cpm-cmake/CPM.cmake/releases/download/v0.40.8/CPM.cmake
+       ${CMAKE_CURRENT_BINARY_DIR}/cmake/CPM.cmake
+       EXPECTED_HASH SHA256=78ba32abdf798bc616bab7c73aac32a17bbd7b06ad9e26a6add69de8f3ae4791)
+  include(${CMAKE_CURRENT_BINARY_DIR}/cmake/CPM.cmake RESULT_VARIABLE CPM_INCLUDED)
+  if(NOT CPM_INCLUDED)
+    message(FATAL_ERROR "could not include CPM ${CPM_INCLUDED}")
+  endif()
+endif()
 
-message("CPM_SOURCE_CACHE $ENV{CPM_SOURCE_CACHE}")
+set(ENV{CPM_SOURCE_CACHE} "${CMAKE_BINARY_DIR}/_deps")
+
+CPMAddPackage(NAME fznparser SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/..)
 
 # ---- Create binary ----
 # Add a definition for the directory that contains the test stubs.

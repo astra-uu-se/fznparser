@@ -1,4 +1,17 @@
-export CMAKE_OPTIONS+= ${ENV_CMAKE_OPTIONS}
+UNAME_S := $(shell uname -s)
+find-first = $(firstword $(foreach candidate,$1,$(shell which $(candidate) 2>/dev/null)))
+
+ifeq ($(UNAME_S),Darwin)
+GCC=$(call find-first,clang)
+GPP=$(call find-first,clang++)
+else
+GCC=$(call find-first,gcc-14 gcc-13 gcc)
+GPP=$(call find-first,g++-14 g++-13 g++)
+endif
+
+CMAKE_C_COMPILER=$(if ${GCC}, -DCMAKE_C_COMPILER=${GCC},)
+CMAKE_CXX_COMPILER=$(if ${GPP}, -DCMAKE_CXX_COMPILER=${GPP},)
+export CMAKE_OPTIONS+= ${ENV_CMAKE_OPTIONS}${CMAKE_C_COMPILER}${CMAKE_CXX_COMPILER}
 
 CMAKE=$(shell which cmake)
 MKFILE_PATH=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
@@ -6,8 +19,6 @@ BUILD_DIR=${MKFILE_PATH}build
 MZN_MODEL_DIR=${MKFILE_PATH}mzn-models
 FZN_MODEL_DIR=${MKFILE_PATH}fzn-models
 MINIZINC=$(shell which minizinc)
-C_COMPILER=$(shell which gcc-14)
-CXX_COMPILER=$(shell which g++-14)
 GIT=$(shell which git)
 MZN_CHALLENGE_REPO="git@github.com:MiniZinc/minizinc-benchmarks.git"
 MZN_CHALLENGE_DIR=${MKFILE_PATH}test/mzn-challenge
@@ -24,10 +35,8 @@ clean:
 build:
 	mkdir -p ${BUILD_DIR}
 	${CMAKE} -S ${MKFILE_PATH}test \
-	         -B ${BUILD_DIR} \
-					 -D CMAKE_C_COMPILER=${C_COMPILER} \
-					 -D CMAKE_CXX_COMPILER=${CXX_COMPILER}
-	${CMAKE} --build ${BUILD_DIR}
+	         -B ${BUILD_DIR}
+	${CMAKE} --build ${BUILD_DIR} -j 8
 
 .PHONY: test
 test: build

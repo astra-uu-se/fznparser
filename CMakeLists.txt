@@ -23,15 +23,13 @@ if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
 endif()
 
 if (COMMAND CPMAddPackage)
-  message("CPM already included, skipping")
-  else()
-  message("Downloading and including CPM")
-  file(
-    DOWNLOAD
+  message(STATUS "CPM already included, skipping")
+else()
+  message(STATUS "Downloading and including CPM")
+  file(DOWNLOAD
     https://github.com/cpm-cmake/CPM.cmake/releases/download/v0.42.0/CPM.cmake
     ${CMAKE_CURRENT_BINARY_DIR}/cmake/CPM.cmake
-    EXPECTED_HASH SHA256=2020b4fc42dba44817983e06342e682ecfc3d2f484a581f11cc5731fbe4dce8a
-  )
+    EXPECTED_HASH SHA256=2020b4fc42dba44817983e06342e682ecfc3d2f484a581f11cc5731fbe4dce8a)
   include(${CMAKE_CURRENT_BINARY_DIR}/cmake/CPM.cmake)
 endif()
 
@@ -51,12 +49,8 @@ endif()
 if(NOT EXISTS ${CPM_SOURCE_CACHE})
   file(MAKE_DIRECTORY ${CPM_SOURCE_CACHE})
 endif()
-message("CPM_SOURCE_CACHE: ${CPM_SOURCE_CACHE}")
-
-include(cmake/CPM.cmake)
 
 if(NOT DEFINED ${FETCHCONTENT_SOURCE_DIR_BOOST})
-  message("FETCHCONTENT_SOURCE_DIR_BOOST not defined")
   set(_fznparser_boost_source_dir ${CPM_SOURCE_CACHE}/boost_1_80_0)
   if(NOT EXISTS "${_atlantis_boost_source_dir}/boost/version.hpp")
     set(BOOST_URL https://sourceforge.net/projects/boost/files/boost/1.80.0/boost_1_80_0.7z)
@@ -112,8 +106,6 @@ CPMAddPackage(
 
 # ---- Add source files ----
 # Configure version header
-message("CMAKE_CURRENT_BINARY_DIR: ${CMAKE_CURRENT_BINARY_DIR}")
-message("PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
 configure_file(${PROJECT_SOURCE_DIR}/config.hpp.in
   ${CMAKE_CURRENT_BINARY_DIR}/include/config.hpp @ONLY)
 
