@@ -2,7 +2,6 @@
 
 #include <functional>
 #include <numeric>
-#include <stdexcept>
 
 #include "fznparser/except.hpp"
 
@@ -13,7 +12,7 @@ SolveType::SolveType(std::vector<fznparser::Annotation>&& annotations)
       _problemType(ProblemType::SATISFY),
       _objective(std::nullopt) {}
 
-SolveType::SolveType(ProblemType problemType, const Var& var,
+SolveType::SolveType(const ProblemType problemType, const Var& var,
                      std::vector<fznparser::Annotation>&& annotations)
     : _annotations(std::move(annotations)),
       _problemType(problemType),

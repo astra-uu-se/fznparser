@@ -12,9 +12,9 @@ namespace fznparser::parser {
 using boost::get;
 using std::to_string;
 
-std::string toString(bool b) { return to_string(b); }
-std::string toString(int64_t i) { return to_string(i); }
-std::string toString(double f) { return to_string(f); }
+std::string toString(const bool b) { return to_string(b); }
+std::string toString(const int64_t i) { return to_string(i); }
+std::string toString(const double f) { return to_string(f); }
 
 template <class T>
 std::string vecToString(const std::vector<T>& vec) {  // NOLINT(*-no-recursion)
@@ -36,7 +36,7 @@ std::string toString(const FloatRange& range) {
   return to_string(range.lowerBound) + ".." + to_string(range.upperBound);
 }
 
-std::string toString(BasicParType basicParType) {
+std::string toString(const BasicParType basicParType) {
   switch (basicParType) {
     case BasicParType::BOOL:
       return "bool";

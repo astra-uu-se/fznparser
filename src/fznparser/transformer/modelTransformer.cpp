@@ -30,7 +30,8 @@ IntSet toIntSet(const T& intSet) {
   if (intSet.type() == typeid(IntSetLiteralBounded)) {
     return IntSet(get<IntSetLiteralBounded>(intSet).lowerBound,
                   get<IntSetLiteralBounded>(intSet).upperBound);
-  } else if (intSet.type() == typeid(IntSetLiteralSet)) {
+  }
+  if (intSet.type() == typeid(IntSetLiteralSet)) {
     return IntSet(
         static_cast<std::vector<int64_t>>(get<IntSetLiteralSet>(intSet)));
   }
@@ -285,16 +286,17 @@ void ModelTransformer::replaceParameters(BasicVarDecl& basicVarDecl) {
     return;
   }
   const std::string& identifier = get<std::string>(basicVarDecl.expr.value());
-  if (_varDeclItems.find(identifier) != _varDeclItems.end()) {
+  if (_varDeclItems.contains(identifier)) {
     return;
   }
-  if (_parDeclItems.find(identifier) == _parDeclItems.end()) {
+  const auto iter = _parDeclItems.find(identifier);
+  if (iter == _parDeclItems.end()) {
     throw FznException("Error when replacing parameters for variable \"" +
                        toString(basicVarDecl) +
                        "\": Reference to undefined variable or parameter " +
                        "\"" + identifier + "\".");
   }
-  basicVarDecl.expr = toBasicExpr(_parDeclItems.at(identifier).expr);
+  basicVarDecl.expr = toBasicExpr(iter->second.expr);
 }
 
 void ModelTransformer::replaceParameters(ArrayVarDecl& arrayVarDecl) {
@@ -304,10 +306,11 @@ void ModelTransformer::replaceParameters(ArrayVarDecl& arrayVarDecl) {
     }
     const std::string& identifier =
         get<std::string>(arrayVarDecl.literals.at(i));
-    if (_varDeclItems.find(identifier) != _varDeclItems.end()) {
+    if (_varDeclItems.contains(identifier)) {
       continue;
     }
-    if (_parDeclItems.find(identifier) == _parDeclItems.end()) {
+    const auto iter = _parDeclItems.find(identifier);
+    if (iter == _parDeclItems.end()) {
       throw FznException("Error when validating array literal \"" +
                          toString(arrayVarDecl.literals.at(i)) +
                          "\" in array \"" + toString(arrayVarDecl) +
@@ -315,8 +318,7 @@ void ModelTransformer::replaceParameters(ArrayVarDecl& arrayVarDecl) {
                          ": Reference to undefined variable or parameter \"" +
                          identifier + "\".");
     }
-    arrayVarDecl.literals.at(i) =
-        toBasicExpr(_parDeclItems.at(identifier).expr);
+    arrayVarDecl.literals.at(i) = toBasicExpr(iter->second.expr);
   }
 }
 
@@ -326,16 +328,17 @@ void ModelTransformer::replaceParameters(ArrayLiteral& array) {
       continue;
     }
     const std::string& identifier = get<std::string>(array.at(i));
-    if (_varDeclItems.find(identifier) != _varDeclItems.end()) {
+    if (_varDeclItems.contains(identifier)) {
       continue;
     }
-    if (_parDeclItems.find(identifier) == _parDeclItems.end()) {
+    const auto iter = _parDeclItems.find(identifier);
+    if (iter == _parDeclItems.end()) {
       throw FznException("Error when replacing parameters for constraint \"" +
                          toString(array) +
                          "\": Reference to undefined variable or parameter " +
                          "\"" + identifier + "\".");
     }
-    array.at(i) = toBasicExpr(_parDeclItems.at(identifier).expr);
+    array.at(i) = toBasicExpr(iter->second.expr);
   }
 }
 
@@ -350,17 +353,18 @@ void ModelTransformer::replaceParameters(ConstraintItem& constraint) {
     }
     const std::string& identifier =
         get<std::string>(constraint.expressions.at(i));
-    if (_varDeclItems.find(identifier) != _varDeclItems.end()) {
+    if (_varDeclItems.contains(identifier)) {
       continue;
     }
-    if (_parDeclItems.find(identifier) == _parDeclItems.end()) {
+    const auto iter = _parDeclItems.find(identifier);
+    if (iter == _parDeclItems.end()) {
       throw FznException("Error when replacing parameters for constraint \"" +
                          toString(constraint) +
                          "\": Reference to undefined variable or parameter " +
                          "\"" + identifier + "\".");
     }
 
-    constraint.expressions.at(i) = toExpr(_parDeclItems.at(identifier).expr);
+    constraint.expressions.at(i) = toExpr(iter->second.expr);
   }
 }
 
@@ -463,28 +467,28 @@ void ModelTransformer::validate(const ArrayVarDecl& arrayVarDecl) const {
     }
     const std::string identifier =
         get<std::string>(arrayVarDecl.literals.at(i));
-    if (_varDeclItems.find(identifier) == _varDeclItems.end()) {
+    const auto iter = _varDeclItems.find(identifier);
+    if (iter == _varDeclItems.end()) {
       throw FznException(
           "Error when validating array literal \"" +
           toString(arrayVarDecl.literals.at(i)) + "\" in array \"" +
           toString(arrayVarDecl) + "\" at index " + std::to_string(i + 1) +
           ": Reference to undefined variable \"" + identifier + "\".");
     }
-    const VarDeclItem& varDeclItem = _varDeclItems.at(identifier);
-    if (varDeclItem.type() != typeid(BasicVarDecl)) {
+    if (iter->second.type() != typeid(BasicVarDecl)) {
       throw FznException("Error when validating array literal \"" +
                          toString(arrayVarDecl.literals.at(i)) +
                          "\"in array \"" + toString(arrayVarDecl) +
                          "\" at index " + std::to_string(i + 1) +
-                         ": variable \"" + toString(varDeclItem) +
+                         ": variable \"" + toString(iter->second) +
                          "\" has incompatible type.");
     }
-    if (!sameType(arrayVarDecl, get<BasicVarDecl>(varDeclItem).type)) {
+    if (!sameType(arrayVarDecl, get<BasicVarDecl>(iter->second).type)) {
       throw FznException(
           "Error when validating variable array \"" + toString(arrayVarDecl) +
           "\" at index " + std::to_string(i + 1) + ": \"" +
           toString(arrayVarDecl.literals.at(i)) +
-          "\". Type mismatch for variable \"" + toString(varDeclItem) + "\"");
+          "\". Type mismatch for variable \"" + toString(iter->second) + "\"");
     }
   }
   for (const parser::Annotation& annotation : arrayVarDecl.annotations) {
@@ -655,13 +659,14 @@ std::shared_ptr<ArrayType> generateVarArray(
   for (const BasicExpr& basicExpr : arrayVarDecl.literals) {
     if (basicExpr.type() == typeid(std::string)) {
       const std::string& identifier = get<std::string>(basicExpr);
-      if (vars.find(identifier) == vars.end()) {
+      const auto iter = vars.find(identifier);
+      if (iter == vars.end()) {
         throw FznException(
             "Error when validating variable \"" + toString(arrayVarDecl) +
             "\": Reference to undefined " + toString(arrayVarDecl.type.type) +
             " variable with identifier \"" + identifier + "\"");
       }
-      Var var = vars.at(identifier);
+      Var var = iter->second;
       while (std::holds_alternative<std::shared_ptr<VarReference>>(var)) {
         var = get<std::shared_ptr<VarReference>>(var)->source();
       }
@@ -695,17 +700,17 @@ std::shared_ptr<SetVarArray> generateSetVarArray(
   for (const BasicExpr& basicExpr : arrayVarDecl.literals) {
     if (basicExpr.type() == typeid(std::string)) {
       const std::string& identifier = get<std::string>(basicExpr);
-      if (vars.find(identifier) == vars.end()) {
+      const auto iter = vars.find(identifier);
+      if (iter == vars.end()) {
         throw FznException(
             "Reference to undefined set variable with identifier \"" +
             identifier + "\"");
       }
-      Var var = vars.at(identifier);
-      if (!std::holds_alternative<std::shared_ptr<SetVar>>(var)) {
+      if (!std::holds_alternative<std::shared_ptr<SetVar>>(iter->second)) {
         throw FznException("Reference to non-set variable with identifier \"" +
                            identifier + "\"");
       }
-      res->append(get<std::shared_ptr<SetVar>>(var));
+      res->append(get<std::shared_ptr<SetVar>>(iter->second));
     } else if (isIntSet(basicExpr.type())) {
       res->append(toIntSet(basicExpr));
     } else {
@@ -723,7 +728,7 @@ std::shared_ptr<ArrayType> generateArgArray(
   for (const BasicExpr& basicExpr : arrayLiteral) {
     if (basicExpr.type() == typeid(std::string)) {
       const std::string& identifier = get<std::string>(basicExpr);
-      if (vars.find(identifier) == vars.end()) {
+      if (!vars.contains(identifier)) {
         throw FznException(
             "Error when validating array literal \"" + toString(arrayLiteral) +
             "\": Reference to undefined variable with identifier \"" +
@@ -754,20 +759,20 @@ std::shared_ptr<SetVarArray> generateSetVarArray(
   for (const BasicExpr& basicExpr : arrayLiteral) {
     if (basicExpr.type() == typeid(std::string)) {
       const std::string& identifier = get<std::string>(basicExpr);
-      if (vars.find(identifier) == vars.end()) {
+      const auto iter = vars.find(identifier);
+      if (iter == vars.end()) {
         throw FznException(
             "Error when validating array literal \"" + toString(arrayLiteral) +
             "\": Reference to undefined variable with identifier \"" +
             identifier + "\"");
       }
-      Var var = vars.at(identifier);
-      if (!std::holds_alternative<std::shared_ptr<SetVar>>(var)) {
+      if (!std::holds_alternative<std::shared_ptr<SetVar>>(iter->second)) {
         throw FznException(
             "Reference type mismatch when parsing array literal \"" +
-            toString(arrayLiteral) + "\" and variable \"" + var.toString() +
-            "\"");
+            toString(arrayLiteral) + "\" and variable \"" +
+            iter->second.toString() + "\"");
       }
-      res->append(get<std::shared_ptr<SetVar>>(var));
+      res->append(get<std::shared_ptr<SetVar>>(iter->second));
     } else if (isIntSet(basicExpr.type())) {
       res->append(toIntSet(basicExpr));
     } else {
@@ -781,25 +786,18 @@ std::shared_ptr<SetVarArray> generateSetVarArray(
 const std::type_info& ModelTransformer::arrayType(
     const std::unordered_map<std::string, Var>&,
     const ArrayLiteral& array) const {
-  bool onlyEmptySets = true;
   for (const BasicExpr& expr : array) {
     if (expr.type() == typeid(std::string)) {
-      onlyEmptySets = false;
       const std::string& identifier = get<std::string>(expr);
-      if (_varDeclItems.find(identifier) == _varDeclItems.end() &&
-          _parDeclItems.find(identifier) == _parDeclItems.end()) {
-        throw FznException("Reference to undefined variable or parameter \"" +
-                           identifier + "\" in array literal: \"" +
-                           toString(array) + "\"");
-      }
-      if (_varDeclItems.find(identifier) != _varDeclItems.end()) {
-        const VarDeclItem& varDeclItem = _varDeclItems.at(identifier);
-        if (varDeclItem.type() != typeid(BasicVarDecl)) {
+      const auto varDeclIter = _varDeclItems.find(identifier);
+      if (varDeclIter != _varDeclItems.end()) {
+        if (varDeclIter->second.type() != typeid(BasicVarDecl)) {
           throw FznException("Invalid array literal in argument array \"" +
                              toString(array) + "\", variable \"" +
-                             toString(varDeclItem) + "\" is a variable array");
+                             toString(varDeclIter->second) +
+                             "\" is a variable array");
         }
-        const auto& t = get<BasicVarDecl>(varDeclItem).type.type();
+        const auto& t = get<BasicVarDecl>(varDeclIter->second).type.type();
         if (isBoolVar(t)) {
           return typeid(bool);
         } else if (isIntVar(t)) {
@@ -811,14 +809,24 @@ const std::type_info& ModelTransformer::arrayType(
         }
         throw FznException("Invalid array literal in argument array \"" +
                            toString(array) + "\", variable \"" +
-                           toString(varDeclItem) + "\" has invalid type");
+                           toString(varDeclIter->second) +
+                           "\" has invalid type");
       }
-      return _parDeclItems.at(identifier).expr.type();
+      const auto parDeclIter = _parDeclItems.find(identifier);
+      if (parDeclIter != _parDeclItems.end()) {
+        return parDeclIter->second.expr.type();
+      }
+      assert(varDeclIter == _varDeclItems.end());
+      assert(parDeclIter == _parDeclItems.end());
+      throw FznException("Reference to undefined variable or parameter \"" +
+                         identifier + "\" in array literal: \"" +
+                         toString(array) + "\"");
     } else if (expr.type() != typeid(SetLiteralEmpty)) {
       return expr.type();
     }
   }
-  return onlyEmptySets ? typeid(SetLiteralEmpty) : typeid(std::string);
+  // The array contains only empty set literals
+  return typeid(SetLiteralEmpty);
 }
 
 Arg ModelTransformer::transformArgArray(
@@ -899,16 +907,16 @@ SolveType ModelTransformer::transform(
     return SolveType(std::move(annotations));
   }
   const std::string& identifier = get<std::string>(solveOptimize.expr);
-  if (vars.find(identifier) == vars.end()) {
-    if (_parDeclItems.find(identifier) != _parDeclItems.end()) {
+  const auto iter = vars.find(identifier);
+  if (iter == vars.end()) {
+    if (_parDeclItems.contains(identifier)) {
       return SolveType(std::move(annotations));
     }
     throw FznException(
         "Error when transforming solve type \"" + toString(solveItem) +
         "\": Reference to undefined variable \"" + identifier + "\"");
   }
-  const Var& var = vars.at(identifier);
-  if (isVarArray(var)) {
+  if (isVarArray(iter->second)) {
     throw FznException(
         "Error when transforming solve item \"" + toString(solveItem) +
         "\": Cannot optimize over array variable with identifier \"" +
@@ -917,10 +925,10 @@ SolveType ModelTransformer::transform(
   return {solveOptimize.type == OptimizationType::MINIMIZE
               ? ProblemType::MINIMIZE
               : ProblemType::MAXIMIZE,
-          var, std::move(annotations)};
+          iter->second, std::move(annotations)};
 }
 
-bool isNonVarRef(Var& var) {
+bool isNonVarRef(const Var& var) {
   return std::holds_alternative<std::shared_ptr<BoolVar>>(var) ||
          std::holds_alternative<std::shared_ptr<IntVar>>(var) ||
          std::holds_alternative<std::shared_ptr<FloatVar>>(var) ||
@@ -931,7 +939,7 @@ bool isNonVarRef(Var& var) {
          std::holds_alternative<std::shared_ptr<SetVarArray>>(var);
 }
 
-Arg tryGetNonVarRef(Var& var) {
+Arg tryGetNonVarRef(const Var& var) {
   if (std::holds_alternative<std::shared_ptr<BoolVar>>(var)) {
     return Arg{std::get<std::shared_ptr<BoolVar>>(var)};
   } else if (std::holds_alternative<std::shared_ptr<IntVar>>(var)) {
@@ -970,17 +978,18 @@ Arg ModelTransformer::transformArgument(
     return Arg{transformArgArray(vars, get<ArrayLiteral>(expr))};
   } else if (expr.type() == typeid(std::string)) {
     const std::string& identifier = get<std::string>(expr);
-    if (vars.find(identifier) == vars.end()) {
+    const auto iter = vars.find(identifier);
+    if (iter == vars.end()) {
       throw FznException(
           "Error when transforming argument \"" + toString(expr) +
           "\": Reference to undefined variable \"" + identifier + "\"");
     }
-    Var var = vars.at(identifier);
-    if (isNonVarRef(var)) {
-      return tryGetNonVarRef(var);
-    } else if (std::holds_alternative<std::shared_ptr<VarReference>>(var)) {
+    if (isNonVarRef(iter->second)) {
+      return tryGetNonVarRef(iter->second);
+    } else if (std::holds_alternative<std::shared_ptr<VarReference>>(
+                   iter->second)) {
       std::unordered_set<std::string> visited{identifier};
-      Var source = var;
+      Var source = iter->second;
       while (std::holds_alternative<std::shared_ptr<VarReference>>(source)) {
         source = std::get<std::shared_ptr<VarReference>>(source)->source();
         if (visited.contains(source.identifier())) {

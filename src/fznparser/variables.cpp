@@ -2,7 +2,6 @@
 
 #include <functional>
 #include <limits>
-#include <stdexcept>
 #include <utility>
 
 #include "fznparser/except.hpp"
@@ -114,11 +113,12 @@ IntVar::IntVar(const std::string& identifier,
       _domain(IntSet(std::numeric_limits<int64_t>::min(),
                      std::numeric_limits<int64_t>::max())) {}
 
-IntVar::IntVar(int64_t val, const std::string& identifier,
+IntVar::IntVar(const int64_t val, const std::string& identifier,
                std::vector<Annotation>&& annotations)
     : VarBase(identifier, std::move(annotations)), _domain(val) {}
 
-IntVar::IntVar(int64_t lb, int64_t ub, const std::string& identifier,
+IntVar::IntVar(const int64_t lb, const int64_t ub,
+               const std::string& identifier,
                std::vector<Annotation>&& annotations)
     : VarBase(identifier, std::move(annotations)), _domain(lb, ub) {}
 
@@ -170,11 +170,12 @@ FloatVar::FloatVar(const std::string& identifier,
       _domain(FloatSet(std::numeric_limits<double>::min(),
                        std::numeric_limits<double>::max())) {}
 
-FloatVar::FloatVar(double val, const std::string& identifier,
+FloatVar::FloatVar(const double val, const std::string& identifier,
                    std::vector<Annotation>&& annotations)
     : VarBase(identifier, std::move(annotations)), _domain(val) {}
 
-FloatVar::FloatVar(double lb, double ub, const std::string& identifier,
+FloatVar::FloatVar(const double lb, const double ub,
+                   const std::string& identifier,
                    std::vector<Annotation>&& annotations)
     : VarBase(identifier, std::move(annotations)), _domain(lb, ub) {}
 
@@ -222,7 +223,8 @@ std::string FloatVar::toString() const {
   return s;
 }
 
-SetVar::SetVar(int64_t lb, int64_t ub, const std::string& identifier,
+SetVar::SetVar(const int64_t lb, const int64_t ub,
+               const std::string& identifier,
                std::vector<Annotation>&& annotations)
     : VarBase(identifier, std::move(annotations)), _domain(lb, ub) {}
 

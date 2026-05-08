@@ -1,7 +1,6 @@
 #include "fznparser/arguments.hpp"
 
 #include <array>
-#include <stdexcept>
 #include <unordered_set>
 
 #include "fznparser/model.hpp"
@@ -248,7 +247,7 @@ bool Arg::isEmptyArray() const {
   } else if (holds_alternative<std::shared_ptr<SetVarArray>>(*this)) {
     return get<std::shared_ptr<SetVarArray>>(*this)->size() == 0;
   } else if (holds_alternative<std::shared_ptr<FloatSetArray>>(*this)) {
-    return get<std::shared_ptr<FloatSetArray>>(*this)->size() == 0;
+    return get<std::shared_ptr<FloatSetArray>>(*this)->empty();
   }
   return false;
 }
