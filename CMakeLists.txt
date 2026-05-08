@@ -101,7 +101,7 @@ CPMAddPackage(
 CPMAddPackage(
   NAME PackageProject.cmake
   GITHUB_REPOSITORY "TheLartians/PackageProject.cmake"
-  GIT_TAG "v1.13.0"
+  GIT_TAG "v1.9.0"
 )
 
 # ---- Add source files ----
