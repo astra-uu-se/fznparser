@@ -2,7 +2,6 @@
 
 #include <array>
 #include <functional>
-#include <numeric>
 #include <string>
 #include <unordered_set>
 #include <utility>

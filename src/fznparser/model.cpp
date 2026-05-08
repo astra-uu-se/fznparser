@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <numeric>
+#include <ranges>
 #include <string>
 #include <unordered_map>
 
@@ -25,7 +26,7 @@ Var varInMap(const std::unordered_map<std::string, Var>& vars) {
   if (vars.size() != 1) {
     throw FznException("Invalid initialization: expected exactly one variable");
   }
-  for (const auto& [identifier, var] : vars) {
+  for (const auto& var : vars | std::views::values) {
     return var;
   }
   throw FznException("Invalid initialization: expected exactly one variable");
@@ -163,7 +164,7 @@ bool Model::operator!=(const Model& other) const { return !operator==(other); }
 
 std::string Model::toString() const {
   std::string s;
-  for (const auto& [identifier, var] : _vars) {
+  for (const auto& var : _vars | std::views::values) {
     s += var.toString() + ";\n";
   }
   for (const Constraint& con : _constraints) {

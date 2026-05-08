@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20.. FATAL_ERROR)
+cmake_minimum_required(VERSION 3.23 FATAL_ERROR)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
@@ -7,6 +7,9 @@ project(${PROJECT_NAME} LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+
+set(ENV{CPM_SOURCE_CACHE} "${CMAKE_BINARY_DIR}/_deps")
+message("CPM_SOURCE_CACHE $ENV{CPM_SOURCE_CACHE}")
 
 enable_testing()
 
@@ -21,14 +24,20 @@ file(
 message("Including CPM ${CMAKE_CURRENT_BINARY_DIR}/cmake/CPM.cmake")
 include(${CMAKE_CURRENT_BINARY_DIR}/cmake/CPM.cmake)
 
+message("CPM_SOURCE_CACHE $ENV{CPM_SOURCE_CACHE}")
+
 message("CPM adding googletest")
-CPMAddPackage(
-  NAME googletest
-  GITHUB_REPOSITORY google/googletest
-  GIT_TAG v1.17.0
+FetchContent_Declare(
+    googletest
+    GIT_REPOSITORY https://github.com/google/googletest.git
+    GIT_TAG v1.17.0
 )
 
+FetchContent_MakeAvailable(googletest)
+
 CPMAddPackage(NAME fznparser SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/..)
+
+message("CPM_SOURCE_CACHE $ENV{CPM_SOURCE_CACHE}")
 
 # ---- Create binary ----
 # Add a definition for the directory that contains the test stubs.

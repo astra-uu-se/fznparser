@@ -1,11 +1,9 @@
-#include <functional>
-#include <numeric>
+#include "fznparser/constraint.hpp"
+
 #include <string>
-#include <unordered_set>
 #include <utility>
 #include <variant>
 
-#include "fznparser/constraint.hpp"
 #include "fznparser/model.hpp"
 
 namespace fznparser {

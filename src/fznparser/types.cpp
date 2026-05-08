@@ -10,17 +10,18 @@ using std::get;
 
 std::vector<int64_t> sortAndRemoveDuplicates(std::vector<int64_t>& vals) {
   std::ranges::sort(vals);
-  vals.erase(std::unique(vals.begin(), vals.end()), vals.end());
+  vals.erase(std::ranges::unique(vals).begin(), vals.end());
   return vals;
 }
 
 std::vector<double> sortAndRemoveDuplicates(std::vector<double>& vals) {
   std::ranges::sort(vals);
-  vals.erase(std::unique(vals.begin(), vals.end()), vals.end());
+  vals.erase(std::ranges::unique(vals).begin(), vals.end());
   return vals;
 }
 
 namespace fznparser {
+
 IntSet::IntSet(int64_t val) : _elements(std::make_pair(val, val)) {}
 IntSet::IntSet(int64_t lb, int64_t ub) {
   if (lb > ub) {
@@ -35,8 +36,8 @@ IntSet::IntSet(int64_t lb, int64_t ub) {
   _elements = std::make_pair(lb, ub);
 }
 
-IntSet::IntSet(std::vector<int64_t>&& vals)
-    : _elements(sortAndRemoveDuplicates(vals)) {}
+IntSet::IntSet(std::vector<int64_t>&& elems)
+    : _elements(sortAndRemoveDuplicates(elems)) {}
 
 bool IntSet::contains(int64_t val) const {
   if (holds_alternative<std::pair<int64_t, int64_t>>(_elements)) {
@@ -141,8 +142,8 @@ FloatSet::FloatSet(double lb, double ub) {
   _elements = std::make_pair(lb, ub);
 }
 
-FloatSet::FloatSet(std::vector<double>&& vals)
-    : _elements(sortAndRemoveDuplicates(vals)) {}
+FloatSet::FloatSet(std::vector<double>&& elems)
+    : _elements(sortAndRemoveDuplicates(elems)) {}
 
 bool FloatSet::contains(double val) const {
   if (holds_alternative<std::pair<double, double>>(_elements)) {
