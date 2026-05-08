@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.23 FATAL_ERROR)
 
 set(META_LIBRARY_NAME "fznparser")
-set(META_PROJECT_VERSION_FULL "1.2.0")
+set(META_PROJECT_VERSION_FULL "1.2.1")
 set(META_PROJECT_DESCRIPTION "FlatZinc parser")
 
 # ---- Project ----
