@@ -4,10 +4,8 @@
 
 #include <string>
 #include <utility>
-#include <variant>
 #include <vector>
 
-#include "fznparser/parser/grammar.hpp"
 #include "fznparser/parser/grammarDef.hpp"
 
 namespace fznparser::testing {

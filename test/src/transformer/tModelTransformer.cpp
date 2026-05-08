@@ -11,7 +11,6 @@
 #include <unordered_set>
 #include <vector>
 
-#include "fznparser/parser/grammar.hpp"
 #include "fznparser/parser/grammarDef.hpp"
 #include "fznparser/transformer/modelTransformer.hpp"
 
@@ -115,9 +114,9 @@ TEST(generator, annotations) {
   std::vector<Constraint> constraints;
   constraints.emplace_back(std::move(int_plus));
 
-  test_generator("annotations.fzn",
-                 fznparser::Model(std::move(vars), std::move(constraints),
-                                  std::move(SolveType())));
+  test_generator(
+      "annotations.fzn",
+      fznparser::Model(std::move(vars), std::move(constraints), SolveType()));
 }
 
 TEST(generator, constraints) {

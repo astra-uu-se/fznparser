@@ -7,11 +7,8 @@
 #include <fstream>
 #include <regex>
 #include <string>
-#include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
-#include "fznparser/parser/grammar.hpp"
 #include "fznparser/parser/grammarDef.hpp"
 #include "fznparser/transformer/modelTransformer.hpp"
 
@@ -23,7 +20,7 @@ namespace x3 = boost::spirit::x3;
 
 void test_model(const std::string& filename) {
   parser::Model resModel;
-  std::string path = std::string(FZN_DIR) + "/" + filename;
+  const std::string path = std::string(FZN_DIR) + "/" + filename;
   std::ifstream input_file(path, std::ios_base::in);
   if (!input_file.is_open()) {
     FAIL() << "Could not open file: " << path;

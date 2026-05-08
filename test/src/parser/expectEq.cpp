@@ -1,5 +1,7 @@
 #include "expectEq.hpp"
 
+#include "fznparser/parser/toString.hpp"
+
 namespace fznparser::testing {
 
 using namespace fznparser::parser;
