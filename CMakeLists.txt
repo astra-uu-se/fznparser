@@ -58,7 +58,7 @@ endif()
 
 if(NOT DEFINED ${FETCHCONTENT_SOURCE_DIR_BOOST})
   set(_fznparser_boost_source_dir ${CPM_SOURCE_CACHE}/boost_1_80_0)
-  if(NOT EXISTS "${_atlantis_boost_source_dir}/boost/version.hpp")
+  if(NOT EXISTS "${_fznparser_boost_source_dir}/boost/version.hpp")
     set(BOOST_URL https://sourceforge.net/projects/boost/files/boost/1.80.0/boost_1_80_0.7z)
     set(BOOST_URL_SHA256 d12a2af721e22dbfb984ef061ee4c4ab2387f1904f6d65bc5acebaa34d6366ec)
 
