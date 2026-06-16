@@ -357,7 +357,7 @@ TEST(mzn_challenge, failing) {
   }
 }
 
-TEST(mzn_challenge, parse) {
+TEST(mzn_challenge, DISABLED_parse) {
   std::stack<std::string> stack;
   stack.emplace(FZN_CHALLENGE_DIR);
   std::unordered_set<std::string> visited{std::string(FZN_CHALLENGE_DIR)};

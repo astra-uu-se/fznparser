@@ -28,7 +28,7 @@ else()
        ${CMAKE_CURRENT_BINARY_DIR}/cmake/CPM.cmake
        EXPECTED_HASH SHA256=78ba32abdf798bc616bab7c73aac32a17bbd7b06ad9e26a6add69de8f3ae4791)
   include(${CMAKE_CURRENT_BINARY_DIR}/cmake/CPM.cmake RESULT_VARIABLE CPM_INCLUDED)
-  if(NOT CPM_INCLUDED)
+  if (NOT CPM_INCLUDED)
     message(FATAL_ERROR "could not include CPM ${CPM_INCLUDED}")
   endif()
 endif()

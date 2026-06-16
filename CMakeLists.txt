@@ -57,12 +57,12 @@ if(APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
 endif()
 
 if(NOT DEFINED ${FETCHCONTENT_SOURCE_DIR_BOOST})
-  set(_fznparser_boost_source_dir ${CPM_SOURCE_CACHE}/boost_1_80_0)
+  cmake_path(ABSOLUTE_PATH CPM_SOURCE_CACHE OUTPUT_VARIABLE _fznparser_cpm_source_cache)
+  cmake_path(APPEND _fznparser_cpm_source_cache "boost_1_80_0" OUTPUT_VARIABLE _fznparser_boost_source_dir)
   if(NOT EXISTS "${_fznparser_boost_source_dir}/boost/version.hpp")
     set(BOOST_URL https://sourceforge.net/projects/boost/files/boost/1.80.0/boost_1_80_0.7z)
     set(BOOST_URL_SHA256 d12a2af721e22dbfb984ef061ee4c4ab2387f1904f6d65bc5acebaa34d6366ec)
-
-    set(_fznparser_boost_archive "${CPM_SOURCE_CACHE}/boost_1_80_0.tar.bz2")
+    cmake_path(APPEND _fznparser_cpm_source_cache "boost_1_80_0.tar.bz2" OUTPUT_VARIABLE _fznparser_boost_archive)
     if(EXISTS "${_fznparser_boost_archive}")
       file(SHA256 "${_fznparser_boost_archive}" _fznparser_boost_archive_hash)
       if(NOT _fznparser_boost_archive_hash STREQUAL BOOST_URL_SHA256)
@@ -163,7 +163,9 @@ target_include_directories(${PROJECT_NAME}
   ${PROJECT_SOURCE_DIR}/include_private)
 
 if(APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
-  target_include_directories(${PROJECT_LIB} SYSTEM PRIVATE "${CPM_SOURCE_CACHE}/boost_1_80_0")
+  cmake_path(ABSOLUTE_PATH CPM_SOURCE_CACHE OUTPUT_VARIABLE _fznparser_cpm_source_cache)
+  cmake_path(APPEND _fznparser_cpm_source_cache "boost_1_80_0" OUTPUT_VARIABLE _fznparser_boost_source_dir)
+  target_include_directories(${PROJECT_LIB} SYSTEM PRIVATE "${_fznparser_boost_source_dir}")
 endif()
 
 if(APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" AND TARGET fznparser)
